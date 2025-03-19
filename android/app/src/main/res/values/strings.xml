@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">repo</string>
+    <string name="title_activity_main">repo</string>
+    <string name="package_name">com.repo.app</string>
+    <string name="custom_url_scheme">com.repo.app</string>
+</resources>

@@ -1,0 +1,249 @@
+<div class="container">
+  <button class="btn-back" (click)="goBack()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Atrás
+  </button>
+
+  <div class="dashboard-card">
+    <div class="card-header">
+      <div class="header-content">
+        <img src="./icons/report.png" alt="Reports" class="dashboard-logo"/>
+        <div class="header-text">
+          <h1>Generar Reporte de Trabajo</h1>
+          <p class="subtitle">Complete la información del reporte en todos los pasos</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensajes de estado -->
+    <div *ngIf="errorMessage" class="alert alert-error" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      {{ errorMessage }}
+    </div>
+    <div *ngIf="successMessage" class="alert alert-success" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      {{ successMessage }}
+    </div>
+
+    <!-- Estado de carga -->
+    <div *ngIf="isLoading" class="loading-indicator">
+      <div class="spinner"></div>
+      <span>Cargando...</span>
+    </div>
+
+    <div class="card-body">
+      <form (ngSubmit)="onSubmit()" [formGroup]="reportForm">
+        <!-- Steps indicator -->
+        <div class="steps">
+          <div class="step" *ngFor="let step of steps; index as i"
+               [ngClass]="{'active': selectedStep === i+1, 'completed': selectedStep > i+1, 'valid': step.isValid}"
+               (click)="goToStep(i+1)">
+            <div class="step-number">{{i+1}}</div>
+            <div class="step-title">{{step.title}}</div>
+          </div>
+        </div>
+
+        <!-- Step 1: Priority and Worker Assignment -->
+        <div *ngIf="selectedStep === 1" class="step-content">
+          <h2>Información de Asignación</h2>
+
+          <div class="form-group">
+            <label for="priority">Prioridad *</label>
+            <select id="priority" formControlName="priority">
+              <option value="">Seleccione una prioridad</option>
+              <option *ngFor="let option of priorityOptions" [value]="option">
+                {{option}}
+              </option>
+            </select>
+            <div class="error-message" 
+                 *ngIf="reportForm.get('priority')?.touched && reportForm.get('priority')?.errors">
+              <span *ngIf="reportForm.get('priority')?.errors?.['required']">
+                La prioridad es requerida
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="department">Departamento *</label>
+            <select id="department" formControlName="department">
+              <option value="">Seleccione un departamento</option>
+              <option *ngFor="let dept of departments$ | async" [value]="dept.id">
+                {{dept.name}}
+              </option>
+            </select>
+            <div class="error-message" 
+                 *ngIf="reportForm.get('department')?.touched && reportForm.get('department')?.errors">
+              <span *ngIf="reportForm.get('department')?.errors?.['required']">
+                El departamento es requerido
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="worker">Trabajador Asignado *</label>
+            <select id="worker" formControlName="workerId">
+              <option value="">Seleccione un trabajador</option>
+              <option *ngFor="let worker of workers$ | async" [value]="worker.Username">
+                {{worker.Username}}
+              </option>
+            </select>
+            <div class="error-message" 
+                 *ngIf="reportForm.get('workerId')?.touched && reportForm.get('workerId')?.errors">
+              <span *ngIf="reportForm.get('workerId')?.errors?.['required']">
+                El trabajador es requerido
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Client and job description data -->
+        <div *ngIf="selectedStep === 2" class="step-content">
+          <h2>Información del Trabajo</h2>
+
+          <div class="form-group">
+            <label for="companyName">Empresa/Cliente *</label>
+            <select id="companyName" formControlName="companyId">
+              <option value="">Seleccione una empresa</option>
+              <option *ngFor="let company of companies$ | async" [value]="company.IdEmpresa">
+                {{company.Nombre}}
+              </option>
+            </select>
+            <div class="error-message" 
+                 *ngIf="reportForm.get('companyId')?.touched && reportForm.get('companyId')?.errors">
+              <span *ngIf="reportForm.get('companyId')?.errors?.['required']">
+                La empresa es requerida
+              </span>
+            </div>
+          </div>
+
+          <!-- New Company Form -->
+          <div *ngIf="showNewCompany" [formGroup]="companyForm" class="new-company-form">
+            <div class="form-group">
+              <label for="newCompanyName">Nombre de la Empresa *</label>
+              <input type="text" id="newCompanyName" formControlName="Nombre" />
+              <div class="error-message" 
+                   *ngIf="companyForm.get('Nombre')?.touched && companyForm.get('Nombre')?.errors">
+                <span *ngIf="companyForm.get('Nombre')?.errors?.['required']">
+                  El nombre de la empresa es requerido
+                </span>
+                <span *ngIf="companyForm.get('Nombre')?.errors?.['minlength']">
+                  El nombre debe tener al menos 2 caracteres
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newCompanyEmail">Correo de la Empresa *</label>
+              <input type="email" id="newCompanyEmail" formControlName="Correo" />
+              <div class="error-message" 
+                   *ngIf="companyForm.get('Correo')?.touched && companyForm.get('Correo')?.errors">
+                <span *ngIf="companyForm.get('Correo')?.errors?.['required']">
+                  El correo es requerido
+                </span>
+                <span *ngIf="companyForm.get('Correo')?.errors?.['email']">
+                  Ingrese un correo válido
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newCompanyAddress">Dirección *</label>
+              <input type="text" id="newCompanyAddress" formControlName="Direccion" />
+              <div class="error-message" 
+                   *ngIf="companyForm.get('Direccion')?.touched && companyForm.get('Direccion')?.errors">
+                <span *ngIf="companyForm.get('Direccion')?.errors?.['required']">
+                  La dirección es requerida
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newCompanySector">Sector *</label>
+              <input type="text" id="newCompanySector" formControlName="Sector" />
+              <div class="error-message" 
+                   *ngIf="companyForm.get('Sector')?.touched && companyForm.get('Sector')?.errors">
+                <span *ngIf="companyForm.get('Sector')?.errors?.['required']">
+                  El sector es requerido
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="jobTitle">Título del Trabajo *</label>
+            <input type="text" id="jobTitle" formControlName="jobTitle"/>
+            <div class="error-message" 
+                 *ngIf="reportForm.get('jobTitle')?.touched && reportForm.get('jobTitle')?.errors">
+              <span *ngIf="reportForm.get('jobTitle')?.errors?.['required']">
+                El título es requerido
+              </span>
+              <span *ngIf="reportForm.get('jobTitle')?.errors?.['minlength']">
+                El título debe tener al menos 3 caracteres
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="jobDescription">Descripción del Trabajo *</label>
+            <textarea id="jobDescription" formControlName="jobDescription" rows="4"></textarea>
+            <div class="error-message" 
+                 *ngIf="reportForm.get('jobDescription')?.touched && reportForm.get('jobDescription')?.errors">
+              <span *ngIf="reportForm.get('jobDescription')?.errors?.['required']">
+                La descripción es requerida
+              </span>
+              <span *ngIf="reportForm.get('jobDescription')?.errors?.['minlength']">
+                La descripción debe tener al menos 10 caracteres
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="location">Ubicación del Trabajo *</label>
+            <input type="text" id="location" formControlName="location"/>
+            <div class="error-message" 
+                 *ngIf="reportForm.get('location')?.touched && reportForm.get('location')?.errors">
+              <span *ngIf="reportForm.get('location')?.errors?.['required']">
+                La ubicación es requerida
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation buttons -->
+        <div class="step-actions">
+          <button type="button" 
+                  class="btn-secondary" 
+                  *ngIf="selectedStep > 1" 
+                  (click)="previousStep()">
+            Anterior
+          </button>
+
+          <button type="button" 
+                  class="btn-primary" 
+                  *ngIf="selectedStep < steps.length" 
+                  [disabled]="!isFormValid"
+                  (click)="nextStep()">
+            Siguiente
+          </button>
+
+          <button type="submit" 
+                  class="btn-primary" 
+                  *ngIf="selectedStep === steps.length" 
+                  [disabled]="!isFormValid || isSubmitting || isLoading">
+            {{ isSubmitting ? 'Generando...' : 'Asignar Reporte' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

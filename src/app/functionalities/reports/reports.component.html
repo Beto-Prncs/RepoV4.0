@@ -1,0 +1,88 @@
+<div class="reports-container">
+  <button class="btn-back" (click)="goBack()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Atrás
+  </button>
+ 
+  <header class="reports-header">
+    <h1>Historial de Reportes</h1>
+    <div class="search-bar">
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar reportes..." class="search-input">
+      <button class="search-button">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+  </header>
+ 
+  <div class="reports-content">
+    <div class="reports-table">
+      <div class="table-header">
+        <div class="header-cell">Empleado</div>
+        <div class="header-cell">Título</div>
+        <div class="header-cell">Fecha</div>
+        <div class="header-cell">Estado</div>
+        <div class="header-cell">Acciones</div>
+      </div>
+ 
+      <div class="table-body">
+        @for (report of filterReports(); track report.id) {
+          <div class="table-row">
+            <div class="cell">{{report.employeeName}}</div>
+            <div class="cell">{{report.title}}</div>
+            <div class="cell">{{formatDate(report.date)}}</div>
+            <div class="cell">
+              <span class="status-badge" [class]="report.status.toLowerCase()">
+                {{report.status}}
+              </span>
+            </div>
+            <div class="cell actions">
+              <button class="view-button" (click)="openPdfPreview(report)">
+                <i class="fas fa-eye"></i> Ver PDF
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Navegación de tipo de reporte -->
+  <nav class="task-type-nav">
+    <button (click)="setView('pending')" [class.active]="currentView === 'pending'">
+      Reportes Pendientes
+    </button>
+    <button (click)="setView('completed')" [class.active]="currentView === 'completed'">
+      Reportes Completados
+    </button>
+  </nav>
+ 
+  <!-- Contenido según tipo seleccionado -->
+  <div class="task-content">
+    <div *ngIf="currentView === 'pending'" class="tasks-view">
+    </div>
+    <div *ngIf="currentView === 'completed'" class="tasks-view">
+    </div>
+  </div>
+ 
+  <!-- Modal de PDF -->
+  @if (selectedReport && safePdfUrl) {
+    <div class="pdf-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>{{selectedReport.title}}</h2>
+          <button class="close-button" (click)="closePreview()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="pdf-viewer">
+            <iframe [src]="safePdfUrl" frameborder="0"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+ </div>

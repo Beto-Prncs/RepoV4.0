@@ -1,0 +1,59 @@
+<button class="btn-back" (click)="goBack()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Atrás
+  </button>
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>Estadísticas de Reportes de Trabajo</h1>
+        <span>Período: Enero 2024</span>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total de Reportes</h3>
+            <div class="stat-value">24</div>
+        </div>
+        <div class="stat-card">
+            <h3>Reportes Completados</h3>
+            <div class="stat-value">18</div>
+        </div>
+        <div class="stat-card">
+            <h3>Reportes Pendientes</h3>
+            <div class="stat-value">6</div>
+        </div>
+    </div>
+
+    <div class="detailed-breakdown">
+        <h2>Desglose Detallado</h2>
+        <table class="breakdown-table">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Total Reportes</th>
+                    <th>Completados</th>
+                    <th>Pendientes</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Juan Pérez</td>
+                    <td>8</td>
+                    <td>6</td>
+                    <td>2</td>
+                    <td><span class="status-badge status-completed">Activo</span></td>
+                </tr>
+                <tr>
+                    <td>María González</td>
+                    <td>6</td>
+                    <td>4</td>
+                    <td>2</td>
+                    <td><span class="status-badge status-pending">En Progreso</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

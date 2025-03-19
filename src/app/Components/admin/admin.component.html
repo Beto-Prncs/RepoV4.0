@@ -1,0 +1,47 @@
+<div class="dashboard-container">
+  <header class="header">
+    <div class="header-logo-section">
+      <img src="icons/logo_RepoS.png" alt="Repo System Logo" class="ImgRegural">
+      <h1>Repo System</h1>
+    </div>
+    
+    <div class="header-controls">
+      <div class="header-user-info">
+        <div *ngIf="usuario" class="user-welcome">
+          <p class="welcome-message">Bienvenido, {{ usuario.Nombre }}</p>
+          <span class="user-username">{{ usuario.Username }}</span>
+        </div>
+        <div *ngIf="!usuario" class="user-welcome">
+          <p class="welcome-message">Cargando...</p>
+        </div>
+      </div>
+      
+      <button class="menu-button" (click)="logout()">
+        <span class="menu-icon">Cerrar Sesión</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="analytics-preview">
+    <img src="icons/reportA.jpg" alt="Analytics Preview" class="ImgRegular">
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando dashboard...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="dashboard-grid">
+    <div 
+      *ngFor="let item of menuItems" 
+      class="dashboard-card" 
+      (click)="navigateTo(item.route)"
+    >
+      <div class="card-icon">
+        <img [src]="'icons/' + item.icon" [alt]="item.title">
+      </div>
+      <h3>{{ item.title }}</h3>
+      <p class="card-description">{{ item.description }}</p>
+    </div>
+  </div>
+</div>

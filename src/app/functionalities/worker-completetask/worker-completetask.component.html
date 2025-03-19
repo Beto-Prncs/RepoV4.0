@@ -1,0 +1,72 @@
+<div class="tasks-container">
+  <button class="btn-back" (click)="goBack()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Atrás
+  </button>
+
+  <h2>Reportes Completados</h2>
+
+  <!-- Mensajes de estado -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="loading-state">
+    <p>Cargando reportes completados...</p>
+  </div>
+
+  <!-- Sin reportes -->
+  <div *ngIf="!isLoading && completedTasks.length === 0" class="no-tasks">
+    <p>No hay reportes completados.</p>
+  </div>
+
+  <!-- Lista de reportes completados -->
+  <div *ngIf="!isLoading && completedTasks.length > 0" class="tasks-grid">
+    <div *ngFor="let task of completedTasks" class="task-card">
+      <div class="task-header">
+        <h3>{{task.Tipo_Trabajo}}</h3>
+        <span class="task-date">Completado: {{formatDate(task.fechaCompletado || task.fecha)}}</span>
+      </div>
+
+      <div class="task-content">
+        <!-- Información principal -->
+        <div class="task-info">
+          <p *ngIf="task.jobDescription" class="task-description">
+            <strong>Descripción:</strong> {{task.jobDescription}}
+          </p>
+          <p *ngIf="task.location" class="task-location">
+            <strong>Ubicación:</strong> {{task.location}}
+          </p>
+          
+          <!-- Etiquetas de estado y prioridad -->
+          <div class="task-tags">
+            <span class="status-badge" [ngClass]="getStatusClass(task.estado)">
+              {{task.estado}}
+            </span>
+            <span *ngIf="task.priority" class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+              {{task.priority}}
+            </span>
+          </div>
+
+          <p *ngIf="task.departamento" class="task-department">
+            <strong>Departamento:</strong> {{task.departamento}}
+          </p>
+        </div>
+
+        <!-- Descripción de completación -->
+        <div *ngIf="task.descripcionCompletado" class="completion-description">
+          <strong>Descripción de completación:</strong>
+          <p>{{task.descripcionCompletado}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

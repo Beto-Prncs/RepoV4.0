@@ -1,0 +1,420 @@
+<div class="admin-config-container">
+  <aside class="sidebar">
+    <ul class="sidebar-menu">
+      <li>
+        <a [class.active]="activeSection === 'general'"
+           (click)="setActiveSection('general')"
+           href="javascript:void(0)">
+          {{ 'CONFIG.GENERAL' | translate }}
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeSection === 'appearance'"
+           (click)="setActiveSection('appearance')"
+           href="javascript:void(0)">
+          {{ 'CONFIG.APPEARANCE' | translate }}
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeSection === 'notifications'"
+           (click)="setActiveSection('notifications')"
+           href="javascript:void(0)">
+          {{ 'CONFIG.NOTIFICATIONS' | translate }}
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeSection === 'regional'"
+           (click)="setActiveSection('regional')"
+           href="javascript:void(0)">
+          {{ 'CONFIG.REGIONAL' | translate }}
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeSection === 'security'"
+           (click)="setActiveSection('security')"
+           href="javascript:void(0)">
+          {{ 'CONFIG.SECURITY' | translate }}
+        </a>
+      </li>
+      <li>
+        <a [class.active]="activeSection === 'advanced'"
+           (click)="setActiveSection('advanced')"
+           href="javascript:void(0)">
+          {{ 'CONFIG.ADVANCED' | translate }}
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="config-content">
+    <form #configForm="ngForm" (ngSubmit)="saveConfiguration()">
+      <!-- Configuración General -->
+      <section class="config-section" [ngClass]="{'active': activeSection === 'general'}"
+        *ngIf="activeSection === 'general'">
+        <h2>{{ 'CONFIG.GENERAL' | translate }}</h2>
+        
+        <div class="form-group" *ngIf="userRole === 'admin'">
+          <label for="company-name">{{ 'CONFIG.COMPANY_NAME' | translate }}</label>
+          <input
+            type="text"
+            id="company-name"
+            class="form-control"
+            [(ngModel)]="config.name"
+            name="companyName"
+            placeholder="{{ 'CONFIG.ENTER_COMPANY_NAME' | translate }}"
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label>{{ 'CONFIG.USER_INFO' | translate }}</label>
+          <div class="user-info">
+            <p><strong>{{ 'CONFIG.NAME' | translate }}:</strong> {{ currentUser?.Nombre }}</p>
+            <p><strong>{{ 'CONFIG.EMAIL' | translate }}:</strong> {{ currentUser?.Correo }}</p>
+            <p><strong>{{ 'CONFIG.ROLE' | translate }}:</strong> {{ userRole | titlecase }}</p>
+            <p><strong>{{ 'CONFIG.DEPARTMENT' | translate }}:</strong> {{ currentUser?.Departamento }}</p>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="checkbox-container">
+            <input
+              type="checkbox"
+              id="auto-save"
+              [(ngModel)]="config.autoSave"
+              name="autoSave">
+            <label for="auto-save" class="checkbox-label">{{ 'CONFIG.AUTO_SAVE' | translate }}</label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Apariencia -->
+      <section class="config-section" [ngClass]="{'active': activeSection === 'appearance'}"
+        *ngIf="activeSection === 'appearance'">
+        <h2>{{ 'CONFIG.APPEARANCE' | translate }}</h2>
+        <div class="form-group">
+          <label>{{ 'CONFIG.APP_THEME' | translate }}</label>
+          <div class="toggle-switch">
+            <div class="toggle-label">{{ 'CONFIG.LIGHT_MODE' | translate }}</div>
+            <label class="switch">
+              <input type="checkbox" 
+                [(ngModel)]="isDarkMode" 
+                name="darkMode" 
+                (change)="toggleDarkMode()">
+              <span class="slider round"></span>
+            </label>
+            <div class="toggle-label">{{ 'CONFIG.DARK_MODE' | translate }}</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="text-size">{{ 'CONFIG.TEXT_SIZE' | translate }}</label>
+          <div class="text-size-control">
+            <span class="size-label small">A</span>
+            <input 
+              type="range" 
+              id="text-size" 
+              min="1" 
+              max="3" 
+              step="1" 
+              [(ngModel)]="config.textSize" 
+              name="textSize"
+              (change)="applyTextSize()">
+            <span class="size-label large">A</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notificaciones -->
+      <section class="config-section" [ngClass]="{'active': activeSection === 'notifications'}"
+        *ngIf="activeSection === 'notifications'">
+        <h2>{{ 'CONFIG.NOTIFICATIONS' | translate }}</h2>
+        <div class="form-group">
+          <div class="toggle-container">
+            <label class="toggle-label" for="email-notif">{{ 'CONFIG.EMAIL_NOTIFICATIONS' | translate }}</label>
+            <div class="toggle-switch">
+              <label class="switch">
+                <input 
+                  type="checkbox" 
+                  id="email-notif"
+                  [(ngModel)]="config.emailNotifications" 
+                  name="emailNotifications">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" *ngIf="config.emailNotifications">
+          <label for="notification-email">{{ 'CONFIG.NOTIFICATION_EMAIL' | translate }}</label>
+          <input
+            type="email"
+            id="notification-email"
+            class="form-control"
+            [(ngModel)]="config.notificationEmail"
+            name="notificationEmail"
+            placeholder="correo@ejemplo.com"
+            email
+          >
+        </div>
+        <div class="form-group">
+          <div class="toggle-container">
+            <label class="toggle-label" for="push-notif">{{ 'CONFIG.PUSH_NOTIFICATIONS' | translate }}</label>
+            <div class="toggle-switch">
+              <label class="switch">
+                <input 
+                  type="checkbox" 
+                  id="push-notif"
+                  [(ngModel)]="config.pushNotifications" 
+                  name="pushNotifications"
+                  (change)="updatePushNotifications()">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="toggle-container">
+            <label class="toggle-label" for="task-reminders">{{ 'CONFIG.TASK_REMINDERS' | translate }}</label>
+            <div class="toggle-switch">
+              <label class="switch">
+                <input 
+                  type="checkbox" 
+                  id="task-reminders"
+                  [(ngModel)]="config.taskReminders" 
+                  name="taskReminders">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group" *ngIf="config.taskReminders">
+          <label>{{ 'CONFIG.REMINDER_TYPES' | translate }}</label>
+          <div class="checkbox-list">
+            <div class="checkbox-container">
+              <input 
+                type="checkbox" 
+                id="reminder-new-tasks"
+                [(ngModel)]="config.reminderNewTasks" 
+                name="reminderNewTasks">
+              <label for="reminder-new-tasks" class="checkbox-label">{{ 'CONFIG.NEW_TASKS' | translate }}</label>
+            </div>
+            <div class="checkbox-container">
+              <input 
+                type="checkbox" 
+                id="reminder-deadlines"
+                [(ngModel)]="config.reminderDeadlines" 
+                name="reminderDeadlines">
+              <label for="reminder-deadlines" class="checkbox-label">{{ 'CONFIG.APPROACHING_DEADLINES' | translate }}</label>
+            </div>
+            <div class="checkbox-container">
+              <input 
+                type="checkbox" 
+                id="reminder-updates"
+                [(ngModel)]="config.reminderUpdates" 
+                name="reminderUpdates">
+              <label for="reminder-updates" class="checkbox-label">{{ 'CONFIG.TASK_UPDATES' | translate }}</label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Configuración Regional -->
+      <section class="config-section" [ngClass]="{'active': activeSection === 'regional'}"
+        *ngIf="activeSection === 'regional'">
+        <h2>{{ 'CONFIG.REGIONAL' | translate }}</h2>
+        <div class="form-group">
+          <label for="language">{{ 'CONFIG.LANGUAGE' | translate }}</label>
+          <select
+            id="language"
+            class="form-control"
+            [(ngModel)]="config.language"
+            name="language"
+            (change)="changeLanguage()"
+            required
+          >
+            <option *ngFor="let lang of languages" [value]="lang.code">
+              {{ lang.name }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="timezone">{{ 'CONFIG.TIMEZONE' | translate }}</label>
+          <select
+            id="timezone"
+            class="form-control"
+            [(ngModel)]="config.timezone"
+            name="timezone"
+            required
+          >
+            <option *ngFor="let tz of timezones" [value]="tz.value">
+              {{ tz.label }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dateFormat">{{ 'CONFIG.DATE_FORMAT' | translate }}</label>
+          <select
+            id="dateFormat"
+            class="form-control"
+            [(ngModel)]="config.dateFormat"
+            name="dateFormat"
+            required
+          >
+            <option *ngFor="let format of dateFormats" [value]="format.value">
+              {{ format.example }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="currency">{{ 'CONFIG.CURRENCY' | translate }}</label>
+          <select
+            id="currency"
+            class="form-control"
+            [(ngModel)]="config.currency"
+            name="currency"
+            required
+          >
+            <option *ngFor="let currency of currencies" [value]="currency.code">
+              {{ currency.name }} ({{ currency.symbol }})
+            </option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Seguridad -->
+      <section class="config-section" [ngClass]="{'active': activeSection === 'security'}"
+        *ngIf="activeSection === 'security'">
+        <h2>{{ 'CONFIG.SECURITY' | translate }}</h2>
+        <div class="form-group">
+          <button type="button" class="btn btn-primary" (click)="changePassword()">
+            {{ 'CONFIG.CHANGE_PASSWORD' | translate }}
+          </button>
+        </div>
+        <div class="form-group">
+          <div class="toggle-container">
+            <label class="toggle-label" for="auto-logout">{{ 'CONFIG.AUTO_LOGOUT' | translate }}</label>
+            <div class="toggle-switch">
+              <label class="switch">
+                <input 
+                  type="checkbox" 
+                  id="auto-logout"
+                  [(ngModel)]="config.autoLogout" 
+                  name="autoLogout"
+                  (change)="setupInactivityMonitor()">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" *ngIf="config.autoLogout">
+          <label for="autoLogoutTime">{{ 'CONFIG.AUTO_LOGOUT_TIME' | translate }}</label>
+          <select
+            id="autoLogoutTime"
+            class="form-control"
+            [(ngModel)]="config.autoLogoutTime"
+            name="autoLogoutTime"
+            (change)="setupAutoLogout()"
+            required
+          >
+            <option value="5">5 {{ 'CONFIG.MINUTES' | translate }}</option>
+            <option value="15">15 {{ 'CONFIG.MINUTES' | translate }}</option>
+            <option value="30">30 {{ 'CONFIG.MINUTES' | translate }}</option>
+            <option value="60">1 {{ 'CONFIG.HOUR' | translate }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <button type="button" class="btn btn-danger" (click)="logout()">
+            {{ 'CONFIG.LOGOUT' | translate }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Configuración Avanzada -->
+      <section class="config-section" [ngClass]="{'active': activeSection === 'advanced'}"
+        *ngIf="activeSection === 'advanced'">
+        <h2>{{ 'CONFIG.ADVANCED' | translate }}</h2>
+        <div class="form-group">
+          <div class="toggle-container">
+            <label class="toggle-label" for="data-sync">{{ 'CONFIG.DATA_SYNC' | translate }}</label>
+            <div class="toggle-switch">
+              <label class="switch">
+                <input 
+                  type="checkbox" 
+                  id="data-sync"
+                  [(ngModel)]="config.dataSync" 
+                  name="dataSync">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" *ngIf="config.dataSync">
+          <label for="syncInterval">{{ 'CONFIG.SYNC_INTERVAL' | translate }}</label>
+          <select
+            id="syncInterval"
+            class="form-control"
+            [(ngModel)]="config.syncInterval"
+            name="syncInterval"
+            required
+          >
+            <option value="5">5 {{ 'CONFIG.MINUTES' | translate }}</option>
+            <option value="15">15 {{ 'CONFIG.MINUTES' | translate }}</option>
+            <option value="30">30 {{ 'CONFIG.MINUTES' | translate }}</option>
+            <option value="60">1 {{ 'CONFIG.HOUR' | translate }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ 'CONFIG.STORAGE_USAGE' | translate }}</label>
+          <div class="progress">
+            <div class="progress-bar" [style.width.%]="storageUsage * 100"></div>
+          </div>
+          <small>{{ storageUsageText }}</small>
+        </div>
+        
+        <!-- Opciones para administradores -->
+        <div class="admin-options" *ngIf="userRole === 'admin'">
+          <h3>{{ 'CONFIG.ADMIN_OPTIONS' | translate }}</h3>
+          <div class="form-group">
+            <div class="toggle-container">
+              <label class="toggle-label" for="debug-mode">{{ 'CONFIG.DEBUG_MODE' | translate }}</label>
+              <div class="toggle-switch">
+                <label class="switch">
+                  <input 
+                    type="checkbox" 
+                    id="debug-mode"
+                    [(ngModel)]="config.debugMode" 
+                    name="debugMode">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+            <small *ngIf="config.debugMode">{{ 'CONFIG.DEBUG_WARNING' | translate }}</small>
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button type="button" class="btn btn-secondary" (click)="clearCache()">
+            {{ 'CONFIG.CLEAR_CACHE' | translate }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="exportConfiguration()">
+            {{ 'CONFIG.EXPORT_CONFIG' | translate }}
+          </button>
+          <button type="button" class="btn btn-danger" (click)="resetConfiguration()">
+            {{ 'CONFIG.RESET_CONFIG' | translate }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Botones de acción -->
+      <div class="action-buttons">
+        <button type="button" class="btn btn-secondary" (click)="goBack()">
+          {{ 'COMMON.BACK' | translate }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="!configForm.form.valid">
+          {{ 'COMMON.SAVE' | translate }}
+        </button>
+      </div>
+    </form>
+  </main>
+</div>
+

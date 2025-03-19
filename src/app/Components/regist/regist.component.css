@@ -1,0 +1,319 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    font-family: 'Roboto', sans-serif;
+    padding: 2rem;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Animated background elements - simplified */
+  .container::before,
+  .container::after {
+    content: '';
+    position: fixed; /* Cambiado de absolute a fixed */
+    width: 1000px;
+    height: 1000px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, rgba(43, 108, 176, 0.1), rgba(43, 108, 176, 0.05));
+    pointer-events: none; /* Asegura que no interfiera con los clicks */
+    z-index: 0;
+  }
+  
+  .container::before {
+    top: -400px;
+    left: -200px;
+  }
+  
+  .container::after {
+    bottom: -400px;
+    right: -200px;
+  }
+  
+  /* Card styles */
+  .card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Logo styles */
+  .app-logo {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    margin: 0 auto 1.5rem;
+  }
+  
+  /* Header styles */
+  .card-header {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #1a365d;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Form elements */
+  .card-body p {
+    font-size: 1.1rem;
+    color: #4a5568;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+  
+  .card-body label {
+    display: block;
+    text-align: left;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-body input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background-color: #f8fafc;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1.5rem;
+    color: #2d3748;
+    box-sizing: border-box;
+  }
+  
+  .card-body input:hover {
+    border-color: #cbd5e0;
+  }
+  
+  .card-body input:focus {
+    outline: none;
+    border-color: #3182ce;
+    box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.15);
+  }
+  
+  /* Remember me checkbox */
+  .remember-me {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0.5rem 0;
+  }
+  
+  .remember-me input[type="checkbox"] {
+    width: auto; /* Cambiado de tamaño fijo */
+    height: auto; /* Cambiado de tamaño fijo */
+    margin-right: 0.75rem;
+    cursor: pointer;
+  }
+  
+  .remember-me label {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #4a5568;
+    cursor: pointer;
+  }
+  
+  /* Button styles */
+  .card-body button {
+    width: 100%;
+    padding: 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3182ce, #2b6cb0);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .card-body button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.25);
+  }
+  
+  .card-body button:active {
+    transform: translateY(1px);
+  }
+  
+  /* Link styles */
+  .card-body label a {
+    text-decoration: none;
+    color: #3182ce;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .card-body label a:hover {
+    color: #2c5282;
+  }
+  
+  /* Error message styles */
+  .error-message {
+    background-color: #fee2e2;
+    border: 1px solid #f87171;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    text-align: center;
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  .input-error {
+    border-color: #f87171 !important;
+  }
+  
+  .input-error:focus {
+    box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.15);
+  }
+  .show-password {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin: -1rem 0 1.5rem;
+  }
+  
+  .show-password label {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #4a5568;
+    cursor: pointer;
+    margin: 0;
+    text-align: left;
+  }
+  
+  .show-password input[type="checkbox"] {
+    width: auto;
+    height: auto;
+    margin: 0 0.5rem 0 0;
+    padding: 0;
+    cursor: pointer;
+  }
+  
+  /* Estilos para el grupo de botones */
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .button-group button {
+    flex: 1;
+    padding: 1rem 0;
+  }
+  
+  .button-group .back-button {
+    background: #f8fafc;
+    color: #2d3748;
+    border: 2px solid #e2e8f0;
+  }
+  
+  .button-group .back-button:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Mensaje de éxito */
+  .success-message {
+    background-color: #dcfce7;
+    border: 1px solid #86efac;
+    color: #166534;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+  
+  /* Estilos para el enlace de inicio de sesión */
+  .login-link {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e2e8f0;
+  }
+  
+  .login-link p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #4a5568;
+  }
+  
+  .login-link a {
+    color: #3182ce;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .login-link a:hover {
+    color: #2c5282;
+  }
+  
+  /* Ajuste de espaciado para campos del formulario */
+  .card-body form {
+    margin-top: 1.5rem;
+  }
+  
+  .card-body form label:not(:first-child) {
+    margin-top: 1rem;
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+  }
+  
+  /* Responsive styles */
+  @media screen and (max-width: 768px) {
+    .container {
+      padding: 1rem;
+    }
+  
+    .card {
+      padding: 2rem;
+    }
+  
+    .app-logo {
+      width: 140px;
+      height: 140px;
+    }
+  
+    .card-header {
+      font-size: 1.75rem;
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    .card {
+      padding: 1.5rem;
+    }
+  
+    .app-logo {
+      width: 120px;
+      height: 120px;
+    }
+  
+    .card-header {
+      font-size: 1.5rem;
+    }
+  }
+  
+    
+    

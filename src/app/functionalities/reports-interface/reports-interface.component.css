@@ -1,0 +1,217 @@
+.reports-interface-container {
+    min-height: 100vh;
+    background-color: #f8fafc;
+    padding: 2rem;
+    position: relative;
+  }
+  
+  .content-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .back-button {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #475569;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .back-button:hover {
+    background-color: #f8fafc;
+    transform: translateX(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .back-button svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .page-title {
+    color: #1e293b;
+    font-size: 2.25rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 3rem 0;
+    letter-spacing: -0.025em;
+  }
+  
+  .cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    padding: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .option-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .option-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .option-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(to right, #3b82f6, #2563eb);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  .option-card:hover::before {
+    opacity: 1;
+  }
+  
+  .card-content {
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  
+  .icon-container {
+    background: #f0f9ff;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  .option-card:hover .icon-container {
+    background: #bfdbfe;
+    transform: scale(1.1);
+  }
+  
+  .icon-container svg {
+    color: #2563eb;
+    transition: transform 0.3s ease;
+  }
+  
+  .option-card:hover .icon-container svg {
+    transform: scale(1.1);
+  }
+  
+  .card-content h2 {
+    color: #1e293b;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    text-align: center;
+  }
+  
+  .card-content p {
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1.6;
+    text-align: center;
+    margin: 0;
+  }
+  
+  .card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .action-text {
+    color: #2563eb;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+  
+  .card-footer svg {
+    color: #2563eb;
+    transition: transform 0.2s ease;
+  }
+  
+  .option-card:hover .card-footer svg {
+    transform: translateX(4px);
+  }
+  
+  @media (max-width: 768px) {
+    .reports-interface-container {
+      padding: 1rem;
+    }
+  
+    .back-button {
+      top: 1rem;
+      left: 1rem;
+      padding: 0.5rem 1rem;
+    }
+  
+    .page-title {
+      font-size: 1.75rem;
+      margin: 4rem 0 2rem;
+    }
+  
+    .cards-container {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding: 0.5rem;
+    }
+  
+    .card-content {
+      padding: 2rem;
+    }
+  
+    .icon-container {
+      width: 72px;
+      height: 72px;
+    }
+  
+    .icon-container svg {
+      width: 32px;
+      height: 32px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+  
+    .card-content h2 {
+      font-size: 1.25rem;
+    }
+  
+    .card-content p {
+      font-size: 0.875rem;
+    }
+  }

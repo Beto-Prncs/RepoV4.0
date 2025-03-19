@@ -1,0 +1,84 @@
+<!-- regist.component.html -->
+<div class="container">
+    <div class="card">
+      <img src="icons/logo_Repo.png" alt="Logo de la Aplicación" class="app-logo" />
+      <div class="card-header">Registro de Usuario</div>
+      <div class="card-body">
+        <p>Complete los datos para registrarse</p>
+  
+        <div class="error-message" *ngIf="showErrorMessage">
+          Error al crear la cuenta
+        </div>
+  
+        <div class="success-message" *ngIf="showSuccessMessage">
+          Cuenta creada exitosamente
+        </div>
+  
+        <form #form="ngForm" (ngSubmit)="onSubmit(form)">
+          <label>Nombre</label>
+          <input
+            type="text"
+            name="firstName"
+            [(ngModel)]="accountData.firstName"
+            required>
+  
+          <label>Apellido</label>
+          <input
+            type="text"
+            name="lastName"
+            [(ngModel)]="accountData.lastName"
+            required>
+  
+          <label>Correo electrónico</label>
+          <input
+            type="email"
+            name="email"
+            [(ngModel)]="accountData.email"
+            required>
+  
+          <label>Teléfono</label>
+          <input
+            type="tel"
+            name="phone"
+            [(ngModel)]="accountData.phone"
+            required>
+  
+          <label>Usuario</label>
+          <input
+            type="text"
+            name="username"
+            [(ngModel)]="accountData.username"
+            required>
+  
+            <label>Contraseña</label>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="accountData.password"
+              required>
+            <div class="show-password">
+              <label>
+                <input type="checkbox" (change)="togglePasswordVisibility()">
+                Mostrar contraseña
+              </label>
+            </div>
+            
+            <!-- Contenedor para los botones -->
+            <div class="button-group">
+              <button type="submit" [disabled]="form.invalid || isLoading">
+                {{isLoading ? 'Registrando...' : 'Registrar'}}
+              </button>
+              <button type="button" (click)="goBack()" class="back-button">
+                Volver
+              </button>
+            </div>
+  
+          
+        </form>
+  
+        <div class="login-link">
+          <p>¿Ya tiene una cuenta? <a routerLink="/">Iniciar sesión</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
