@@ -3,12 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateStore } from '@ngx-translate/core'; // Añadido para resolver el error
+import { Preferences } from '@capacitor/preferences';
 
-import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-
-// Interfaces importadas del modelo de datos
-// Asumimos que estas interfaces ya están definidas en tu aplicación
+// Interfaces para los modelos de datos
 interface Usuario {
   IdUsuario: string;
   Username: string;
@@ -18,37 +16,6 @@ interface Usuario {
   Rol: string;
   Telefono: string;
   Foto_Perfil?: string;
-  NivelAdmin?: string;
-  IdDepartamento?: string;
-}
-
-interface Empresa {
-  IdEmpresa: string;
-  Nombre: string;
-  Correo: string;
-  Direccion: string;
-  Sector: string;
-}
-
-interface Reporte {
-  IdReporte?: string;
-  IdEmpresa: string;
-  IdUsuario: string;
-  Tipo_Trabajo: string;
-  estado: string;
-  fecha: Date;
-  jobDescription: string;
-  location: string;
-  priority: string;
-  departamento: string;
-  fechaCompletado?: Date;
-  descripcionCompletado?: string;
-  fechaActualizacion?: Date;
-}
-
-interface Department {
-  id: string;
-  name: string;
 }
 
 // Interfaz para la configuración de la aplicación
@@ -58,20 +25,11 @@ interface AppConfig {
   timezone: string;
   theme: 'light' | 'dark';
   textSize: number;
-  emailNotifications: boolean;
-  notificationEmail: string;
-  pushNotifications: boolean;
-  taskReminders: boolean;
-  reminderNewTasks: boolean;
-  reminderDeadlines: boolean;
-  reminderUpdates: boolean;
   autoSave: boolean;
   currency: string;
   dateFormat: string;
   autoLogout: boolean;
   autoLogoutTime: string;
-  dataSync: boolean;
-  syncInterval: string;
   debugMode?: boolean;
 }
 
@@ -98,40 +56,30 @@ interface DateFormat {
 
 @Component({
   selector: 'app-configuration',
+  standalone: true,
   imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './configuration.component.html',
-  styleUrl: './configuration.component.css'
+  styleUrl: './configuration.component.css',
+  providers: [TranslateStore]
 })
 export class ConfigurationComponent implements OnInit {
   activeSection: string = 'general';
   userRole: string = '';
   isDarkMode: boolean = false;
-  storageUsage: number = 0.35; // Ejemplo: 35% de uso
-  storageUsageText: string = '';
   inactivityTimer: any;
   currentUser: Usuario | null = null;
-  currentDepartment: Department | null = null;
-
   config: AppConfig = {
     name: '',
     language: 'es',
     timezone: 'America/Mexico_City',
     theme: 'light',
     textSize: 2,
-    emailNotifications: true,
-    notificationEmail: '',
-    pushNotifications: false,
-    taskReminders: true,
-    reminderNewTasks: true,
-    reminderDeadlines: true,
-    reminderUpdates: true,
     autoSave: false,
     currency: 'MXN',
     dateFormat: 'DD/MM/YYYY',
     autoLogout: false,
     autoLogoutTime: '15',
-    dataSync: true,
-    syncInterval: '15'
+    debugMode: false
   };
 
   languages: Language[] = [
@@ -163,58 +111,41 @@ export class ConfigurationComponent implements OnInit {
     { value: 'YYYY-MM-DD', example: '2023-12-31' }
   ];
 
-  private firestore: AngularFirestore = inject(AngularFirestore);
-  private afAuth: AngularFireAuth = inject(AngularFireAuth);
-  
-  constructor(
-    private router: Router,
-    private translate: TranslateService
-  ) {}
+  private router: Router = inject(Router);
+  private translate: TranslateService = inject(TranslateService);
 
-  async ngOnInit() {
-    await this.loadUserInfo();
-    await this.loadConfiguration();
+  ngOnInit() {
+    // Cargar información del usuario desde Preferences
+    this.loadUserInfo();
+    // Cargar configuración desde Preferences
+    this.loadConfiguration();
+    // Configurar monitoreo de inactividad
     this.setupInactivityMonitor();
-    this.calculateStorageUsage();
-    
-    // Iniciar servicios según la configuración
-    if (this.config.autoLogout) {
-      this.setupAutoLogout();
-    }
-
     // Inicializar idioma
     this.changeLanguage();
+    // Aplicar tema
+    this.applyTheme();
+    // Aplicar tamaño de texto
+    this.applyTextSize();
   }
 
   async loadUserInfo() {
     try {
-      const user = await this.afAuth.currentUser;
-      if (user) {
-        const userDoc = await this.firestore
-          .collection<Usuario>('Usuario')
-          .doc(user.uid)
-          .get()
-          .toPromise();
-        
-        if (userDoc?.exists) {
-          this.currentUser = userDoc.data() as Usuario;
-          this.userRole = this.currentUser.Rol;
-          this.config.notificationEmail = this.currentUser.Correo;
-          
-          // Cargar departamento si tiene IdDepartamento
-          if (this.currentUser.IdDepartamento) {
-            const deptDoc = await this.firestore
-              .collection<Department>('Departamento')
-              .doc(this.currentUser.IdDepartamento)
-              .get()
-              .toPromise();
-              
-            if (deptDoc?.exists) {
-              this.currentDepartment = deptDoc.data() as Department;
-            }
-          }
-        }
-      }
+      // Obtener información del usuario desde Preferences
+      const userRole = await this.getPreference('userRole', 'worker');
+      const userEmail = await this.getPreference('userEmail', 'demo@ejemplo.com');
+      this.userRole = userRole;
+      // Crear usuario demo para la UI
+      this.currentUser = {
+        IdUsuario: '1',
+        Username: userEmail.split('@')[0],
+        Nombre: 'Usuario de Demostración',
+        Correo: userEmail,
+        Departamento: 'Sistemas',
+        Rol: userRole,
+        Telefono: '555-1234',
+        Foto_Perfil: undefined
+      };
     } catch (error) {
       console.error('Error loading user info:', error);
       this.showToast('Error al cargar información de usuario', 'danger');
@@ -223,32 +154,15 @@ export class ConfigurationComponent implements OnInit {
 
   async loadConfiguration() {
     try {
-      // Primero intentar cargar desde Firestore
-      const user = await this.afAuth.currentUser;
-      if (user) {
-        const configDoc = await this.firestore
-          .collection('userConfigurations')
-          .doc(user.uid)
-          .get()
-          .toPromise();
-        
-        if (configDoc?.exists) {
-          const savedConfig = configDoc.data() as AppConfig;
-          this.config = { ...this.config, ...savedConfig };
-        } else {
-          // Si no existe en Firestore, intentar cargar desde almacenamiento local
-          const savedConfigStr = localStorage.getItem('appConfig');
-          if (savedConfigStr) {
-            this.config = { ...this.config, ...JSON.parse(savedConfigStr) };
-          }
-        }
+      // Intentar cargar configuración desde Preferences
+      const savedConfigStr = await this.getPreference('appConfig', '');
+      if (savedConfigStr) {
+        const savedConfig = JSON.parse(savedConfigStr);
+        this.config = { ...this.config, ...savedConfig };
       }
-      
+
       // Aplicar configuración cargada
       this.isDarkMode = this.config.theme === 'dark';
-      this.applyTheme();
-      this.applyTextSize();
-      
     } catch (error) {
       console.error('Error loading configuration:', error);
       this.showToast('Error al cargar la configuración', 'danger');
@@ -261,25 +175,12 @@ export class ConfigurationComponent implements OnInit {
 
   async saveConfiguration() {
     try {
-      const user = await this.afAuth.currentUser;
-      
-      // Guardar en Firestore si el usuario está autenticado
-      if (user) {
-        await this.firestore
-          .collection('userConfigurations')
-          .doc(user.uid)
-          .set(this.config, { merge: true });
-      }
-      
-      // Guardar también localmente para acceso sin conexión
-      localStorage.setItem('appConfig', JSON.stringify(this.config));
-      
+      // Guardar en Preferences
+      await this.setPreference('appConfig', JSON.stringify(this.config));
       this.showToast('Configuración guardada exitosamente', 'success');
-      
       // Aplicar cambios
       this.applyTheme();
       this.applyTextSize();
-      
     } catch (error) {
       console.error('Error saving configuration:', error);
       this.showToast('Error al guardar la configuración', 'danger');
@@ -296,40 +197,20 @@ export class ConfigurationComponent implements OnInit {
           timezone: 'America/Mexico_City',
           theme: 'light',
           textSize: 2,
-          emailNotifications: true,
-          notificationEmail: this.currentUser?.Correo || '',
-          pushNotifications: false,
-          taskReminders: true,
-          reminderNewTasks: true,
-          reminderDeadlines: true,
-          reminderUpdates: true,
           autoSave: false,
           currency: 'MXN',
           dateFormat: 'DD/MM/YYYY',
           autoLogout: false,
           autoLogoutTime: '15',
-          dataSync: true,
-          syncInterval: '15'
+          debugMode: false
         };
-        
-        // Eliminar de Firestore
-        const user = await this.afAuth.currentUser;
-        if (user) {
-          await this.firestore
-            .collection('userConfigurations')
-            .doc(user.uid)
-            .delete();
-        }
-        
-        // Eliminar de almacenamiento local
-        localStorage.removeItem('appConfig');
-        
+        // Eliminar de Preferences
+        await Preferences.remove({ key: 'appConfig' });
         // Aplicar configuración predeterminada
         this.isDarkMode = false;
         this.applyTheme();
         this.applyTextSize();
         this.changeLanguage();
-        
         this.showToast('Configuración restablecida correctamente', 'success');
       } catch (error) {
         console.error('Error resetting configuration:', error);
@@ -365,96 +246,32 @@ export class ConfigurationComponent implements OnInit {
     document.body.classList.add(sizeClass);
   }
 
-  // Funcionalidad de notificaciones push
-  async updatePushNotifications() {
-    if (this.config.pushNotifications) {
-      this.showToast('Las notificaciones push se han habilitado', 'success');
-    }
-  }
-
   // Cambio de contraseña
-  async changePassword() {
+  changePassword() {
     const currentPassword = prompt('Ingrese su contraseña actual:');
     if (!currentPassword) return;
-    
     const newPassword = prompt('Ingrese su nueva contraseña:');
     if (!newPassword) return;
-    
     const confirmPassword = prompt('Confirme su nueva contraseña:');
     if (!confirmPassword) return;
-    
     if (newPassword !== confirmPassword) {
       this.showToast('Las contraseñas no coinciden', 'danger');
       return;
     }
-    
     if (newPassword.length < 6) {
       this.showToast('La contraseña debe tener al menos 6 caracteres', 'danger');
       return;
     }
-    
-    try {
-      const user = await this.afAuth.currentUser;
-      if (user && user.email) {
-        // Reautenticar para cambiar contraseña
-        const credentials = await this.afAuth.signInWithEmailAndPassword(
-          user.email, 
-          currentPassword
-        );
-        
-        await user.updatePassword(newPassword);
-        this.showToast('Contraseña actualizada correctamente', 'success');
-      }
-    } catch (error: any) {
-      console.error('Error changing password:', error);
-      if (error.code === 'auth/wrong-password') {
-        this.showToast('Contraseña actual incorrecta', 'danger');
-      } else {
-        this.showToast('Error al cambiar la contraseña', 'danger');
-      }
-    }
-  }
-
-  // Cierre de sesión
-  async logout() {
-    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-      try {
-        // Actualizar último estado antes de salir
-        if (this.config.autoSave) {
-          await this.saveConfiguration();
-        }
-        
-        // Limpiar sesión de Firebase
-        await this.afAuth.signOut();
-        
-        // Limpiar datos de sesión local
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userEmail');
-        
-        // Redireccionar al login
-        this.router.navigate(['/login']);
-      } catch (error) {
-        console.error('Error during logout:', error);
-        this.showToast('Error al cerrar sesión', 'danger');
-      }
-    }
-  }
-
-  // Cálculo de uso de almacenamiento
-  calculateStorageUsage() {
-    // Simulación del cálculo de almacenamiento
-    this.storageUsageText = `${(this.storageUsage * 100).toFixed(1)}% de espacio utilizado`;
+    // Simular cambio de contraseña sin acceder a la base de datos
+    this.showToast('Contraseña actualizada correctamente (simulado)', 'success');
   }
 
   // Limpiar caché
-  clearCache() {
+  async clearCache() {
     if (confirm('¿Estás seguro de que deseas limpiar la caché? Esto eliminará datos temporales.')) {
       try {
-        // Aquí se implementaría la lógica para limpiar el caché
-        // Por ejemplo, borrar datos temporales en localStorage
-        this.storageUsage = 0.05; // Reducir después de limpiar
-        this.calculateStorageUsage();
-        
+        // Limpiar datos temporales de la aplicación
+        // Esto usaría la API FileSystem de Capacitor en una aplicación real
         this.showToast('Caché limpiada correctamente', 'success');
       } catch (error) {
         console.error('Error clearing cache:', error);
@@ -486,46 +303,49 @@ export class ConfigurationComponent implements OnInit {
     if (this.inactivityTimer) {
       clearTimeout(this.inactivityTimer);
     }
-    
     // Eventos para reiniciar el temporizador de inactividad
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    
     // Tiempo de inactividad en minutos convertido a milisegundos
     const timeoutInMinutes = parseInt(this.config.autoLogoutTime);
     const timeoutInMs = timeoutInMinutes * 60 * 1000;
-    
     const resetInactivityTimer = () => {
       if (this.inactivityTimer) {
         clearTimeout(this.inactivityTimer);
       }
       this.inactivityTimer = setTimeout(() => this.autoLogoutDueToInactivity(), timeoutInMs);
     };
-    
     // Registrar eventos para reiniciar el temporizador
     events.forEach(event => {
       window.addEventListener(event, resetInactivityTimer, false);
     });
-    
     // Iniciar el temporizador
     resetInactivityTimer();
   }
 
   autoLogoutDueToInactivity() {
-    if (confirm('Tu sesión ha expirado por inactividad. ¿Deseas cerrar sesión o continuar?')) {
-      this.logout();
-    } else {
-      // Reiniciar el temporizador
-      this.setupAutoLogout();
-    }
+    // En lugar de cerrar sesión, solo mostramos un mensaje
+    this.showToast('Tu sesión ha expirado por inactividad. En una aplicación real, se cerraría la sesión.', 'warning');
+    // Reiniciar el temporizador
+    this.setupAutoLogout();
   }
 
   goBack(): void {
     if (this.userRole === 'admin') {
-      this.router.navigate(['/admin1']);
+      this.router.navigate(['/admin']);
     } else if (this.userRole === 'worker') {
       this.router.navigate(['/worker']);
     } else {
       this.router.navigate(['/']);
     }
+  }
+
+  // Métodos auxiliares para Capacitor Preferences
+  private async getPreference(key: string, defaultValue: string): Promise<string> {
+    const { value } = await Preferences.get({ key });
+    return value || defaultValue;
+  }
+
+  private async setPreference(key: string, value: string): Promise<void> {
+    await Preferences.set({ key, value });
   }
 }

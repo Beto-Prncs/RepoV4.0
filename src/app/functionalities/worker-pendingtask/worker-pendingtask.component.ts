@@ -44,6 +44,7 @@ export class WorkerPendingtaskComponent implements OnInit, OnDestroy {
     completionDescription: string = '';
   
     ngOnInit(): void {
+      console.log('Inicializando componente worker-Pendingtask')
       this.setupAuthListener();
     }
   

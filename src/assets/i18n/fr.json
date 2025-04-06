@@ -1,0 +1,40 @@
+{
+    "CONFIG": {
+      "GENERAL": "Général",
+      "APPEARANCE": "Apparence",
+      "REGIONAL": "Régional",
+      "SECURITY": "Sécurité",
+      "ADVANCED": "Avancé",
+      "COMPANY_NAME": "Nom de l'entreprise",
+      "ENTER_COMPANY_NAME": "Entrez le nom de l'entreprise",
+      "USER_INFO": "Informations utilisateur",
+      "NAME": "Nom",
+      "EMAIL": "Email",
+      "ROLE": "Rôle",
+      "DEPARTMENT": "Département",
+      "AUTO_SAVE": "Enregistrement automatique",
+      "APP_THEME": "Thème de l'application",
+      "LIGHT_MODE": "Mode clair",
+      "DARK_MODE": "Mode sombre",
+      "TEXT_SIZE": "Taille du texte",
+      "LANGUAGE": "Langue",
+      "TIMEZONE": "Fuseau horaire",
+      "DATE_FORMAT": "Format de date",
+      "CURRENCY": "Devise",
+      "CHANGE_PASSWORD": "Changer le mot de passe",
+      "AUTO_LOGOUT": "Déconnexion automatique",
+      "AUTO_LOGOUT_TIME": "Temps d'inactivité",
+      "MINUTES": "minutes",
+      "HOUR": "heure",
+      "ADMIN_OPTIONS": "Options d'administrateur",
+      "DEBUG_MODE": "Mode débogage",
+      "DEBUG_WARNING": "Le mode débogage peut affetar aux performances",
+      "CLEAR_CACHE": "Vider le cache",
+      "EXPORT_CONFIG": "Exporter la configuration",
+      "RESET_CONFIG": "Réinitialiser la configuration"
+    },
+    "COMMON": {
+      "BACK": "Retour",
+      "SAVE": "Enregistrer"
+    }
+}

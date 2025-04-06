@@ -1,0 +1,40 @@
+{
+    "CONFIG": {
+      "GENERAL": "General",
+      "APPEARANCE": "Appearance",
+      "REGIONAL": "Regional",
+      "SECURITY": "Security",
+      "ADVANCED": "Advanced",
+      "COMPANY_NAME": "Company Name",
+      "ENTER_COMPANY_NAME": "Enter company name",
+      "USER_INFO": "User Information",
+      "NAME": "Name",
+      "EMAIL": "Email",
+      "ROLE": "Role",
+      "DEPARTMENT": "Department",
+      "AUTO_SAVE": "Auto save",
+      "APP_THEME": "Application Theme",
+      "LIGHT_MODE": "Light mode",
+      "DARK_MODE": "Dark mode",
+      "TEXT_SIZE": "Text size",
+      "LANGUAGE": "Language",
+      "TIMEZONE": "Timezone",
+      "DATE_FORMAT": "Date format",
+      "CURRENCY": "Currency",
+      "CHANGE_PASSWORD": "Change password",
+      "AUTO_LOGOUT": "Auto logout",
+      "AUTO_LOGOUT_TIME": "Inactivity time",
+      "MINUTES": "minutes",
+      "HOUR": "hour",
+      "ADMIN_OPTIONS": "Admin options",
+      "DEBUG_MODE": "Debug mode",
+      "DEBUG_WARNING": "Debug mode may affect performance",
+      "CLEAR_CACHE": "Clear cache",
+      "EXPORT_CONFIG": "Export configuration",
+      "RESET_CONFIG": "Reset configuration"
+    },
+    "COMMON": {
+      "BACK": "Back",
+      "SAVE": "Save"
+    }
+  }
