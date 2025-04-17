@@ -93,7 +93,7 @@ export class WorkerCompleteTaskComponent implements OnInit, OnDestroy {
     switch (estado.toLowerCase()) {
       case 'completado':
         return 'status-completed';
-      case 'pendiente':
+      case 'pendiente':  
         return 'status-pending';
       default:
         return 'status-default';

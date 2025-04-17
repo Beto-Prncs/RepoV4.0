@@ -14,13 +14,18 @@ import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  doc,
+  updateDoc,
+  setDoc,
+  getDoc
 } from '@angular/fire/firestore';
 import { AuthService } from '../../services/auth.service';
 
 interface Usuario {
   Correo: string;
   Rol: string;
+  IdUsuario?: string; // Cambiado de uid a IdUsuario para reflejar el nombre real en la BD
 }
 
 @Component({
@@ -57,7 +62,6 @@ export class LoginComponent {
         this.usuario.email,
         this.usuario.password
       );
-
       await this.processUserLogin(userCredential.user);
     } catch (error: any) {
       this.handleAuthError(error);
@@ -68,14 +72,9 @@ export class LoginComponent {
     try {
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
-      
       const result = await signInWithPopup(this.auth, provider);
-      
       if (result.user) {
-        await this.processUserLogin(result.user).then((user) => {
-          console.log(user);
-        });
-;
+        await this.processUserLogin(result.user);
       } else {
         this.showAuthError('No se pudo obtener la información del usuario');
       }
@@ -90,20 +89,35 @@ export class LoginComponent {
         this.showAuthError('Correo electrónico no disponible');
         return;
       }
-
-      // Primero, verificar si el usuario existe en la base de datos
+  
+      // Verificar si el usuario existe en la base de datos usando el campo Correo
       const usuariosRef = collection(this.firestore, 'Usuario');
       const q = query(usuariosRef, where('Correo', '==', user.email));
-      
       const querySnapshot = await getDocs(q);
-      
+  
       if (!querySnapshot.empty) {
-        const userData = querySnapshot.docs[0].data() as Usuario;
+        const docSnapshot = querySnapshot.docs[0];
+        const userData = docSnapshot.data() as Usuario;
         
+        // Crear o actualizar documento utilizando el UID de autenticación como ID del documento
+        const userDocRef = doc(this.firestore, 'Usuario', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        
+        if (!userDocSnap.exists()) {
+          // Si no existe documento con el UID como ID, crear uno nuevo
+          await setDoc(userDocRef, {
+            ...userData,
+            Correo: user.email,
+            IdUsuario: user.uid
+          });
+          console.log('Documento de usuario creado con UID como ID:', user.uid);
+        }
+  
         // Almacenar información de usuario
         localStorage.setItem('userRole', userData.Rol);
         localStorage.setItem('userEmail', userData.Correo);
-
+        localStorage.setItem('userUid', user.uid);
+  
         // Redirección usando ngZone para manejar el contexto de Angular
         this.ngZone.run(() => {
           switch(userData.Rol) {
@@ -131,7 +145,6 @@ export class LoginComponent {
 
   private handleAuthError(error: any): void {
     this.showError = true;
-    
     switch (error.code) {
       case 'auth/user-not-found':
         this.errorMessage = 'Usuario no encontrado';
@@ -150,7 +163,6 @@ export class LoginComponent {
 
   private handleGoogleAuthError(error: any): void {
     this.showError = true;
-    
     switch (error.code) {
       case 'auth/popup-blocked':
         this.errorMessage = 'El popup fue bloqueado. Por favor, permite ventanas emergentes.';
