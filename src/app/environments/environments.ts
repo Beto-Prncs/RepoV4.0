@@ -6,6 +6,7 @@ export const environment = {
         projectId: "workflowdb-4122b",
         storageBucket: "workflowdb-4122b.firebasestorage.app",
         messagingSenderId: "1053802838055",
-        appId: "1:1053802838055:web:17ffaf05c2fe045c77b602"
+        appId: "1:1053802838055:web:17ffaf05c2fe045c77b602",
+        persistence: 'session'
       }
 }

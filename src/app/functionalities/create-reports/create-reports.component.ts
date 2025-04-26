@@ -355,6 +355,7 @@ export class CreateReportsComponent implements OnInit {
   }
 
   goBack(): void {
+    
     this.router.navigate(['/reportsInterface']);
  }
 }

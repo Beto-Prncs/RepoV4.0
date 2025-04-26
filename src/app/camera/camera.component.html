@@ -1,0 +1,59 @@
+<div class="camera-container">
+    <!-- Vista principal de la cámara o imagen seleccionada -->
+    <div class="main-image-container">
+      @if (selectedImage) {
+        <img [src]="selectedImage" alt="Imagen seleccionada" class="captured-image">
+      } @else if (imgUrl) {
+        <img [src]="imgUrl" alt="Última foto capturada" class="captured-image">
+      } @else {
+        <div class="placeholder">
+          <span class="placeholder-icon">📷</span>
+          <span class="placeholder-text">No hay imagen seleccionada</span>
+        </div>
+      }
+    </div>
+  
+    <!-- Botones de acción -->
+    <div class="actions-container">
+      <button (click)="takePicture()" class="take-picture-button" [disabled]="loading">
+        📷 Tomar Foto
+      </button>
+      
+      <button (click)="loadFromGallery()" class="load-gallery-button" [disabled]="loading">
+        📁 Cargar Imágenes
+      </button>
+      
+      @if (imageGallery.length > 0) {
+        <button (click)="clearGallery()" class="clear-gallery-button">
+          🗑️ Limpiar Galería
+        </button>
+      }
+    </div>
+  
+    <!-- Spinner de carga -->
+    @if (loading) {
+      <div class="loading-spinner">⌛</div>
+    }
+  
+    <!-- Mensaje de error -->
+    @if (errorMessage) {
+      <div class="error-message">
+        {{ errorMessage }}
+      </div>
+    }
+  
+    <!-- Galería de imágenes -->
+    @if (imageGallery.length > 0) {
+      <div class="gallery-section">
+        <div class="gallery-title">Galería de Imágenes ({{ imageGallery.length }})</div>
+        <div class="gallery-container">
+          @for (image of imageGallery; track $index; let i = $index) {
+            <div class="gallery-item" [class.selected]="selectedImage === image">
+              <img [src]="image" alt="Imagen {{ i + 1 }}" (click)="selectImage(image)">
+              <button class="delete-image-button" (click)="deleteImage(i)">×</button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>

@@ -4,15 +4,64 @@
       <img src="icons/logo_RepoS.png" alt="Repo System Logo" class="ImgRegural">
       <h1>Repo System</h1>
     </div>
-    
     <div class="header-controls">
       <div class="header-user-info">
         <div *ngIf="usuario" class="user-welcome">
-          <p class="welcome-message">Bienvenido, {{ usuario.Nombre }}</p>
-          <span class="user-username">{{ usuario.Username }}</span>
+          <p class="welcome-message">Bienvenido,</p>
+          <span class="user-username"> {{ usuario.Nombre }}</span>
         </div>
         <div *ngIf="!usuario" class="user-welcome">
           <p class="welcome-message">Cargando...</p>
+        </div>
+      </div>
+      
+      <!-- Dropdown menu para la configuración de usuario -->
+      <div class="user-profile-dropdown">
+        <div class="profile-toggle" (click)="toggleProfileMenu()">
+          <img 
+            [src]="usuario && usuario.Foto_Perfil ? usuario.Foto_Perfil : 'icons/default_profile.png'" 
+            alt="Foto de perfil" 
+            class="profile-image">
+          <span class="dropdown-arrow" [class.active]="isProfileMenuOpen">▼</span>
+        </div>
+        
+        <div class="profile-dropdown-menu" *ngIf="isProfileMenuOpen">
+          <div class="profile-header">
+            <div class="profile-photo-container">
+              <img 
+                [src]="usuario && usuario.Foto_Perfil ? usuario.Foto_Perfil : 'icons/default_profile.png'" 
+                alt="Foto de perfil" 
+                class="profile-image-large">
+              <button class="change-photo-btn" (click)="openPhotoSelector()">Cambiar foto</button>
+              <input 
+                type="file" 
+                #fileInput 
+                style="display: none" 
+                accept="image/*" 
+                (change)="onPhotoSelected($event)">
+            </div>
+            <div class="profile-info">
+              <p class="profile-name">{{ usuario?.Nombre }}</p>
+              <p class="profile-role">{{ usuario?.Rol }}</p>
+              <p class="profile-email">{{ usuario?.Correo }}</p>
+            </div>
+          </div>
+          
+          <div class="profile-menu-items">
+            <a class="profile-menu-item" (click)="navigateTo('/profile')">
+              <i class="profile-icon">👤</i>
+              <span>Mi Perfil</span>
+            </a>
+            <a class="profile-menu-item" (click)="navigateTo('/settings')">
+              <i class="profile-icon">⚙️</i>
+              <span>Configuración</span>
+            </a>
+            <hr class="menu-divider">
+            <a class="profile-menu-item logout-item" (click)="logout()">
+              <i class="profile-icon">🚪</i>
+              <span>Cerrar Sesión</span>
+            </a>
+          </div>
         </div>
       </div>
       
@@ -21,20 +70,20 @@
       </button>
     </div>
   </header>
-
+  
   <div class="analytics-preview">
     <img src="icons/reportA.jpg" alt="Analytics Preview" class="ImgRegular">
   </div>
-
+  
   <div *ngIf="isLoading" class="loading-state">
     <div class="spinner"></div>
     <p>Cargando dashboard...</p>
   </div>
-
+  
   <div *ngIf="!isLoading" class="dashboard-grid">
-    <div 
-      *ngFor="let item of menuItems" 
-      class="dashboard-card" 
+    <div
+      *ngFor="let item of menuItems"
+      class="dashboard-card"
       (click)="navigateTo(item.route)"
     >
       <div class="card-icon">

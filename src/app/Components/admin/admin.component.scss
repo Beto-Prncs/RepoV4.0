@@ -20,8 +20,10 @@
   backdrop-filter: blur(10px);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 100;
 
-  > div:first-child {
+  .header-logo-section {
     display: flex;
     align-items: center;
   }
@@ -53,48 +55,56 @@
   .header-controls {
     display: flex;
     align-items: center;
+    gap: 20px;
+    z-index: 110;
+  }
+}
+
+.header-user-info {
+  text-align: right;
+  padding-right: 15px;
+}
+
+.user-welcome {
+  display: flex;
+  flex-direction: column;
+  
+  .welcome-message {
+    margin: 0 0 3px 0;
+    font-size: 0.95rem;
+    color: #555;
+  }
+  
+  .user-username {
+    font-weight: bold;
+    color: #1a237e;
+    font-size: 1.1rem;
   }
 }
 
 .menu-button {
-  background: rgba(26, 35, 126, 0.05);
+  background: #e53935;
+  color: white;
   border: none;
   cursor: pointer;
-  padding: 0.75rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 12px;
   transition: all 0.3s ease;
-
+  font-weight: 600;
+  min-width: 130px;
+  white-space: nowrap;
+  z-index: 120;
+  
   &:hover {
-    background: rgba(26, 35, 126, 0.1);
-    transform: scale(1.05);
+    background: #c62828;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
-
+  
   .menu-icon {
-    display: block;
-    width: 24px;
-    height: 2px;
-    background: #1a237e;
-    position: relative;
-    transition: all 0.3s ease;
-    
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      width: 24px;
-      height: 2px;
-      background: #1a237e;
-      left: 0;
-      transition: all 0.3s ease;
-    }
-    
-    &::before { top: -6px; }
-    &::after { bottom: -6px; }
-  }
-
-  &:hover .menu-icon {
-    &::before { top: -8px; }
-    &::after { bottom: -8px; }
+    display: inline-block;
+    color: white;
+    font-size: 0.95rem;
   }
 }
 
@@ -106,6 +116,8 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   overflow: hidden;
+  position: relative;
+  z-index: 50;
 
   &:hover {
     transform: translateY(-5px);
@@ -132,6 +144,8 @@
   gap: 2rem;
   margin-top: 2rem;
   perspective: 1000px;
+  position: relative;
+  z-index: 50;
 }
 
 .dashboard-card {
@@ -202,6 +216,37 @@
     transition: all 0.3s ease;
     position: relative;
   }
+  
+  .card-description {
+    color: #666;
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  position: relative;
+  z-index: 50;
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #1a237e;
+    border-top: 4px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Responsive Adjustments */
@@ -222,13 +267,29 @@
 
   .header {
     flex-direction: column;
-    gap: 1rem;
+    align-items: center;
+    gap: 1.5rem;
     text-align: center;
+    padding: 1.5rem;
 
+    .header-logo-section {
+      margin-bottom: 0.5rem;
+    }
+
+    .header-controls {
+      flex-direction: column;
+      gap: 15px;
+    }
+    
     h1::after {
       left: 50%;
       transform: translateX(-50%);
     }
+  }
+
+  .header-user-info {
+    text-align: center;
+    padding-right: 0;
   }
 
   .dashboard-grid {
@@ -270,25 +331,188 @@
   }
 }
 
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 300px;
 
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid #1a237e;
-    border-top: 4px solid transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
+
+
+
+
+
+/* Estilos para el menú desplegable de perfil */
+.user-profile-dropdown {
+  position: relative;
+  margin-right: 15px;
+}
+
+.profile-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
   }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.profile-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-arrow {
+  margin-left: 5px;
+  font-size: 12px;
+  transition: transform 0.3s;
+
+  &.active {
+    transform: rotate(180deg);
+  }
+}
+
+.profile-dropdown-menu {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 300px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.profile-header {
+  padding: 20px;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.profile-photo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.profile-image-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  margin-bottom: 10px;
+}
+
+.change-photo-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #0069d9;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+}
+
+.profile-info {
+  text-align: center;
+  width: 100%;
+}
+
+.profile-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 5px;
+}
+
+.profile-role {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0 0 5px;
+}
+
+.profile-email {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0;
+  word-break: break-all;
+}
+
+.profile-menu-items {
+  padding: 10px 0;
+}
+
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #343a40;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #f1f3f5;
+  }
+}
+
+.profile-icon {
+  margin-right: 10px;
+  font-size: 18px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: #e9ecef;
+  margin: 8px 0;
+  border: none;
+}
+
+.logout-item {
+  color: #dc3545;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilos para cuando se está subiendo una imagen */
+.profile-photo-container.uploading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Asegúrate de que estos estilos sean compatibles con los existentes */
+.header-controls {
+  display: flex;
+  align-items: center;
 }

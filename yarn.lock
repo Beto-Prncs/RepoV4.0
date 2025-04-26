@@ -158,6 +158,14 @@
   optionalDependencies:
     lmdb "3.2.6"
 
+"@angular/cdk@^19.2.11":
+  version "19.2.11"
+  resolved "https://registry.npmjs.org/@angular/cdk/-/cdk-19.2.11.tgz"
+  integrity sha512-G568yWIJlnsuS563WxvCofmxc1405+wRQvDGQ32+qWOblJScFkHgr4jeDkZGcyt/r8OudaW0H0/rNeg1dzdnIQ==
+  dependencies:
+    parse5 "^7.1.2"
+    tslib "^2.3.0"
+
 "@angular/cli@^19.0.3":
   version "19.2.6"
   resolved "https://registry.npmjs.org/@angular/cli/-/cli-19.2.6.tgz"
@@ -181,7 +189,7 @@
     symbol-observable "4.0.0"
     yargs "17.7.2"
 
-"@angular/common@^19.0.0", "@angular/common@>=16", "@angular/common@>=17.0.0 <21.0.0", "@angular/common@19.2.5":
+"@angular/common@^19.0.0", "@angular/common@^19.0.0 || ^20.0.0", "@angular/common@>=16", "@angular/common@>=17.0.0 <21.0.0", "@angular/common@19.2.5":
   version "19.2.5"
   resolved "https://registry.npmjs.org/@angular/common/-/common-19.2.5.tgz"
   integrity sha512-vFCBdas4C5PxP6ts/4TlRddWD3DUmI3aaO0QZdZvqyLHy428t84ruYdsJXKaeD8ie2U4/9F3a1tsklclRG/BBA==
@@ -209,7 +217,7 @@
   dependencies:
     tslib "^2.3.0"
 
-"@angular/core@^19.0.0", "@angular/core@>=16", "@angular/core@>=16.0.0", "@angular/core@>=17.0.0 <21.0.0", "@angular/core@19.2.5":
+"@angular/core@^19.0.0", "@angular/core@^19.0.0 || ^20.0.0", "@angular/core@>=16", "@angular/core@>=16.0.0", "@angular/core@>=17.0.0 <21.0.0", "@angular/core@19.2.5":
   version "19.2.5"
   resolved "https://registry.npmjs.org/@angular/core/-/core-19.2.5.tgz"
   integrity sha512-NNEz1sEZz1mBpgf6Tz3aJ9b8KjqpTiMYhHfCYA9h9Ipe4D8gUmOsvPHPK2M755OX7p7PmUmzp1XCUHYrZMVHRw==
@@ -1083,6 +1091,11 @@
   version "7.2.0"
   resolved "https://registry.npmjs.org/@capacitor/android/-/android-7.2.0.tgz"
   integrity sha512-zdhEy3jZPG5Toe/pGzKtDgIiBGywjaoEuQWnGVjBYPlSAEUtAhpZ2At7V0SCb26yluAuzrAUV0Ue+LQeEtHwFQ==
+
+"@capacitor/browser@^7.0.1":
+  version "7.0.1"
+  resolved "https://registry.npmjs.org/@capacitor/browser/-/browser-7.0.1.tgz"
+  integrity sha512-N6KEVLw2enTnourQzYJLvAkSds2Ed21zqsvHnSImrVDenzX8fUj032kMt4EdewmxfxiEwRa911BT1VOPBi0fEA==
 
 "@capacitor/camera@^7.0.1":
   version "7.0.1"
@@ -5968,7 +5981,7 @@ parse5-sax-parser@^7.0.0:
   dependencies:
     parse5 "^7.0.0"
 
-parse5@^7.0.0:
+parse5@^7.0.0, parse5@^7.1.2:
   version "7.2.1"
   resolved "https://registry.npmjs.org/parse5/-/parse5-7.2.1.tgz"
   integrity sha512-BuBYQYlv1ckiPdQi/ohiivi9Sagc9JG+Ozs0r7b/0iK3sKmrb0b9FdWdBbOdx6hBCM/F9Ir82ofnBhtZOjCRPQ==

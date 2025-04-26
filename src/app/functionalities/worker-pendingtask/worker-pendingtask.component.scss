@@ -78,7 +78,7 @@ $transition: all 0.3s ease;
   
   &.alert-error {
     background-color: rgba($error-color, 0.1);
-    color: color.adjust($error-color, $lightness: -10%); // Fixed: replaced darken with color.adjust
+    color: color.adjust($error-color, $lightness: -10%);
     border-left: 4px solid $error-color;
     
     .alert-icon {
@@ -88,7 +88,7 @@ $transition: all 0.3s ease;
   
   &.alert-success {
     background-color: rgba($success-color, 0.1);
-    color: color.adjust($success-color, $lightness: -10%); // Fixed: replaced darken with color.adjust
+    color: color.adjust($success-color, $lightness: -10%);
     border-left: 4px solid $success-color;
     
     .alert-icon {
@@ -153,10 +153,16 @@ $transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   border: 1px solid rgba($primary-color, 0.1);
+  cursor: pointer;
   
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 25px rgba($primary-color, 0.15);
+  }
+  
+  &.selected {
+    border: 2px solid $primary-color;
+    background-color: $primary-light;
   }
   
   // Card Header
@@ -295,30 +301,30 @@ $transition: all 0.3s ease;
   }
 }
 
-// Signature Pad
-.signature-container {
-  .signature-pad-container {
-    background-color: white;
-    border: 1px solid rgba($primary-color, 0.2);
-    border-radius: $border-radius;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
+// Images Section
+.images-section {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border-radius: $border-radius;
+  background-color: white;
+  border: 1px solid $primary-light;
+  
+  h4 {
+    margin-top: 0;
+    color: $primary-dark;
+    margin-bottom: 1rem;
   }
   
-  .signature-pad {
-    width: 100%;
-    height: 200px;
-    touch-action: none;
-  }
-  
-  .signature-actions {
+  .image-input {
+    margin-bottom: 1rem;
     display: flex;
-    justify-content: flex-end;
+    gap: 0.75rem;
+    align-items: center;
     
-    .btn-clear {
+    .btn-upload {
       padding: 0.5rem 1rem;
-      background-color: rgba($error-color, 0.1);
-      color: $error-color;
+      background-color: $primary-color;
+      color: white;
       border: none;
       border-radius: $border-radius;
       font-weight: 500;
@@ -326,7 +332,51 @@ $transition: all 0.3s ease;
       transition: $transition;
       
       &:hover {
-        background-color: rgba($error-color, 0.2);
+        background-color: $primary-dark;
+      }
+    }
+  }
+  
+  .image-previews {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+    
+    .image-preview-container {
+      position: relative;
+      border-radius: $border-radius;
+      overflow: hidden;
+      aspect-ratio: 1;
+      border: 1px solid $primary-light;
+      
+      .image-preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .btn-remove-image {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: $error-color;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: $transition;
+        
+        &:hover {
+          opacity: 1;
+          transform: scale(1.1);
+        }
       }
     }
   }
@@ -337,6 +387,7 @@ $transition: all 0.3s ease;
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+  margin-top: 1.5rem;
   
   button {
     flex: 1;
@@ -387,7 +438,7 @@ $transition: all 0.3s ease;
   }
 }
 
-// PDF Modal
+// PDF/Camera Modal
 .pdf-modal {
   position: fixed;
   top: 0;
@@ -491,88 +542,36 @@ $transition: all 0.3s ease;
   }
 }
 
-// Images Section
-.images-section {
-  margin-top: 1.5rem;
-  padding: 1.25rem;
-  border-radius: $border-radius;
-  background-color: white;
-  border: 1px solid $primary-light;
+// Vista previa del reporte
+.preview-content {
+  padding: 1.5rem;
+  
+  h3 {
+    color: $primary-dark;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid $primary-light;
+  }
+  
+  p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    
+    strong {
+      color: $primary-color;
+      font-weight: 600;
+    }
+  }
   
   h4 {
-    margin-top: 0;
     color: $primary-dark;
-    margin-bottom: 1rem;
-  }
-  
-  .image-input {
-    margin-bottom: 1rem;
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    
-    .btn-upload {
-      padding: 0.5rem 1rem;
-      background-color: $primary-color;
-      color: white;
-      border: none;
-      border-radius: $border-radius;
-      font-weight: 500;
-      cursor: pointer;
-      transition: $transition;
-      
-      &:hover {
-        background-color: $primary-dark;
-      }
-    }
-  }
-  
-  .image-previews {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 0.75rem;
-    
-    .image-preview-container {
-      position: relative;
-      border-radius: $border-radius;
-      overflow: hidden;
-      aspect-ratio: 1;
-      border: 1px solid $primary-light;
-      
-      .image-preview {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      
-      .btn-remove-image {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: $error-color;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        opacity: 0.8;
-        transition: $transition;
-        
-        &:hover {
-          opacity: 1;
-          transform: scale(1.1);
-        }
-      }
-    }
+    font-size: 1.2rem;
+    margin: 1.5rem 0 1rem;
   }
 }
 
-// Keyframes
+// Animaciones
 @keyframes spin {
   to {
     transform: rotate(360deg);

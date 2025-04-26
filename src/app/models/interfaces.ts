@@ -60,3 +60,4 @@ export interface Usuario {
     materialesUtilizados: string;
     codigoQR: string;
   }
+
