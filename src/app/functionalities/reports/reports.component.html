@@ -6,49 +6,18 @@
     </svg>
     Atrás
   </button>
- 
+
   <header class="reports-header">
     <h1>Historial de Reportes</h1>
     <div class="search-bar">
-      <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar reportes..." class="search-input">
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" 
+        placeholder="Buscar por título, descripción o trabajador..." class="search-input">
       <button class="search-button">
         <i class="fas fa-search"></i>
       </button>
     </div>
   </header>
- 
-  <div class="reports-content">
-    <div class="reports-table">
-      <div class="table-header">
-        <div class="header-cell">Empleado</div>
-        <div class="header-cell">Título</div>
-        <div class="header-cell">Fecha</div>
-        <div class="header-cell">Estado</div>
-        <div class="header-cell">Acciones</div>
-      </div>
- 
-      <div class="table-body">
-        @for (report of filterReports(); track report.id) {
-          <div class="table-row">
-            <div class="cell">{{report.employeeName}}</div>
-            <div class="cell">{{report.title}}</div>
-            <div class="cell">{{formatDate(report.date)}}</div>
-            <div class="cell">
-              <span class="status-badge" [class]="report.status.toLowerCase()">
-                {{report.status}}
-              </span>
-            </div>
-            <div class="cell actions">
-              <button class="view-button" (click)="openPdfPreview(report)">
-                <i class="fas fa-eye"></i> Ver PDF
-              </button>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  </div>
- 
+
   <!-- Navegación de tipo de reporte -->
   <nav class="task-type-nav">
     <button (click)="setView('pending')" [class.active]="currentView === 'pending'">
@@ -58,21 +27,117 @@
       Reportes Completados
     </button>
   </nav>
- 
-  <!-- Contenido según tipo seleccionado -->
-  <div class="task-content">
-    <div *ngIf="currentView === 'pending'" class="tasks-view">
+
+  <!-- Filtros avanzados -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label for="company-filter">Empresa</label>
+      <select id="company-filter" [(ngModel)]="selectedCompany" (change)="onCompanyFilterChange(selectedCompany)">
+        <option value="">Todas las empresas</option>
+        @for (company of companies$ | async; track company.IdEmpresa) {
+          <option [value]="company.IdEmpresa">{{ company.Nombre }}</option>
+        }
+      </select>
     </div>
-    <div *ngIf="currentView === 'completed'" class="tasks-view">
+
+    <div class="filter-group">
+      <label for="worker-filter">Trabajador</label>
+      <select id="worker-filter" [(ngModel)]="selectedWorker" (change)="onWorkerFilterChange(selectedWorker)">
+        <option value="">Todos los trabajadores</option>
+        @for (worker of workers$ | async; track worker.IdUsuario) {
+          <option [value]="worker.IdUsuario">{{ worker.Nombre }}</option>
+        }
+      </select>
     </div>
+
+    <div class="filter-group">
+      <label for="priority-filter">Prioridad</label>
+      <select id="priority-filter" [(ngModel)]="selectedPriority" (change)="onPriorityFilterChange(selectedPriority)">
+        <option value="">Todas las prioridades</option>
+        <option value="Alta">Alta</option>
+        <option value="Media">Media</option>
+        <option value="Baja">Baja</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="date-filter">Fecha</label>
+      <select id="date-filter" [(ngModel)]="selectedDateFilter" (change)="onDateFilterChange(selectedDateFilter)">
+        <option value="">Todas las fechas</option>
+        <option value="today">Hoy</option>
+        <option value="yesterday">Ayer</option>
+        <option value="week">Última semana</option>
+        <option value="month">Último mes</option>
+      </select>
+    </div>
+
+    <button class="btn-reset-filters" (click)="resetFilters()">
+      Limpiar filtros
+    </button>
   </div>
- 
-  <!-- Modal de PDF -->
+
+  <!-- Mensajes de estado -->
+  @if (errorMessage) {
+    <div class="error-message alert">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (isLoading) {
+    <div class="loading-indicator">
+      <div class="spinner"></div>
+      <span>Cargando reportes...</span>
+    </div>
+  }
+
+  <!-- Tabla de reportes -->
+  <div class="reports-content">
+    @if (filteredReports.length === 0 && !isLoading) {
+      <div class="no-reports">
+        <i class="fas fa-folder-open"></i>
+        <p>No hay reportes {{ currentView === 'pending' ? 'pendientes' : 'completados' }} que coincidan con los criterios de búsqueda</p>
+      </div>
+    } @else {
+      <div class="reports-table">
+        <div class="table-header">
+          <div class="header-cell">Título</div>
+          <div class="header-cell">Fecha</div>
+          <div class="header-cell">Empresa</div>
+          <div class="header-cell">Trabajador</div>
+          <div class="header-cell">Prioridad</div>
+          <div class="header-cell">Acciones</div>
+        </div>
+        <div class="table-body">
+          @for (report of filteredReports; track report.IdReporte) {
+            <div class="table-row">
+              <div class="cell">{{ report.Tipo_Trabajo }}</div>
+              <div class="cell">{{ formatDate(currentView === 'completed' ? report.fechaCompletado : report.fecha) }}</div>
+              <div class="cell">{{ getCompanyName(report.IdEmpresa) | async }}</div>
+              <div class="cell">{{ getWorkerName(report.IdUsuario) | async }}</div>
+              <div class="cell">
+                <span class="priority-badge {{ report.priority?.toLowerCase() }}">
+                  {{ report.priority }}
+                </span>
+              </div>
+              <div class="cell actions">
+                <button class="view-button" (click)="openPdfPreview(report)">
+                  <i class="fas fa-eye"></i> Ver Reporte
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Modal de vista previa del reporte -->
   @if (selectedReport && safePdfUrl) {
     <div class="pdf-modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>{{selectedReport.title}}</h2>
+          <h2>{{ selectedReport.Tipo_Trabajo }}</h2>
           <button class="close-button" (click)="closePreview()">
             <i class="fas fa-times"></i>
           </button>
@@ -85,4 +150,4 @@
       </div>
     </div>
   }
- </div>
+</div>
