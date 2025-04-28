@@ -29,18 +29,18 @@ export class WorkerPendingTaskComponent implements OnInit {
   showCameraModal: boolean = false;
   showPreviewModal: boolean = false;
   evidenceImages: string[] = [];
-
+  
   constructor(
     private router: Router,
     private firestore: Firestore,
     private formBuilder: FormBuilder
   ) {}
-
+  
   ngOnInit() {
     this.loadPendingTasks();
     this.initForm();
   }
-
+  
   // Inicializar formulario
   initForm() {
     this.reportForm = this.formBuilder.group({
@@ -48,7 +48,7 @@ export class WorkerPendingTaskComponent implements OnInit {
       status: ['completed', Validators.required]
     });
   }
-
+  
   // Cargar tareas pendientes
   async loadPendingTasks() {
     try {
@@ -56,7 +56,6 @@ export class WorkerPendingTaskComponent implements OnInit {
       const tasksRef = collection(this.firestore, 'Tasks');
       const q = query(tasksRef, where('status', '==', 'pending'));
       const querySnapshot = await getDocs(q);
-      
       this.pendingTasks = [];
       querySnapshot.forEach((doc) => {
         this.pendingTasks.push({
@@ -71,7 +70,7 @@ export class WorkerPendingTaskComponent implements OnInit {
       this.isLoading = false;
     }
   }
-
+  
   // Seleccionar una tarea
   selectTask(task: any) {
     this.selectedTask = task;
@@ -80,19 +79,29 @@ export class WorkerPendingTaskComponent implements OnInit {
       status: 'completed' // Por defecto, establecemos el estado como completado
     });
   }
-
+  
   // Métodos para el modal de cámara
   openCameraModal() {
     this.showCameraModal = true;
+    // Si ya hay un componente de cámara y está inicializado,
+    // asegurarse de que esté en el modo de cámara
+    if (this.cameraComponent) {
+      this.cameraComponent.switchTab('camera');
+    }
   }
-
+  
   closeCameraModal() {
     this.showCameraModal = false;
+    // Detener la cámara cuando se cierra el modal
+    if (this.cameraComponent) {
+      this.cameraComponent.stopCamera();
+    }
   }
-
+  
   // Guardar imágenes del componente de cámara
   saveEvidenceImages() {
     if (this.cameraComponent && this.cameraComponent.imageGallery.length > 0) {
+      // Copiar imágenes del componente de cámara a las evidencias
       this.evidenceImages = [...this.cameraComponent.imageGallery];
       this.closeCameraModal();
     } else {
@@ -100,12 +109,12 @@ export class WorkerPendingTaskComponent implements OnInit {
       setTimeout(() => this.errorMessage = '', 3000);
     }
   }
-
+  
   // Eliminar imagen de evidencia
   removeEvidenceImage(index: number) {
     this.evidenceImages.splice(index, 1);
   }
-
+  
   // Métodos para el modal de vista previa
   previewReport() {
     if (this.reportForm.valid && this.selectedTask) {
@@ -115,11 +124,11 @@ export class WorkerPendingTaskComponent implements OnInit {
       setTimeout(() => this.errorMessage = '', 3000);
     }
   }
-
+  
   closePreviewModal() {
     this.showPreviewModal = false;
   }
-
+  
   // Método para enviar el reporte
   async submitReport() {
     if (!this.reportForm.valid) {
@@ -127,7 +136,7 @@ export class WorkerPendingTaskComponent implements OnInit {
       setTimeout(() => this.errorMessage = '', 3000);
       return;
     }
-
+    
     if (!this.selectedTask) {
       this.errorMessage = 'Debes seleccionar una tarea para completar';
       setTimeout(() => this.errorMessage = '', 3000);
@@ -140,10 +149,8 @@ export class WorkerPendingTaskComponent implements OnInit {
       
       // Subir imágenes a Firebase Storage
       const uploadedImageUrls: string[] = [];
-      
       if (this.evidenceImages.length > 0) {
         const storage = getStorage();
-        
         for (const imageDataUrl of this.evidenceImages) {
           // Convertir Data URL a Blob
           const response = await fetch(imageDataUrl);
@@ -183,7 +190,6 @@ export class WorkerPendingTaskComponent implements OnInit {
         this.successMessage = '';
         this.router.navigate(['/worker-completetask']); // Opcional: redireccionar
       }, 2000);
-      
     } catch (error) {
       console.error('Error al enviar reporte:', error);
       this.errorMessage = 'Error al enviar el reporte. Por favor intenta nuevamente.';
@@ -192,7 +198,7 @@ export class WorkerPendingTaskComponent implements OnInit {
       this.isLoading = false;
     }
   }
-
+  
   // Volver a la página principal
   goBack() {
     this.router.navigate(['/worker']);

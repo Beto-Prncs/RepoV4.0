@@ -1,4 +1,4 @@
-<!-- worker-pending-task.component.html adaptado al SCSS proporcionado -->
+<!-- worker-pending-task.component.html adaptado con componente de cámara -->
 <div class="tasks-container">
   <!-- Botón de regreso -->
   <button (click)="goBack()" class="btn-back">
@@ -8,9 +8,8 @@
     </svg>
     Volver
   </button>
-
   <h2>Trabajos Pendientes</h2>
-
+  
   <!-- Mensajes de alerta -->
   @if (errorMessage) {
     <div class="alert alert-error">
@@ -22,7 +21,7 @@
       {{ errorMessage }}
     </div>
   }
-
+  
   @if (successMessage) {
     <div class="alert alert-success">
       <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -32,7 +31,7 @@
       {{ successMessage }}
     </div>
   }
-
+  
   <!-- Estado de carga -->
   @if (isLoading) {
     <div class="loading-state">
@@ -77,37 +76,38 @@
       }
     </div>
   }
-
+  
   <!-- Formulario de reporte para tarea seleccionada -->
   @if (selectedTask) {
     <h2>Completar tarea: {{ selectedTask.title }}</h2>
-
     <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
       <div class="completion-form">
         <div class="form-group">
           <label for="notes">
             Notas de finalización <span class="required">*</span>
           </label>
-          <textarea 
-            id="notes" 
-            formControlName="notes" 
-            rows="4" 
+          <textarea
+            id="notes"
+            formControlName="notes"
+            rows="4"
             [class.error]="reportForm.get('notes')?.invalid && reportForm.get('notes')?.touched"
             placeholder="Describe cómo se completó la tarea..."></textarea>
-          
           @if (reportForm.get('notes')?.invalid && reportForm.get('notes')?.touched) {
             <span class="error-text">Este campo es requerido</span>
           }
           <span class="helper-text">Describe detalladamente cómo se resolvió la tarea</span>
         </div>
       </div>
-
+      
       <!-- Sección de imágenes/evidencias -->
       <div class="images-section">
         <h4>Evidencia fotográfica</h4>
-        
         <div class="image-input">
           <button type="button" class="btn-upload" (click)="openCameraModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
             Agregar foto
           </button>
         </div>
@@ -123,7 +123,7 @@
           </div>
         }
       </div>
-
+      
       <!-- Acciones de tarea -->
       <div class="task-actions">
         <button type="button" class="btn-preview" (click)="previewReport()" [disabled]="reportForm.invalid">
@@ -140,20 +140,19 @@
       </div>
     </form>
   }
-
+  
   <!-- Modal de la cámara -->
   @if (showCameraModal) {
     <div class="pdf-modal">
-      <div class="pdf-modal-content">
+      <div class="pdf-modal-content camera-modal-content">
         <div class="pdf-modal-header">
           <h3>Capturar evidencia fotográfica</h3>
           <button class="btn-close" (click)="closeCameraModal()">&times;</button>
         </div>
-        
         <div class="pdf-modal-body">
+          <!-- Componente de cámara -->
           <app-camera></app-camera>
         </div>
-        
         <div class="pdf-modal-footer">
           <button class="btn-cancel" (click)="closeCameraModal()">Cancelar</button>
           <button class="btn-confirm" (click)="saveEvidenceImages()">Guardar imágenes</button>
@@ -161,7 +160,7 @@
       </div>
     </div>
   }
-
+  
   <!-- Modal de vista previa (opcional) -->
   @if (showPreviewModal) {
     <div class="pdf-modal">
@@ -170,14 +169,12 @@
           <h3>Vista previa del reporte</h3>
           <button class="btn-close" (click)="closePreviewModal()">&times;</button>
         </div>
-        
         <div class="pdf-modal-body">
           <!-- Contenido de la vista previa -->
           <div class="preview-content">
             <h3>{{ selectedTask.title }}</h3>
             <p><strong>Notas:</strong> {{ reportForm.value.notes }}</p>
             <p><strong>Estado:</strong> Completado</p>
-            
             @if (evidenceImages.length > 0) {
               <h4>Evidencias</h4>
               <div class="image-previews">
@@ -190,7 +187,6 @@
             }
           </div>
         </div>
-        
         <div class="pdf-modal-footer">
           <button class="btn-cancel" (click)="closePreviewModal()">Cerrar</button>
           <button class="btn-confirm" (click)="submitReport()">Enviar reporte</button>

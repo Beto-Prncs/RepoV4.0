@@ -108,40 +108,30 @@ export class AuthService {
       // Capturar la URL actual para preservar la ruta base
       const baseUrl = window.location.origin;
       
-      // 1. Limpiar estado local primero
+      // 1. Limpieza de estados locales
       this.currentUserSubject.next(null);
-      
-      // 2. Eliminar todos los datos locales
       localStorage.clear();
       sessionStorage.clear();
       
-      // 3. Limpiar específicamente los tokens de Firebase
-      this.clearFirebaseTokens();
-      
-      // 4. Limpiar cookies específicas de autenticación
-      this.clearAuthCookies();
-      
-      // 5. Limpiar estado de Google Auth
-      await this.cleanGoogleAuth();
-      
-      // 6. Cerrar sesión en Firebase
+      // 2. Limpieza específica de Firebase
       await this.auth.signOut();
       
-      // 7. Limpieza para Capacitor (solo en móvil)
-      if (Capacitor.isNativePlatform()) {
-        await this.cleanCapacitorAuth();
-      }
+      // 3. Limpiar IndexedDB de manera más efectiva
+      const databases = ['firebaseLocalStorageDb', 'firebaseAuth', 'firebase-installations-database'];
+      databases.forEach(dbName => {
+        const deleteRequest = indexedDB.deleteDatabase(dbName);
+        deleteRequest.onsuccess = () => console.log(`${dbName} eliminada correctamente`);
+        deleteRequest.onerror = () => console.warn(`Error al eliminar ${dbName}`);
+      });
       
-      // 8. Usar técnica de IndexedDB para forzar la limpieza de tokens persistentes
-      await this.clearIndexedDB();
-      
-      // 9. Método más agresivo: Forzar recarga completa y eliminar caché
-      // Esto es más efectivo que solo cambiar la URL
-      window.location.href = baseUrl + '/login?forceRefresh=true&nocache=' + new Date().getTime();
+      // 4. Redirección con parámetros para forzar recarga y evitar caché
+      setTimeout(() => {
+        window.location.href = `${baseUrl}/login?forceRefresh=true&t=${Date.now()}`;
+      }, 300); // Pequeño retraso para asegurar que todo se limpie
     } catch (error) {
-      console.error('Error completo al cerrar sesión:', error);
-      // Incluso si hay un error, intentar redirigir
-      window.location.href = '/login?error=true&nocache=' + new Date().getTime();
+      console.error('Error al cerrar sesión:', error);
+      // Redirección en caso de error
+      window.location.href = '/login?error=true&t=' + Date.now();
     }
   }
   private clearFirebaseTokens(): void {

@@ -1,59 +1,82 @@
+<!-- camera.component.html -->
 <div class="camera-container">
-    <!-- Vista principal de la cámara o imagen seleccionada -->
-    <div class="main-image-container">
-      @if (selectedImage) {
-        <img [src]="selectedImage" alt="Imagen seleccionada" class="captured-image">
-      } @else if (imgUrl) {
-        <img [src]="imgUrl" alt="Última foto capturada" class="captured-image">
-      } @else {
-        <div class="placeholder">
-          <span class="placeholder-icon">📷</span>
-          <span class="placeholder-text">No hay imagen seleccionada</span>
-        </div>
-      }
-    </div>
-  
-    <!-- Botones de acción -->
-    <div class="actions-container">
-      <button (click)="takePicture()" class="take-picture-button" [disabled]="loading">
-        📷 Tomar Foto
-      </button>
-      
-      <button (click)="loadFromGallery()" class="load-gallery-button" [disabled]="loading">
-        📁 Cargar Imágenes
-      </button>
-      
-      @if (imageGallery.length > 0) {
-        <button (click)="clearGallery()" class="clear-gallery-button">
-          🗑️ Limpiar Galería
-        </button>
-      }
-    </div>
-  
-    <!-- Spinner de carga -->
-    @if (loading) {
-      <div class="loading-spinner">⌛</div>
-    }
-  
-    <!-- Mensaje de error -->
-    @if (errorMessage) {
-      <div class="error-message">
-        {{ errorMessage }}
-      </div>
-    }
-  
-    <!-- Galería de imágenes -->
-    @if (imageGallery.length > 0) {
-      <div class="gallery-section">
-        <div class="gallery-title">Galería de Imágenes ({{ imageGallery.length }})</div>
-        <div class="gallery-container">
-          @for (image of imageGallery; track $index; let i = $index) {
-            <div class="gallery-item" [class.selected]="selectedImage === image">
-              <img [src]="image" alt="Imagen {{ i + 1 }}" (click)="selectImage(image)">
-              <button class="delete-image-button" (click)="deleteImage(i)">×</button>
-            </div>
-          }
-        </div>
-      </div>
-    }
+  <!-- Pestañas para alternar entre cámara y galería -->
+  <div class="camera-tabs">
+    <button class="tab-button" [class.active]="selectedTab === 'camera'" (click)="switchTab('camera')">
+      <i class="fa fa-camera"></i> Cámara
+    </button>
+    <button class="tab-button" [class.active]="selectedTab === 'gallery'" (click)="switchTab('gallery')">
+      <i class="fa fa-images"></i> Galería 
+      <span *ngIf="imageGallery.length > 0" class="badge">{{ imageGallery.length }}</span>
+    </button>
   </div>
+
+  <!-- Mensaje de error de cámara si existe -->
+  <div class="camera-error" *ngIf="cameraError">
+    <p>{{ cameraError }}</p>
+  </div>
+
+  <!-- Vista de cámara -->
+  <div class="camera-view" *ngIf="selectedTab === 'camera'">
+    <!-- En navegadores web, mostrar el video en vivo -->
+    <div class="web-camera" *ngIf="!isMobile">
+      <video #videoElement autoplay playsinline [hidden]="!isCameraActive"></video>
+      <canvas #canvasElement style="display: none;"></canvas>
+      <div class="camera-controls">
+        <button class="camera-button" (click)="takePhoto()" *ngIf="isCameraActive">
+          <span class="capture-icon"></span>
+        </button>
+        <button class="gallery-button" (click)="selectFromGallery()">
+          <i class="fa fa-image"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- En dispositivos móviles, mostrar botones para acceder a la cámara -->
+    <div class="mobile-camera" *ngIf="isMobile">
+      <div class="mobile-camera-placeholder">
+        <i class="fa fa-camera fa-3x"></i>
+        <p>Toque para tomar foto</p>
+      </div>
+      <div class="camera-controls">
+        <button class="camera-button" (click)="takePhoto()">
+          <span class="capture-icon"></span>
+        </button>
+        <button class="gallery-button" (click)="selectFromGallery()">
+          <i class="fa fa-image"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista de galería -->
+  <div class="gallery-view" *ngIf="selectedTab === 'gallery'">
+    <div class="gallery-empty" *ngIf="isGalleryEmpty()">
+      <i class="fa fa-image fa-3x"></i>
+      <p>No hay imágenes capturadas</p>
+      <button class="camera-button" (click)="switchTab('camera')">
+        Tomar Fotos
+      </button>
+    </div>
+    
+    <div class="gallery-grid" *ngIf="!isGalleryEmpty()">
+      <div class="gallery-item" *ngFor="let image of imageGallery; let i = index">
+        <div class="image-container">
+          <img [src]="image" alt="Imagen capturada {{ i + 1 }}">
+          <button class="remove-button" (click)="removePhoto(i)">
+            <i class="fa fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="gallery-actions" *ngIf="!isGalleryEmpty()">
+      <button class="clear-button" (click)="clearAllPhotos()">
+        <i class="fa fa-trash"></i> Borrar Todo
+      </button>
+      <button class="add-button" (click)="switchTab('camera')">
+        <i class="fa fa-plus"></i> Agregar Más
+      </button>
+    </div>
+  </div>
+</div>

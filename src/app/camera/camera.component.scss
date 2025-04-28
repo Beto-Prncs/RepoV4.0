@@ -1,0 +1,392 @@
+// Variables (reusando las definidas en worker-pendingtask.scss)
+$primary-color: #1a56db;
+$primary-light: #ebf3ff;
+$primary-dark: #0f3e8c;
+$accent-color: #3f83f8;
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$success-color: #10b981;
+$error-color: #ef4444;
+$warning-color: #f59e0b;
+$border-radius: 12px;
+$box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+$transition: all 0.3s ease;
+
+// Contenedor principal de la cámara
+.camera-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f8fafc;
+  border-radius: $border-radius;
+}
+
+// Tabs de navegación (cámara y galería)
+.camera-tabs {
+  display: flex;
+  background-color: white;
+  border-radius: $border-radius $border-radius 0 0;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+  .tab-button {
+    flex: 1;
+    padding: 1rem;
+    background: none;
+    border: none;
+    font-weight: 500;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: $transition;
+    position: relative;
+    border-bottom: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+
+    &:hover {
+      background-color: rgba($primary-color, 0.05);
+    }
+
+    &.active {
+      color: $primary-color;
+      border-bottom-color: $primary-color;
+      background-color: rgba($primary-color, 0.05);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: $primary-color;
+      color: white;
+      height: 20px;
+      min-width: 20px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      padding: 0 0.375rem;
+      margin-left: 0.25rem;
+    }
+
+    i {
+      font-size: 1.1rem;
+    }
+  }
+}
+
+// Mensaje de error
+.camera-error {
+  padding: 0.75rem;
+  margin: 0.5rem;
+  background-color: rgba($error-color, 0.1);
+  color: $error-color;
+  border-radius: $border-radius;
+  border-left: 3px solid $error-color;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+// Vista de cámara web
+.camera-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+
+  // Implementación para navegadores web
+  .web-camera {
+    position: relative;
+    height: 100%;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+    border-radius: $border-radius;
+    overflow: hidden;
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  // Implementación para dispositivos móviles
+  .mobile-camera {
+    position: relative;
+    height: 100%;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: $primary-light;
+    border-radius: $border-radius;
+    
+    .mobile-camera-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: $primary-color;
+      padding: 2rem;
+      
+      i {
+        margin-bottom: 1rem;
+        opacity: 0.7;
+      }
+      
+      p {
+        font-size: 1rem;
+        opacity: 0.9;
+      }
+    }
+  }
+
+  // Controles de cámara
+  .camera-controls {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    
+    .camera-button {
+      width: 70px;
+      height: 70px;
+      background-color: white;
+      border: 4px solid $primary-color;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: $transition;
+      box-shadow: $box-shadow;
+      
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      }
+      
+      .capture-icon {
+        width: 50px;
+        height: 50px;
+        background-color: $primary-color;
+        border-radius: 50%;
+        transition: $transition;
+      }
+      
+      &:active .capture-icon {
+        transform: scale(0.9);
+      }
+    }
+    
+    .gallery-button {
+      width: 50px;
+      height: 50px;
+      background-color: white;
+      border: 2px solid $primary-color;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: $transition;
+      box-shadow: $box-shadow;
+      
+      i {
+        font-size: 1.5rem;
+        color: $primary-color;
+      }
+      
+      &:hover {
+        transform: scale(1.05);
+        background-color: $primary-light;
+      }
+    }
+  }
+}
+
+// Vista de galería
+.gallery-view {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  
+  // Estado cuando la galería está vacía
+  .gallery-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background-color: white;
+    border-radius: $border-radius;
+    border: 2px dashed $primary-light;
+    
+    i {
+      color: $primary-light;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: $text-secondary;
+      margin-bottom: 1.5rem;
+    }
+    
+    .camera-button {
+      padding: 0.75rem 1.5rem;
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      border-radius: $border-radius;
+      font-weight: 500;
+      cursor: pointer;
+      transition: $transition;
+      
+      &:hover {
+        background-color: $primary-dark;
+        transform: translateY(-2px);
+      }
+    }
+  }
+  
+  // Cuadrícula de imágenes
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+    
+    .gallery-item {
+      position: relative;
+      
+      .image-container {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: $border-radius;
+        overflow: hidden;
+        box-shadow: $box-shadow;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: $transition;
+        }
+        
+        .remove-button {
+          position: absolute;
+          top: 0.5rem;
+          right: 0.5rem;
+          background-color: $error-color;
+          color: white;
+          border: none;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          opacity: 0.8;
+          transition: $transition;
+          
+          &:hover {
+            opacity: 1;
+            transform: scale(1.1);
+          }
+          
+          i {
+            font-size: 0.9rem;
+          }
+        }
+        
+        &:hover img {
+          transform: scale(1.03);
+        }
+      }
+    }
+  }
+  
+  // Acciones de la galería
+  .gallery-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+    
+    button {
+      padding: 0.75rem 1rem;
+      border-radius: $border-radius;
+      font-weight: 500;
+      cursor: pointer;
+      transition: $transition;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      
+      i {
+        font-size: 1rem;
+      }
+    }
+    
+    .clear-button {
+      background-color: rgba($error-color, 0.1);
+      color: $error-color;
+      border: 1px solid rgba($error-color, 0.3);
+      
+      &:hover {
+        background-color: rgba($error-color, 0.2);
+      }
+    }
+    
+    .add-button {
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      
+      &:hover {
+        background-color: $primary-dark;
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+  }
+  
+  .camera-controls {
+    .camera-button {
+      width: 60px !important;
+      height: 60px !important;
+      
+      .capture-icon {
+        width: 40px !important;
+        height: 40px !important;
+      }
+    }
+    
+    .gallery-button {
+      width: 40px !important;
+      height: 40px !important;
+      
+      i {
+        font-size: 1.2rem !important;
+      }
+    }
+  }
+}

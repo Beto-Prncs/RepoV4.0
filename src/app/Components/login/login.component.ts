@@ -29,7 +29,7 @@ interface Usuario {
   standalone: true,
   imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.scss'
 })
 
 export class LoginComponent implements OnInit{
@@ -187,30 +187,40 @@ export class LoginComponent implements OnInit{
     const forceRefresh = urlParams.get('forceRefresh');
     
     if (forceRefresh === 'true') {
-      // Asegurarse de que se complete el cierre de sesión
-      this.auth.signOut().then(() => {
-        // Limpiar todo el estado
-        localStorage.clear();
-        sessionStorage.clear();
-        
-        // Eliminar caché local de firebase
-        indexedDB.deleteDatabase('firebaseLocalStorageDb');
-        
-        // Eliminar el parámetro para evitar bucles
-        const url = new URL(window.location.href);
-        url.searchParams.delete('forceRefresh');
-        url.searchParams.delete('nocache');
-        window.history.replaceState({}, document.title, url.pathname);
-        
-        // Configurar la persistencia
+      // Asegurarse de limpiar todo el estado localmente
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Forzar limpieza de IndexedDB
+      const cleanupPromises = ['firebaseLocalStorageDb', 'firebaseAuth']
+        .map(dbName => this.deleteIndexedDB(dbName));
+      
+      Promise.all(cleanupPromises).finally(() => {
+        // Configurar persistencia
         this.authService.setPersistenceSession();
-      }).catch(error => {
-        console.error('Error en cierre de sesión:', error);
+        
+        // Limpieza de URL
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('forceRefresh');
+        cleanUrl.searchParams.delete('t');
+        window.history.replaceState({}, document.title, cleanUrl.pathname);
       });
     } else {
-      // Configurar la persistencia cada vez que se carga el componente
-      this.authService.setPersistenceSession()
-        .catch(e => console.warn('Error configurando persistencia:', e));
+      // Configurar persistencia normalmente
+      this.authService.setPersistenceSession();
     }
+  }
+  
+  // Método auxiliar para eliminar bases de datos IndexedDB
+  private deleteIndexedDB(dbName: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(dbName);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject();
+      request.onblocked = () => {
+        console.warn(`Base de datos ${dbName} bloqueada, cerrando conexiones...`);
+        resolve(); // Continuamos de todos modos
+      };
+    });
   }
 }

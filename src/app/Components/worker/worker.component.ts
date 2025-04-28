@@ -1,266 +1,270 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
-import { Auth } from '@angular/fire/auth';
-import {
-  Firestore,
-  collection,
-  query,
-  where,
-  getDocs,
-  DocumentData,
-  QuerySnapshot,
-  doc,
-  updateDoc
-} from '@angular/fire/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
-import { Subscription } from 'rxjs';
-import { Usuario } from '../../models/interfaces'; // Asegúrate de que esta interfaz exista
-import { AuthService } from '../../services/auth.service';
+import { Router, NavigationEnd } from '@angular/router';
+import { Auth, signOut } from '@angular/fire/auth';
+import { Firestore, doc, getDoc, updateDoc } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
+import { Usuario } from '../../models/interfaces';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-worker',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule],
   templateUrl: './worker.component.html',
   styleUrl: './worker.component.scss'
 })
-export class WorkerComponent implements OnInit, OnDestroy {
-  isProfileMenuOpen: boolean = false;
-  isLoading: boolean = true;
-  isUploading: boolean = false;
-  usuario: Usuario | null = null;
-  
+export class WorkerComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
   
-  private userSubscription: Subscription | null = null;
+  private auth: Auth = inject(Auth);
+  private firestore: Firestore = inject(Firestore);
+  private storage: Storage = inject(Storage);
+  private router: Router = inject(Router);
+  
+  usuario: Usuario | null = null;
+  currentRoute = '';
+  isMobile = false;
 
-  selectedView: string = 'pending';
-  currentView: 'pending' | 'completed' | 'reports' | 'config' = 'pending';
+  // Configuración de menús y funcionalidades
+  menuItems = [
+    {
+      title: 'Inicio',
+      icon: 'home.png',
+      route: '/worker',
+      description: 'Página principal'
+    },
+    {
+      title: 'Reportes Pendientes',
+      icon: 'pending.png',
+      route: '/worker-pendingtask',
+      description: 'Ver reportes pendientes'
+    },
+    {
+      title: 'Trabajos Completados',
+      icon: 'completed.png',
+      route: '/worker-completetask',
+      description: 'Ver trabajos completados'
+    },
+    {
+      title: 'Estadísticas',
+      icon: 'stats.png',
+      route: '/worker-statistics',
+      description: 'Ver estadísticas'
+    },
+    {
+      title: 'Configuración',
+      icon: 'tools.png',
+      route: '/configuration',
+      description: 'Ajustes del sistema'
+    }
+  ];
 
-  showPendingTasks() {
-    this.router.navigate(['/worker-pendingtask']);
-  }
-
-  showCompletedTasks() {
-    this.router.navigate(['/worker-completetask']);
-  }
-
-  showConfig() {
-    this.router.navigate(['/worker-config']);
-  }
-
-  getHeaderTitle(): string {
-    const titles = {
-      pending: 'Trabajos Pendientes',
-      completed: 'Trabajos Realizados',
-      reports: 'Generar Reportes',
-      config: 'Configuración'
-    };
-    return titles[this.currentView];
-  }
- 
-  constructor(
-    private router: Router,
-    private auth: Auth,
-    private firestore: Firestore,
-    private authService: AuthService
-  ) {}
-
-  ngOnInit() {
-    this.initializeUserData();
+  constructor() {
+    // Detectar dispositivo móvil
+    this.isMobile = this.detectMobile();
     
-    // Cerrar el menú desplegable cuando se hace clic fuera de él
-    document.addEventListener('click', this.closeMenuOnClickOutside.bind(this));
+    // Suscribirse a los cambios de ruta
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.currentRoute = event.urlAfterRedirects;
+    });
   }
 
-  ngOnDestroy() {
-    // Limpiar cualquier suscripción pendiente
-    if (this.userSubscription) {
-      this.userSubscription.unsubscribe();
+  ngOnInit(): void {
+    console.log('Inicializando componente worker');
+    this.loadUserData();
+    this.currentRoute = this.router.url;
+    
+    // Configurar el sidebar según el tamaño de pantalla
+    this.setupSidebar();
+  }
+
+  // Detectar si es un dispositivo móvil
+  private detectMobile(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
+  // Verificar si una ruta está activa
+  isActiveRoute(route: string): boolean {
+    return this.currentRoute === route;
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.setupSidebar();
+  }
+
+  // Configurar el sidebar según el tamaño de la pantalla
+  private setupSidebar(): void {
+    if (window.innerWidth < 992) {
+      // En dispositivos móviles, ocultar el sidebar inicialmente
+      this.closeSidebar();
+    } else {
+      // En desktop, mostrar el sidebar
+      this.showSidebar();
+    }
+  }
+
+  // Mostrar el sidebar (usado para desktop)
+  private showSidebar(): void {
+    const sidebar = document.getElementById('mySidebar');
+    
+    if (sidebar) {
+      sidebar.style.display = 'block';
+      sidebar.style.transform = 'none';
+    }
+  }
+
+  // Abrir el sidebar (para móvil)
+  openSidebar(): void {
+    console.log('Abriendo sidebar');
+    const sidebar = document.getElementById('mySidebar');
+    const overlay = document.getElementById('myOverlay');
+    
+    if (sidebar && overlay) {
+      // Estilos para el sidebar
+      sidebar.style.display = 'block';
+      sidebar.style.transform = 'none';
+      sidebar.style.zIndex = '1001';
+      
+      // Mostrar el overlay
+      overlay.style.display = 'block';
+      
+      // Evitar scroll del body
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  // Cerrar el sidebar (para móvil)
+  closeSidebar(): void {
+    console.log('Cerrando sidebar');
+    const sidebar = document.getElementById('mySidebar');
+    const overlay = document.getElementById('myOverlay');
+    
+    if (sidebar && overlay) {
+      if (window.innerWidth < 992) {
+        // Solo ocultar en móviles
+        sidebar.style.display = 'none';
+        overlay.style.display = 'none';
+      }
+      
+      // Restaurar scroll del body
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Cargar datos del usuario
+  async loadUserData(): Promise<void> {
+    try {
+      const user = this.auth.currentUser;
+      
+      if (user) {
+        const userDoc = await getDoc(doc(this.firestore, 'Usuario', user.uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          this.usuario = {
+            ...userData as Usuario,
+            IdUsuario: user.uid
+          };
+          console.log('Usuario cargado:', this.usuario);
+        } else {
+          console.log('No se encontró el documento del usuario');
+          this.router.navigate(['/login']);
+        }
+      } else {
+        console.log('No hay usuario autenticado');
+        this.router.navigate(['/login']);
+      }
+    } catch (error) {
+      console.error('Error al cargar datos del usuario:', error);
+    }
+  }
+
+  // Navegar a diferentes rutas
+  navigateTo(route: string): void {
+    console.log('Navegando a:', route);
+    // En móvil, cerrar el sidebar al navegar
+    if (window.innerWidth < 992) {
+      this.closeSidebar();
     }
     
-    // Eliminar el event listener
-    document.removeEventListener('click', this.closeMenuOnClickOutside.bind(this));
+    this.router.navigate([route]);
   }
 
-  // Método para manejar clics fuera del menú desplegable
-  private closeMenuOnClickOutside(event: MouseEvent) {
-    const profileMenu = document.querySelector('.user-profile-dropdown');
-    if (this.isProfileMenuOpen && profileMenu && !profileMenu.contains(event.target as Node)) {
-      this.isProfileMenuOpen = false;
+  // Cerrar sesión
+  async logout(): Promise<void> {
+    try {
+      await signOut(this.auth);
+      this.router.navigate(['/login']);
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
     }
   }
 
-  // Método para abrir/cerrar el menú de perfil
-  toggleProfileMenu(event?: MouseEvent) {
-    if (event) {
-      event.stopPropagation(); // Evitar que el clic se propague
-    }
-    this.isProfileMenuOpen = !this.isProfileMenuOpen;
-  }
-
-  // Método para abrir el selector de archivos
-  openPhotoSelector() {
+  // Abrir selector de archivo para foto de perfil
+  openPhotoSelector(): void {
     this.fileInput.nativeElement.click();
   }
 
-  // Método para manejar la selección de una nueva foto
-  async onPhotoSelected(event: Event) {
+  // Manejar selección de foto
+  async onPhotoSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     
-    if (!input.files || input.files.length === 0) {
-      return;
-    }
-    
-    try {
-      this.isLoading = true;
+    if (input.files && input.files.length > 0 && this.usuario?.IdUsuario) {
       const file = input.files[0];
+      const storageRef = ref(this.storage, `profiles/${this.usuario.IdUsuario}/profile.jpg`);
       
-      // Validar que sea una imagen
-      if (!file.type.includes('image')) {
-        this.showErrorToast('Por favor seleccione un archivo de imagen válido.');
-        return;
-      }
-      
-      // Obtener referencia al storage
-      const storage = getStorage();
-      const currentUser = this.auth.currentUser;
-      
-      if (!currentUser || !currentUser.email || !this.usuario?.IdUsuario) {
-        throw new Error('Usuario no autenticado o ID no disponible');
-      }
-      
-      // Crear referencia para la imagen
-      const storageRef = ref(storage, `profile_images/${this.usuario.IdUsuario}_${Date.now()}`);
-      
-      // Subir archivo
-      await uploadBytes(storageRef, file);
-      
-      // Obtener URL de descarga
-      const downloadURL = await getDownloadURL(storageRef);
-      
-      // Actualizar la URL en Firestore
-      const userDocRef = doc(this.firestore, 'Usuario', this.usuario.IdUsuario);
-      await updateDoc(userDocRef, {
-        Foto_Perfil: downloadURL
-      });
-      
-      // Actualizar la URL en el objeto local
-      this.usuario = {
-        ...this.usuario,
-        Foto_Perfil: downloadURL
-      };
-      
-      this.showSuccessToast('Foto de perfil actualizada correctamente');
-    } catch (error) {
-      console.error('Error al actualizar foto de perfil:', error);
-      this.showErrorToast('Error al actualizar la foto de perfil');
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  private async initializeUserData() {
-    try {
-      // Reiniciar estado de carga
-      this.isLoading = true;
-      this.usuario = null;
-      
-      // Obtener el usuario autenticado
-      const currentUser = this.auth.currentUser;
-      if (!currentUser) {
-        throw new Error('No hay usuario autenticado');
-      }
-      
-      // Verificar que el correo exista
-      const userEmail = currentUser.email;
-      if (!userEmail) {
-        throw new Error('Correo de usuario no disponible');
-      }
-      
-      // Consultar la colección de Usuarios
-      const usuariosRef = collection(this.firestore, 'Usuario');
-      const q = query(usuariosRef, where('Correo', '==', userEmail));
-      
-      // Ejecutar consulta
-      const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        // Obtener el primer documento (debería ser único por correo)
-        const usuarioDoc = querySnapshot.docs[0].data() as Usuario;
+      try {
+        const uploadTask = uploadBytesResumable(storageRef, file);
         
-        // Asignar datos de usuario
-        this.usuario = {
-          ...usuarioDoc,
-          // Asegurar que todos los campos estén definidos
-          Correo: usuarioDoc.Correo || '',
-          Departamento: usuarioDoc.Departamento || '',
-          Foto_Perfil: usuarioDoc.Foto_Perfil || '',
-          IdUsuario: usuarioDoc.IdUsuario || '',
-          NivelAdmin: usuarioDoc.NivelAdmin || '',
-          Nombre: usuarioDoc.Nombre || '',
-          Rol: usuarioDoc.Rol || '',
-          Telefono: usuarioDoc.Telefono || '',
-          Username: usuarioDoc.Username || ''
-        };
-      } else {
-        console.warn('No se encontró usuario en la base de datos');
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            // Progreso
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log(`Upload progress: ${progress}%`);
+          },
+          (error) => {
+            // Error
+            console.error('Error al subir la imagen:', error);
+          },
+          async () => {
+            // Completado
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              
+              // Actualizar URL en Firestore
+              await this.updateUserPhotoURL(downloadURL);
+              
+              // Actualizar UI
+              this.usuario = {
+                ...this.usuario!,
+                Foto_Perfil: downloadURL
+              };
+            } catch (error) {
+              console.error('Error al obtener URL:', error);
+            }
+          }
+        );
+      } catch (error) {
+        console.error('Error al subir la imagen:', error);
       }
-    } catch (error) {
-      console.error('Error al obtener datos de usuario:', error);
-      // Manejar el error, posiblemente redirigir al login
-      this.handleAuthError(error);
-    } finally {
-      // Finalizar estado de carga
-      this.isLoading = false;
     }
   }
 
-  // Método para manejar errores de autenticación
-  private handleAuthError(error: any) {
-    // Limpiar datos de usuario
-    this.usuario = null;
-    // Redirigir al login o mostrar mensaje de error
-    this.router.navigate(['/login']);
-  }
-
-  // Método de navegación
-  navigateTo(route: string) {
-    // Validar que la ruta exista
-    if (route) {
-      this.router.navigate([route]);
+  // Actualizar URL de foto en Firestore
+  private async updateUserPhotoURL(photoURL: string): Promise<void> {
+    if (this.usuario?.IdUsuario) {
+      try {
+        const userRef = doc(this.firestore, 'Usuario', this.usuario.IdUsuario);
+        await updateDoc(userRef, {
+          Foto_Perfil: photoURL
+        });
+      } catch (error) {
+        console.error('Error al actualizar foto de perfil:', error);
+      }
     }
-    
-    // Cerrar el menú desplegable si está abierto
-    this.isProfileMenuOpen = false;
-  }
-
-  // En el componente Worker - mejorando el método logout() existente
-  async logout(): Promise<void> {
-    try {
-      this.isLoading = true;
-      // Usar el servicio de autenticación mejorado para un cierre de sesión completo
-      await this.authService.signOut();
-      // No necesitamos redireccionar aquí ya que el signOut() del servicio
-      // ya maneja la redirección completa
-    } catch (error) {
-      console.error('Logout error:', error);
-      this.showErrorToast('Error al cerrar sesión. Por favor inténtelo nuevamente.');
-      // En caso de error, intentar redirección forzada como último recurso
-      window.location.href = '/login?forceRefresh=true&t=' + Date.now();
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  private showErrorToast(message: string): void {
-    console.error('Error:', message);
-    // Aquí podrías implementar un sistema de notificaciones más avanzado
-  }
-
-  private showSuccessToast(message: string): void {
-    console.log('Success:', message);
-    // Aquí podrías implementar un sistema de notificaciones más avanzado
   }
 }
