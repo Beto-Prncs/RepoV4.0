@@ -1,0 +1,684 @@
+@use "sass:color";
+
+// Variables y mixins
+$primary-color: #3b82f6;
+$primary-dark: #2563eb;
+$secondary-color: #64748b;
+$accent-color: #0ea5e9;
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$danger-color: #ef4444;
+$bg-light: #f8fafc;
+$bg-white: #ffffff;
+$text-dark: #1e293b;
+$text-light: #94a3b8;
+$border-color: #e2e8f0;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$border-radius: 0.5rem;
+$transition-fast: all 0.2s ease;
+$transition-normal: all 0.3s ease;
+
+// Utiliza esta forma para definir todos los mixins
+@mixin flex($direction: row, $justify: flex-start, $align: center) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+}
+
+@mixin button-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  
+  &:focus {
+    outline: none;
+  }
+}
+
+@mixin responsive-padding {
+  padding: 1.5rem;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.75rem;
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+// Estilos generales con estructura corregida
+.reports-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: $bg-light;
+  animation: fadeIn 0.4s ease-out;
+  position: relative;
+  overflow-x: hidden;
+  
+  @media (max-width: 768px) {
+    min-height: calc(100vh - 56px); // Ajuste para navbar móvil
+  }
+}
+
+// Botón atrás
+.btn-back {
+  @include button-reset;
+  @include flex(row, flex-start, center);
+  color: $secondary-color;
+  font-weight: 500;
+  margin: 1rem 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: $border-radius;
+  transition: $transition-fast;
+  background-color: rgba($bg-white, 0.8);
+  backdrop-filter: blur(4px);
+  box-shadow: $shadow-sm;
+  
+  svg {
+    margin-right: 0.5rem;
+    transition: $transition-fast;
+  }
+  
+  &:hover {
+    color: $primary-color;
+    background-color: $bg-white;
+    box-shadow: $shadow-md;
+    
+    svg {
+      transform: translateX(-3px);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    margin: 0.75rem 0 0 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+// Cabecera de reportes
+.reports-header {
+  @include responsive-padding;
+  @include flex(column, flex-start, flex-start);
+  margin-bottom: 1.5rem;
+  
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $text-dark;
+    margin: 1rem 0;
+    
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 1.25rem;
+    }
+  }
+  
+  .search-bar {
+    width: 100%;
+    max-width: 600px;
+    @include flex(row, space-between, center);
+    margin: 1rem 0;
+    position: relative;
+    
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 3rem;
+      border-radius: $border-radius;
+      border: 1px solid $border-color;
+      background-color: $bg-white;
+      font-size: 1rem;
+      color: $text-dark;
+      transition: $transition-normal;
+      box-shadow: $shadow-sm;
+      
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
+      }
+      
+      @media (max-width: 480px) {
+        padding: 0.6rem 1rem 0.6rem 2.5rem;
+        font-size: 0.875rem;
+      }
+    }
+    
+    .search-button {
+      @include button-reset;
+      position: absolute;
+      left: 0.75rem;
+      color: $secondary-color;
+      
+      i {
+        font-size: 1.25rem;
+        
+        @media (max-width: 480px) {
+          font-size: 1rem;
+        }
+      }
+    }
+    
+    @media (max-width: 768px) {
+      max-width: 100%;
+    }
+  }
+}
+
+// Navegación de tipo de reporte
+.task-type-nav {
+  @include flex(row, flex-start, center);
+  padding: 0 1.5rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  
+  button {
+    @include button-reset;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    color: $secondary-color;
+    position: relative;
+    transition: $transition-normal;
+    white-space: nowrap;
+    
+    &:before {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0);
+      width: 80%;
+      height: 3px;
+      background-color: $primary-color;
+      border-radius: 8px 8px 0 0;
+      transition: $transition-normal;
+    }
+    
+    &.active {
+      color: $primary-color;
+      
+      &:before {
+        transform: translateX(-50%) scaleX(1);
+      }
+    }
+    
+    &:hover {
+      color: $primary-dark;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0 0.75rem;
+  }
+}
+
+// Sección de filtros
+.filters-section {
+  @include flex(row, flex-start, center);
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0 1.5rem;
+  margin-bottom: 1.5rem;
+  
+  .filter-group {
+    @include flex(column, flex-start, flex-start);
+    min-width: 180px;
+    flex-grow: 1;
+    
+    label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: $secondary-color;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: $border-radius;
+      border: 1px solid $border-color;
+      background-color: $bg-white;
+      color: $text-dark;
+      font-size: 0.875rem;
+      transition: $transition-fast;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 16px;
+      
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      min-width: calc(50% - 0.5rem);
+    }
+    
+    @media (max-width: 480px) {
+      min-width: 100%;
+    }
+  }
+  
+  .btn-reset-filters {
+    @include button-reset;
+    padding: 0.5rem 1rem;
+    border-radius: $border-radius;
+    background-color: transparent;
+    border: 1px solid $border-color;
+    color: $secondary-color;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: $transition-fast;
+    margin-top: 1.5rem;
+    
+    &:hover {
+      background-color: $bg-white;
+      color: $primary-color;
+      border-color: $primary-color;
+    }
+    
+    @media (max-width: 768px) {
+      margin-top: 0.5rem;
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0 0.75rem;
+    gap: 0.75rem;
+  }
+}
+
+// Mensajes de estado
+.error-message {
+  @include flex(row, flex-start, center);
+  margin: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
+  background-color: rgba($danger-color, 0.1);
+  border-left: 4px solid $danger-color;
+  border-radius: $border-radius;
+  color: color.adjust($danger-color, $lightness: -20%);
+  animation: fadeIn 0.3s ease-out;
+  
+  i {
+    margin-right: 0.5rem;
+    font-size: 1.25rem;
+  }
+  
+  @media (max-width: 768px) {
+    margin: 1rem 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    margin: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+.loading-indicator {
+  @include flex(column, center, center);
+  padding: 2rem;
+  width: 100%;
+  color: $secondary-color;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba($primary-color, 0.3);
+    border-radius: 50%;
+    border-top-color: $primary-color;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+}
+
+// Sin reportes
+.no-reports {
+  @include flex(column, center, center);
+  padding: 3rem 1.5rem;
+  color: $secondary-color;
+  text-align: center;
+  
+  i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+  
+  p {
+    font-size: 1rem;
+    max-width: 400px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 2rem 1rem;
+    
+    i {
+      font-size: 2.5rem;
+    }
+    
+    p {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Tabla de reportes
+.reports-content {
+  @include responsive-padding;
+  padding-top: 0;
+}
+
+.reports-table {
+  background-color: $bg-white;
+  border-radius: $border-radius;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+  animation: fadeIn 0.5s ease-out;
+  
+  .table-header {
+    @include flex(row, flex-start, center);
+    background: linear-gradient(135deg, $primary-color, $primary-dark);
+    color: $bg-white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    
+    .header-cell {
+      padding: 1rem 0.75rem;
+      flex: 1;
+      white-space: nowrap;
+      
+      &:last-child {
+        flex: 0.5;
+        text-align: center;
+      }
+    }
+    
+    @media (max-width: 1024px) {
+      display: none; // Ocultamos el encabezado en pantallas pequeñas
+    }
+  }
+  
+  .table-body {
+    .table-row {
+      @include flex(row, flex-start, center);
+      border-bottom: 1px solid $border-color;
+      transition: $transition-fast;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:hover {
+        background-color: rgba($primary-color, 0.05);
+      }
+      
+      .cell {
+        padding: 1rem 0.75rem;
+        flex: 1;
+        color: $text-dark;
+        
+        // Prioridad con badge
+        .priority-badge {
+          display: inline-block;
+          padding: 0.25rem 0.5rem;
+          border-radius: 20px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          
+          &.alta {
+            background-color: rgba($danger-color, 0.15);
+            color: $danger-color;
+          }
+          
+          &.media {
+            background-color: rgba($warning-color, 0.15);
+            color: $warning-color;
+          }
+          
+          &.baja {
+            background-color: rgba($success-color, 0.15);
+            color: $success-color;
+          }
+          
+          &.sin-prioridad {
+            background-color: rgba($secondary-color, 0.1);
+            color: $secondary-color;
+          }
+        }
+        
+        &.actions {
+          flex: 0.5;
+          text-align: center;
+          
+          .view-button {
+            @include button-reset;
+            padding: 0.5rem 0.75rem;
+            border-radius: $border-radius;
+            background-color: rgba($primary-color, 0.1);
+            color: $primary-color;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: $transition-fast;
+            
+            i {
+              margin-right: 0.35rem;
+            }
+            
+            &:hover {
+              background-color: $primary-color;
+              color: $bg-white;
+            }
+          }
+        }
+      }
+      
+      @media (max-width: 1024px) {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+        position: relative;
+        
+        .cell {
+          width: 100%;
+          padding: 0.35rem 0;
+          display: flex;
+          align-items: center;
+          
+          &:before {
+            content: attr(data-label);
+            flex: 0 0 40%;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: $secondary-color;
+            text-transform: uppercase;
+          }
+          
+          &.actions {
+            margin-top: 0.75rem;
+            justify-content: flex-end;
+            
+            .view-button {
+              width: 100%;
+              padding: 0.6rem;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Modal de vista previa
+.pdf-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba($text-dark, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  @include flex(row, center, center);
+  animation: fadeIn 0.3s ease-out;
+  
+  .modal-content {
+    width: 90%;
+    max-width: 900px;
+    height: 90%;
+    background-color: $bg-white;
+    border-radius: $border-radius;
+    box-shadow: $shadow-lg;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    
+    .modal-header {
+      @include flex(row, space-between, center);
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid $border-color;
+      
+      h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+        color: $text-dark;
+      }
+      
+      .close-button {
+        @include button-reset;
+        width: 36px;
+        height: 36px;
+        @include flex(row, center, center);
+        border-radius: 50%;
+        background-color: rgba($secondary-color, 0.1);
+        color: $secondary-color;
+        transition: $transition-fast;
+        
+        &:hover {
+          background-color: rgba($danger-color, 0.1);
+          color: $danger-color;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        padding: 0.75rem 1rem;
+        
+        h2 {
+          font-size: 1rem;
+        }
+      }
+    }
+    
+    .modal-body {
+      flex: 1;
+      overflow: hidden;
+      
+      .pdf-viewer {
+        width: 100%;
+        height: 100%;
+        
+        iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+      }
+    }
+  }
+}
+
+// Optimizaciones para atributos data en dispositivos pequeños
+@media (max-width: 1024px) {
+  .reports-table .table-body .table-row .cell {
+    &:nth-child(1):before {
+      content: "Título";
+    }
+    
+    &:nth-child(2):before {
+      content: "Fecha";
+    }
+    
+    &:nth-child(3):before {
+      content: "Empresa";
+    }
+    
+    &:nth-child(4):before {
+      content: "Trabajador";
+    }
+    
+    &:nth-child(5):before {
+      content: "Prioridad";
+    }
+  }
+}
+
+// Animaciones de interacción
+.table-row, .btn-back, .view-button, select, .search-input, .pdf-modal .close-button {
+  &:active {
+    transform: scale(0.98);
+  }
+}

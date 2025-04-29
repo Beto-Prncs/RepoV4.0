@@ -34,6 +34,7 @@ export interface Usuario {
     fechaCompletado?: Date;
     descripcionCompletado?: string;
     fechaActualizacion?: Date;
+    materialesUtilizados?: string;
 }
   
   export interface Department {

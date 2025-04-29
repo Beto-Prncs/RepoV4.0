@@ -10,6 +10,8 @@ import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { getStorage, provideStorage } from '@angular/fire/storage';
 import { TranslationModule } from './shared/modules/translation.module';
+import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyB02aFRJQaUZV4PH-1UilL0G1qR011UMOo",
@@ -27,6 +29,7 @@ export const appConfig: ApplicationConfig = {
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
     importProvidersFrom(TranslationModule),
-    provideStorage(() => getStorage())
+    provideStorage(() => getStorage()),
+    importProvidersFrom(NgxExtendedPdfViewerModule)
   ]
 };

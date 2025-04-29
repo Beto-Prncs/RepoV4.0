@@ -61,7 +61,7 @@ export const routes: Routes = [
  
   {
     path: 'worker-pendingtask',
-    loadComponent: () => import('./functionalities/worker-pendingtask/worker-pendingtask.component').then(m => m.WorkerPendingTaskComponent),
+    loadComponent: () => import('./functionalities/worker-pendingtask/worker-pendingtask.component').then(m => m.WorkerPendingtaskComponent),
     canActivate: [authGuard, workerGuard]
   },
   {

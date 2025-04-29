@@ -1,4 +1,4 @@
-<!-- worker-pending-task.component.html adaptado con componente de cámara -->
+<!-- worker-pendingtask.component.html con soporte para tareas y reportes -->
 <div class="tasks-container">
   <!-- Botón de regreso -->
   <button (click)="goBack()" class="btn-back">
@@ -36,49 +36,110 @@
   @if (isLoading) {
     <div class="loading-state">
       <div class="spinner"></div>
-      <p>Cargando tareas pendientes...</p>
-    </div>
-  } @else if (pendingTasks.length === 0) {
-    <!-- No hay tareas pendientes -->
-    <div class="no-reports">
-      <p>No hay tareas pendientes en este momento.</p>
+      <p>Cargando trabajos pendientes...</p>
     </div>
   } @else {
-    <!-- Lista de tareas pendientes -->
-    <div class="tasks-grid">
-      @for (task of pendingTasks; track task.id) {
-        <div class="task-card" (click)="selectTask(task)" [class.selected]="selectedTask?.id === task.id">
-          <div class="task-header">
-            <h3 class="task-title">{{ task.title }}</h3>
-            <span class="priority-badge priority-{{ task.priority | lowercase }}">{{ task.priority }}</span>
+    <div class="pending-work-container">
+      <!-- Tabs de navegación para los tipos de trabajos -->
+      <div class="work-tabs">
+        <button class="tab-button" [class.active]="activeTab === 'tasks'" (click)="activeTab = 'tasks'">
+          Tareas
+          <span class="counter">{{ pendingTasks.length }}</span>
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'reportes'" (click)="activeTab = 'reportes'">
+          Reportes
+          <span class="counter">{{ pendingReportes.value.length }}</span>
+        </button>
+      </div>
+      
+      <!-- Sección de Tareas -->
+      @if (activeTab === 'tasks') {
+        @if (pendingTasks.length === 0) {
+          <div class="no-reports">
+            <p>No hay tareas pendientes en este momento.</p>
           </div>
-          <div class="task-info">
-            <div class="task-date">
-              <strong>Fecha de creación</strong>
-              <span>{{ task.createdAt.toDate() | date:'dd/MM/yyyy' }}</span>
-            </div>
-            <div class="task-description">
-              <strong>Descripción</strong>
-              <p>{{ task.description }}</p>
-            </div>
-            <div class="task-department">
-              <strong>Departamento</strong>
-              <span>{{ task.department }}</span>
-            </div>
-            @if (task.location) {
-              <div class="task-location">
-                <strong>Ubicación</strong>
-                <span>{{ task.location }}</span>
+        } @else {
+          <!-- Lista de tareas pendientes -->
+          <div class="tasks-grid">
+            @for (task of pendingTasks; track task.id) {
+              <div class="task-card" (click)="selectTask(task)" [class.selected]="selectedTask?.id === task.id">
+                <div class="task-header">
+                  <h3 class="task-title">{{ task.title }}</h3>
+                  <span class="priority-badge priority-{{ task.priority | lowercase }}">{{ task.priority }}</span>
+                </div>
+                <div class="task-info">
+                  <div class="task-date">
+                    <strong>Fecha de creación</strong>
+                    <span>{{ task.createdAt.toDate() | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                  <div class="task-description">
+                    <strong>Descripción</strong>
+                    <p>{{ task.description }}</p>
+                  </div>
+                  <div class="task-department">
+                    <strong>Departamento</strong>
+                    <span>{{ task.department }}</span>
+                  </div>
+                  @if (task.location) {
+                    <div class="task-location">
+                      <strong>Ubicación</strong>
+                      <span>{{ task.location }}</span>
+                    </div>
+                  }
+                </div>
               </div>
             }
           </div>
-        </div>
+        }
+      }
+      
+      <!-- Sección de Reportes -->
+      @if (activeTab === 'reportes') {
+        @if (pendingReportes.value.length === 0) {
+          <div class="no-reports">
+            <p>No hay reportes pendientes en este momento.</p>
+          </div>
+        } @else {
+          <!-- Lista de reportes pendientes -->
+          <div class="tasks-grid">
+            @for (reporte of pendingReportes.value; track reporte.IdReporte) {
+              <div class="task-card" (click)="selectReporte(reporte)" [class.selected]="selectedReporte?.IdReporte === reporte.IdReporte">
+                <div class="task-header">
+                  <h3 class="task-title">{{ reporte.Tipo_Trabajo }}</h3>
+                  <span class="priority-badge priority-{{ reporte.priority | lowercase }}">{{ reporte.priority || 'Normal' }}</span>
+                </div>
+                <div class="task-info">
+                  <div class="task-date">
+                    <strong>Fecha de asignación</strong>
+                    <span>{{ reporte.fecha | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                  <div class="task-description">
+                    <strong>Descripción</strong>
+                    <p>{{ reporte.jobDescription }}</p>
+                  </div>
+                  @if (reporte.departamento) {
+                    <div class="task-department">
+                      <strong>Departamento</strong>
+                      <span>{{ reporte.departamento }}</span>
+                    </div>
+                  }
+                  @if (reporte.location) {
+                    <div class="task-location">
+                      <strong>Ubicación</strong>
+                      <span>{{ reporte.location }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
       }
     </div>
   }
   
-  <!-- Formulario de reporte para tarea seleccionada -->
-  @if (selectedTask) {
+  <!-- Formulario para TAREAS seleccionadas -->
+  @if (selectedTask && !selectedReporte) {
     <h2>Completar tarea: {{ selectedTask.title }}</h2>
     <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
       <div class="completion-form">
@@ -99,7 +160,7 @@
         </div>
       </div>
       
-      <!-- Sección de imágenes/evidencias -->
+      <!-- Sección de imágenes/evidencias para tareas -->
       <div class="images-section">
         <h4>Evidencia fotográfica</h4>
         <div class="image-input">
@@ -141,6 +202,79 @@
     </form>
   }
   
+  <!-- Formulario para REPORTES seleccionados -->
+  @if (selectedReporte && !selectedTask) {
+    <h2>Completar reporte: {{ selectedReporte.Tipo_Trabajo }}</h2>
+    <div class="completion-form">
+      <div class="form-group">
+        <label for="completionDescription">
+          Descripción de la completación <span class="required">*</span>
+        </label>
+        <textarea
+          id="completionDescription"
+          [(ngModel)]="completionDescription"
+          name="completionDescription"
+          rows="4"
+          [class.error]="showErrors && !completionDescription.trim()"
+          placeholder="Describe cómo se completó el trabajo..."></textarea>
+        @if (showErrors && !completionDescription.trim()) {
+          <span class="error-text">Este campo es requerido</span>
+        }
+      </div>
+      
+      <div class="form-group">
+        <label for="materialsUsed">
+          Materiales utilizados <span class="required">*</span>
+        </label>
+        <textarea
+          id="materialsUsed"
+          [(ngModel)]="materialsUsed"
+          name="materialsUsed"
+          rows="3"
+          [class.error]="showErrors && !materialsUsed.trim()"
+          placeholder="Indica los materiales que utilizaste..."></textarea>
+        @if (showErrors && !materialsUsed.trim()) {
+          <span class="error-text">Este campo es requerido</span>
+        }
+      </div>
+      
+      <!-- Componente de firma para reportes -->
+      <div class="form-group signature-container">
+        <label>
+          Firma digital <span class="required">*</span>
+        </label>
+        <div class="signature-box" [class.error]="showErrors && isSignatureEmpty()">
+          <canvas #signatureCanvas></canvas>
+          <div class="signature-actions">
+            <button type="button" class="btn-clear" (click)="clearSignature()">Limpiar</button>
+            <button type="button" class="btn-save" (click)="saveSignature()">Guardar firma</button>
+          </div>
+        </div>
+        @if (showErrors && isSignatureEmpty()) {
+          <span class="error-text">La firma es requerida</span>
+        }
+      </div>
+      
+      <!-- Acciones de reporte -->
+      <div class="task-actions">
+        <button type="button" class="btn-preview" (click)="previewPdf(selectedReporte)" 
+                [disabled]="!completionDescription.trim() || !materialsUsed.trim() || isSignatureEmpty()">
+          Vista previa PDF
+        </button>
+        <button type="button" class="btn-complete" 
+                (click)="markAsCompleted(selectedReporte)"
+                [disabled]="!completionDescription.trim() || !materialsUsed.trim() || isSignatureEmpty() || isSubmitting">
+          @if (isSubmitting) {
+            <span class="spinner-small"></span>
+            Enviando...
+          } @else {
+            Completar reporte
+          }
+        </button>
+      </div>
+    </div>
+  }
+  
   <!-- Modal de la cámara -->
   @if (showCameraModal) {
     <div class="pdf-modal">
@@ -161,7 +295,7 @@
     </div>
   }
   
-  <!-- Modal de vista previa (opcional) -->
+  <!-- Modal de vista previa para tareas -->
   @if (showPreviewModal) {
     <div class="pdf-modal">
       <div class="pdf-modal-content">
@@ -190,6 +324,28 @@
         <div class="pdf-modal-footer">
           <button class="btn-cancel" (click)="closePreviewModal()">Cerrar</button>
           <button class="btn-confirm" (click)="submitReport()">Enviar reporte</button>
+        </div>
+      </div>
+    </div>
+  }
+  
+  <!-- Modal de vista previa de PDF para reportes -->
+  @if (showPdfPreview) {
+    <div class="pdf-modal">
+      <div class="pdf-modal-content">
+        <div class="pdf-modal-header">
+          <h3>Vista previa del PDF</h3>
+          <button class="btn-close" (click)="closePdfPreview()">&times;</button>
+        </div>
+        <div class="pdf-modal-body">
+          <!-- Visor de PDF -->
+          <div class="pdf-preview-container">
+            <pdf-viewer [src]="pdfSrc" [render-text]="true" [original-size]="false"></pdf-viewer>
+          </div>
+        </div>
+        <div class="pdf-modal-footer">
+          <button class="btn-cancel" (click)="closePdfPreview()">Cerrar</button>
+          <button class="btn-confirm" (click)="confirmCompletion()">Confirmar y enviar</button>
         </div>
       </div>
     </div>
