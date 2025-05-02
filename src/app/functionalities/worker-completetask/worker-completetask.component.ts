@@ -13,7 +13,7 @@ import { Reporte } from '../../models/interfaces';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './worker-completetask.component.html',
-  styleUrl: './worker-completetask.component.css'
+  styleUrl: './worker-completetask.component.scss'
 })
 export class WorkerCompleteTaskComponent implements OnInit, OnDestroy {
   private taskService: TaskService = inject(TaskService);

@@ -309,4 +309,97 @@ export class TaskService {
       })
     );
   }
+
+
+
+// Método para obtener reportes filtrados por el administrador actual
+async getFilteredReportes(): Promise<Observable<Reporte[]>> {
+  try {
+    const currentUser = await this.authService.getCurrentUser();
+    if (!currentUser) {
+      console.error('No hay usuario autenticado');
+      return of([]);
+    }
+    
+    // Obtener datos del usuario actual
+    const userData = await this.authService.getUserData(currentUser.uid);
+    if (!userData) {
+      console.error('Datos de usuario no encontrados');
+      return of([]);
+    }
+    
+    // Si es admin nivel 3, filtrar reportes solo de usuarios creados por él
+    if (userData.Rol === 'admin' && userData.NivelAdmin === '3') {
+      return this.getReportesByCreator(currentUser.uid);
+    }
+    
+    // Para otros casos, devolver todos los reportes
+    return this.getReportes();
+  } catch (error) {
+    console.error('Error al filtrar reportes:', error);
+    return of([]);
+  }
+}
+
+// Método para obtener reportes de usuarios creados por un administrador específico
+  getReportesByCreator(creatorId: string): Observable<Reporte[]> {
+    return new Observable<Reporte[]>(observer => {
+      // Primero obtenemos los usuarios creados por este administrador
+      this.authService.getUsersByCreator(creatorId).then(users => {
+        // Extraer solo los IDs de los usuarios
+        const userIds = users.map(user => user.IdUsuario);
+        
+        if (userIds.length === 0) {
+          observer.next([]);
+          observer.complete();
+          return;
+        }
+        
+        // Obtener reportes para estos usuarios
+        const reportesRef = collection(this.firestore, 'Reportes');
+        
+        // Firebase no permite consultas 'IN' con más de 10 elementos
+        // Dividimos en grupos de 10 si es necesario
+        const userIdChunks = this.chunkArray(userIds, 10);
+        const reportePromises: Promise<Reporte[]>[] = [];
+        
+        userIdChunks.forEach(chunk => {
+          const q = query(reportesRef, where('IdUsuario', 'in', chunk));
+          const promise = getDocs(q).then(snapshot => {
+            const reportes: any[] = [];
+            snapshot.forEach(doc => {
+              reportes.push({
+                IdReporte: doc.id,
+                ...doc.data()
+              });
+            });
+            return this.processReportes(reportes);
+          });
+          reportePromises.push(promise);
+        });
+        
+        Promise.all(reportePromises).then(reportesArrays => {
+          // Combinar todos los arrays de reportes
+          const allReportes = reportesArrays.flat();
+          observer.next(allReportes);
+          observer.complete();
+        }).catch(error => {
+          console.error('Error obteniendo reportes:', error);
+          observer.error(error);
+        });
+      }).catch(error => {
+        console.error('Error obteniendo usuarios:', error);
+        observer.error(error);
+      });
+    });
+  }
+
+  // Método auxiliar para dividir arrays en grupos de un tamaño específico
+  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+  }
 }

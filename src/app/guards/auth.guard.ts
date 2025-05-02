@@ -1,32 +1,24 @@
 import { CanActivateFn } from '@angular/router';
 import { inject } from '@angular/core';
-import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = async (route, state) => {
-  const auth = inject(Auth);
+  const authService = inject(AuthService);
   const router = inject(Router);
-  const firestore = inject(Firestore);
-
-  const user = auth.currentUser;
-
+  
+  // Usar el método getCurrentUser que ya has implementado
+  const user = await authService.getCurrentUser();
+  
   if (user) {
-    try {
-      // Verificar que el usuario existe en Firestore
-      const userDoc = await getDoc(doc(firestore, 'Usuario', user.uid));
-      console.log('Usuario encontrado en Firestore:', userDoc.exists()); 
-      if (userDoc.exists()) {
-        return true; // Usuario autenticado y existe en Firestore
-      } else {
-        // Usuario no encontrado en Firestore
-        await auth.signOut();
-        router.navigate(['/login']);
-        return false;
-      }
-    } catch (error) {
-      console.error('Error verificando usuario:', error);
-      await auth.signOut();
+    // Verificar que el usuario existe en Firestore
+    const userData = await authService.getUserData(user.uid);
+    
+    if (userData) {
+      return true; // Usuario autenticado y existe en Firestore
+    } else {
+      // Usuario no encontrado en Firestore
+      await authService.signOut();
       router.navigate(['/login']);
       return false;
     }

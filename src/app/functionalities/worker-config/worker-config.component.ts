@@ -17,7 +17,7 @@ interface CompanyConfig {
   selector: 'app-worker-config',
   imports: [],
   templateUrl: './worker-config.component.html',
-  styleUrl: './worker-config.component.css'
+  styleUrl: './worker-config.component.scss'
 })
 export class WorkerConfigComponent implements OnInit {
   activeSection: string = 'general';
@@ -100,7 +100,7 @@ export class WorkerConfigComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/admin1']);
+    this.router.navigate(['/worker']);
   }
 }
 

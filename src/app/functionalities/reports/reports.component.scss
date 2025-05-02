@@ -1,59 +1,111 @@
 @use "sass:color";
 
-// Variables y mixins
-$primary-color: #3b82f6;
-$primary-dark: #2563eb;
-$secondary-color: #64748b;
-$accent-color: #0ea5e9;
-$success-color: #10b981;
-$warning-color: #f59e0b;
-$danger-color: #ef4444;
-$bg-light: #f8fafc;
-$bg-white: #ffffff;
-$text-dark: #1e293b;
-$text-light: #94a3b8;
-$border-color: #e2e8f0;
-$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+/* Variables con colores alineados con Tailwind CSS v3.4.1 */
+$primary: #3b82f6; // blue-500
+$primary-light: #60a5fa; // blue-400
+$primary-dark: #2563eb; // blue-600
+$primary-gradient: linear-gradient(135deg, $primary, $primary-dark);
+
+$secondary: #64748b; // slate-500
+$secondary-light: #94a3b8; // slate-400
+$secondary-dark: #475569; // slate-600
+
+$success: #10b981; // emerald-500
+$warning: #f59e0b; // amber-500
+$danger: #ef4444; // red-500
+$info: #0ea5e9; // sky-500
+
+$white: #ffffff;
+$gray-50: #f8fafc;
+$gray-100: #f1f5f9;
+$gray-200: #e2e8f0;
+$gray-300: #cbd5e1;
+$gray-400: #94a3b8;
+$gray-500: #64748b;
+$gray-600: #475569;
+$gray-700: #334155;
+$gray-800: #1e293b;
+$gray-900: #0f172a;
+
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
 $shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-$border-radius: 0.5rem;
-$transition-fast: all 0.2s ease;
-$transition-normal: all 0.3s ease;
 
-// Utiliza esta forma para definir todos los mixins
-@mixin flex($direction: row, $justify: flex-start, $align: center) {
+$border-radius-sm: 0.375rem;
+$border-radius: 0.5rem;
+$border-radius-lg: 0.75rem;
+$border-radius-xl: 1rem;
+
+$transition-fast: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// Mixins
+@mixin flex($direction: row, $justify: flex-start, $align: center, $gap: 0) {
   display: flex;
   flex-direction: $direction;
   justify-content: $justify;
   align-items: $align;
-}
-
-@mixin button-reset {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  outline: none;
-  
-  &:focus {
-    outline: none;
+  @if $gap != 0 {
+    gap: $gap;
   }
 }
 
-@mixin responsive-padding {
-  padding: 1.5rem;
-  
-  @media (max-width: 768px) {
-    padding: 1rem;
+@mixin grid($columns: 1, $gap: 1rem) {
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  gap: $gap;
+}
+
+@mixin card($bg: $white, $padding: 1.25rem, $border: true) {
+  background-color: $bg;
+  border-radius: $border-radius;
+  padding: $padding;
+  box-shadow: $shadow-sm;
+  @if $border {
+    border: 1px solid $gray-200;
   }
-  
-  @media (max-width: 480px) {
-    padding: 0.75rem;
+}
+
+@mixin hover-effect($bg-color: $gray-100, $text-color: currentColor, $transform: true) {
+  transition: $transition;
+  &:hover {
+    background-color: $bg-color;
+    color: $text-color;
+    @if $transform {
+      transform: translateY(-2px);
+    }
+    box-shadow: $shadow-md;
+  }
+  &:active {
+    transform: translateY(0);
   }
 }
 
 // Animaciones
 @keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideUp {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -65,506 +117,500 @@ $transition-normal: all 0.3s ease;
 }
 
 @keyframes spin {
-  100% {
+  to {
     transform: rotate(360deg);
   }
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba($primary, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba($primary, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba($primary, 0);
   }
 }
 
-// Estilos generales con estructura corregida
+/* Estilos base con integración de Tailwind */
 .reports-container {
-  width: 100%;
   min-height: 100vh;
-  background-color: $bg-light;
-  animation: fadeIn 0.4s ease-out;
+  background-color: $gray-50;
+  color: $gray-800;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  animation: fadeIn 0.3s ease-out;
   position: relative;
   overflow-x: hidden;
+  padding-bottom: 3rem;
+}
+
+/* Cabecera y navegación */
+.header-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: $white;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid $gray-200;
+  box-shadow: $shadow-sm;
+  animation: slideUp 0.3s ease-out;
+}
+
+.top-bar {
+  @include flex(row, space-between, center, 1rem);
+  margin-bottom: 1.25rem;
   
-  @media (max-width: 768px) {
-    min-height: calc(100vh - 56px); // Ajuste para navbar móvil
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $gray-800;
+    margin: 0;
+    
+    @media (min-width: 768px) {
+      font-size: 1.75rem;
+    }
   }
 }
 
-// Botón atrás
 .btn-back {
-  @include button-reset;
-  @include flex(row, flex-start, center);
-  color: $secondary-color;
+  @include flex(row, center, center, 0.5rem);
+  background-color: transparent;
+  color: $secondary;
   font-weight: 500;
-  margin: 1rem 0 0 1rem;
+  font-size: 0.875rem;
   padding: 0.5rem 0.75rem;
+  border: none;
   border-radius: $border-radius;
-  transition: $transition-fast;
-  background-color: rgba($bg-white, 0.8);
-  backdrop-filter: blur(4px);
-  box-shadow: $shadow-sm;
+  cursor: pointer;
+  transition: $transition;
   
   svg {
-    margin-right: 0.5rem;
-    transition: $transition-fast;
+    transition: transform 0.2s ease;
   }
   
   &:hover {
-    color: $primary-color;
-    background-color: $bg-white;
-    box-shadow: $shadow-md;
+    color: $primary;
+    background-color: rgba($primary, 0.05);
     
     svg {
       transform: translateX(-3px);
     }
   }
   
-  @media (max-width: 480px) {
-    margin: 0.75rem 0 0 0.75rem;
-    font-size: 0.875rem;
+  &:active {
+    transform: scale(0.97);
   }
 }
 
-// Cabecera de reportes
-.reports-header {
-  @include responsive-padding;
-  @include flex(column, flex-start, flex-start);
-  margin-bottom: 1.5rem;
+.search-container {
+  margin-bottom: 1.25rem;
+}
+
+.search-bar {
+  position: relative;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
   
-  h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: $text-dark;
-    margin: 1rem 0;
-    
-    @media (max-width: 768px) {
-      font-size: 1.5rem;
-    }
-    
-    @media (max-width: 480px) {
-      font-size: 1.25rem;
-    }
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $secondary;
+    pointer-events: none;
+    z-index: 1;
   }
   
-  .search-bar {
+  .search-input {
     width: 100%;
-    max-width: 600px;
-    @include flex(row, space-between, center);
-    margin: 1rem 0;
-    position: relative;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    font-size: 0.9375rem;
+    color: $gray-800;
+    background-color: $white;
+    border: 1px solid $gray-200;
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-sm;
+    transition: $transition;
     
-    .search-input {
-      width: 100%;
-      padding: 0.75rem 1rem 0.75rem 3rem;
-      border-radius: $border-radius;
-      border: 1px solid $border-color;
-      background-color: $bg-white;
-      font-size: 1rem;
-      color: $text-dark;
-      transition: $transition-normal;
-      box-shadow: $shadow-sm;
-      
-      &:focus {
-        outline: none;
-        border-color: $primary-color;
-        box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
-      }
-      
-      @media (max-width: 480px) {
-        padding: 0.6rem 1rem 0.6rem 2.5rem;
-        font-size: 0.875rem;
-      }
+    &::placeholder {
+      color: $secondary-light;
     }
     
-    .search-button {
-      @include button-reset;
-      position: absolute;
-      left: 0.75rem;
-      color: $secondary-color;
-      
-      i {
-        font-size: 1.25rem;
-        
-        @media (max-width: 480px) {
-          font-size: 1rem;
-        }
-      }
-    }
-    
-    @media (max-width: 768px) {
-      max-width: 100%;
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.15);
     }
   }
 }
 
-// Navegación de tipo de reporte
-.task-type-nav {
-  @include flex(row, flex-start, center);
+.tab-navigation {
+  @include flex(row, flex-start, center, 0.5rem);
+  border-bottom: 2px solid $gray-200;
+  margin: 0 -1.5rem;
   padding: 0 1.5rem;
-  margin-bottom: 1.5rem;
   overflow-x: auto;
   
-  button {
-    @include button-reset;
-    padding: 0.75rem 1.5rem;
+  &::-webkit-scrollbar {
+    height: 0;
+    width: 0;
+  }
+  
+  .tab-button {
+    @include flex(row, center, center, 0.5rem);
+    padding: 0.75rem 1.25rem;
+    color: $secondary;
     font-weight: 600;
-    color: $secondary-color;
+    background: transparent;
+    border: none;
+    border-radius: $border-radius-sm $border-radius-sm 0 0;
+    font-size: 0.9375rem;
     position: relative;
-    transition: $transition-normal;
+    cursor: pointer;
     white-space: nowrap;
+    margin-bottom: -2px;
+    transition: $transition;
     
-    &:before {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%) scaleX(0);
-      width: 80%;
-      height: 3px;
-      background-color: $primary-color;
-      border-radius: 8px 8px 0 0;
-      transition: $transition-normal;
+    .tab-icon {
+      position: relative;
+      display: inline-block;
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      
+      &.pending {
+        background-color: $warning;
+      }
+      
+      &.completed {
+        background-color: $success;
+      }
+    }
+    
+    &:hover:not(.active) {
+      color: $primary;
+      background-color: rgba($primary, 0.05);
     }
     
     &.active {
-      color: $primary-color;
+      color: $primary;
+      border-bottom: 2px solid $primary;
       
-      &:before {
-        transform: translateX(-50%) scaleX(1);
+      .tab-icon {
+        &::after {
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          border-radius: 50%;
+          border: 2px solid currentColor;
+          opacity: 0.4;
+          animation: pulse 2s infinite;
+        }
       }
     }
-    
-    &:hover {
-      color: $primary-dark;
-    }
-    
-    @media (max-width: 480px) {
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    padding: 0 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 0 0.75rem;
   }
 }
 
-// Sección de filtros
+/* Sección de filtros */
 .filters-section {
-  @include flex(row, flex-start, center);
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 0 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.filters-grid {
+  @include grid(1, 1rem);
+  margin-bottom: 1.25rem;
   
-  .filter-group {
-    @include flex(column, flex-start, flex-start);
-    min-width: 180px;
-    flex-grow: 1;
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.filter-card {
+  @include card($white, 1rem, true);
+  transition: $transition;
+  
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+  
+  .filter-header {
+    @include flex(row, flex-start, center, 0.5rem);
+    margin-bottom: 0.625rem;
+    
+    svg {
+      color: $secondary;
+    }
     
     label {
       font-size: 0.75rem;
       font-weight: 600;
-      color: $secondary-color;
-      margin-bottom: 0.25rem;
+      color: $secondary;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    select {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border-radius: $border-radius;
-      border: 1px solid $border-color;
-      background-color: $bg-white;
-      color: $text-dark;
-      font-size: 0.875rem;
-      transition: $transition-fast;
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.75rem center;
-      background-size: 16px;
-      
-      &:focus {
-        outline: none;
-        border-color: $primary-color;
-        box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
-      }
-    }
-    
-    @media (max-width: 768px) {
-      min-width: calc(50% - 0.5rem);
-    }
-    
-    @media (max-width: 480px) {
-      min-width: 100%;
+      letter-spacing: 0.025em;
     }
   }
   
-  .btn-reset-filters {
-    @include button-reset;
-    padding: 0.5rem 1rem;
-    border-radius: $border-radius;
-    background-color: transparent;
-    border: 1px solid $border-color;
-    color: $secondary-color;
+  .filter-select {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
     font-size: 0.875rem;
-    font-weight: 500;
+    color: $gray-800;
+    background-color: $white;
+    border: 1px solid $gray-200;
+    border-radius: $border-radius;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
     transition: $transition-fast;
-    margin-top: 1.5rem;
     
-    &:hover {
-      background-color: $bg-white;
-      color: $primary-color;
-      border-color: $primary-color;
-    }
-    
-    @media (max-width: 768px) {
-      margin-top: 0.5rem;
-      width: 100%;
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
     }
   }
   
-  @media (max-width: 768px) {
-    padding: 0 1rem;
-    margin-bottom: 1rem;
+  // Estilos específicos para cada tipo de filtro
+  &.company {
+    border-top: 3px solid $primary;
   }
   
-  @media (max-width: 480px) {
-    padding: 0 0.75rem;
-    gap: 0.75rem;
+  &.department {
+    border-top: 3px solid $info;
+  }
+  
+  &.worker {
+    border-top: 3px solid $secondary;
+  }
+  
+  &.priority {
+    border-top: 3px solid $warning;
+  }
+  
+  &.date {
+    border-top: 3px solid $success;
   }
 }
 
-// Mensajes de estado
-.error-message {
-  @include flex(row, flex-start, center);
-  margin: 1rem 1.5rem;
-  padding: 0.75rem 1rem;
-  background-color: rgba($danger-color, 0.1);
-  border-left: 4px solid $danger-color;
+.btn-reset-filters {
+  @include flex(row, center, center, 0.5rem);
+  background-color: $white;
+  color: $secondary;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid $gray-200;
   border-radius: $border-radius;
-  color: color.adjust($danger-color, $lightness: -20%);
+  margin: 0 auto;
+  cursor: pointer;
+  transition: $transition;
+  box-shadow: $shadow-sm;
+  
+  svg {
+    transition: transform 0.3s ease;
+  }
+  
+  &:hover {
+    background-color: $gray-50;
+    color: $primary;
+    border-color: $primary;
+    
+    svg {
+      transform: rotate(90deg);
+    }
+  }
+  
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* Mensajes de estado */
+.error-message {
+  @include flex(row, flex-start, center, 0.75rem);
+  margin: 0 1.5rem 1.5rem;
+  padding: 1rem;
+  background-color: rgba($danger, 0.08);
+  border-left: 4px solid $danger;
+  border-radius: $border-radius;
+  color: color.adjust($danger, $lightness: -15%);
   animation: fadeIn 0.3s ease-out;
   
-  i {
-    margin-right: 0.5rem;
-    font-size: 1.25rem;
-  }
-  
-  @media (max-width: 768px) {
-    margin: 1rem 1rem;
-  }
-  
-  @media (max-width: 480px) {
-    margin: 0.75rem;
-    font-size: 0.875rem;
+  svg {
+    flex-shrink: 0;
   }
 }
 
 .loading-indicator {
-  @include flex(column, center, center);
-  padding: 2rem;
-  width: 100%;
-  color: $secondary-color;
+  @include flex(column, center, center, 1rem);
+  padding: 3rem 1.5rem;
+  color: $secondary;
+  
+  .spinner-container {
+    width: 4rem;
+    height: 4rem;
+    @include flex(row, center, center);
+  }
   
   .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba($primary-color, 0.3);
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid rgba($primary, 0.2);
     border-radius: 50%;
-    border-top-color: $primary-color;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
+    border-top-color: $primary;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  span {
+    font-size: 0.9375rem;
+    color: $secondary;
   }
 }
 
-// Sin reportes
+/* Contenido principal */
+.reports-content {
+  padding: 0 1.5rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+// Estado vacío
 .no-reports {
-  @include flex(column, center, center);
-  padding: 3rem 1.5rem;
-  color: $secondary-color;
-  text-align: center;
+  padding: 2rem 0;
   
-  i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-  }
-  
-  p {
-    font-size: 1rem;
-    max-width: 400px;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 2rem 1rem;
+  .empty-state {
+    @include card;
+    @include flex(column, center, center, 1.5rem);
+    padding: 3rem 2rem;
+    text-align: center;
+    color: $secondary;
     
-    i {
-      font-size: 2.5rem;
+    svg {
+      color: $gray-300;
     }
     
     p {
-      font-size: 0.875rem;
+      max-width: 24rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      margin: 0;
     }
   }
 }
 
 // Tabla de reportes
-.reports-content {
-  @include responsive-padding;
-  padding-top: 0;
-}
-
 .reports-table {
-  background-color: $bg-white;
-  border-radius: $border-radius;
-  box-shadow: $shadow-md;
+  border-radius: $border-radius-lg;
   overflow: hidden;
-  animation: fadeIn 0.5s ease-out;
+  box-shadow: $shadow-md;
+  background-color: $white;
+  margin-bottom: 2rem;
   
   .table-header {
-    @include flex(row, flex-start, center);
-    background: linear-gradient(135deg, $primary-color, $primary-dark);
-    color: $bg-white;
+    @include flex(row, stretch, stretch);
+    background: $primary-gradient;
+    color: $white;
     font-weight: 600;
     font-size: 0.875rem;
     
     .header-cell {
-      padding: 1rem 0.75rem;
+      padding: 1rem 1.25rem;
+      text-align: left;
       flex: 1;
-      white-space: nowrap;
       
-      &:last-child {
-        flex: 0.5;
-        text-align: center;
-      }
+      &.title { flex: 1.5; }
+      &.actions { flex: 0.8; text-align: center; }
     }
     
     @media (max-width: 1024px) {
-      display: none; // Ocultamos el encabezado en pantallas pequeñas
+      display: none;
     }
   }
   
   .table-body {
     .table-row {
-      @include flex(row, flex-start, center);
-      border-bottom: 1px solid $border-color;
-      transition: $transition-fast;
+      @include flex(row, stretch, center);
+      border-bottom: 1px solid $gray-200;
+      transition: background-color 0.2s ease;
       
       &:last-child {
         border-bottom: none;
       }
       
       &:hover {
-        background-color: rgba($primary-color, 0.05);
+        background-color: rgba($primary, 0.03);
       }
       
       .cell {
-        padding: 1rem 0.75rem;
+        padding: 1rem 1.25rem;
         flex: 1;
-        color: $text-dark;
+        overflow: hidden;
         
-        // Prioridad con badge
-        .priority-badge {
-          display: inline-block;
-          padding: 0.25rem 0.5rem;
-          border-radius: 20px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-transform: uppercase;
+        &.title { flex: 1.5; }
+        &.actions { flex: 0.8; }
+        
+        .cell-content {
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
           
-          &.alta {
-            background-color: rgba($danger-color, 0.15);
-            color: $danger-color;
+          &.title {
+            font-weight: 500;
+            color: $gray-800;
           }
           
-          &.media {
-            background-color: rgba($warning-color, 0.15);
-            color: $warning-color;
-          }
-          
-          &.baja {
-            background-color: rgba($success-color, 0.15);
-            color: $success-color;
-          }
-          
-          &.sin-prioridad {
-            background-color: rgba($secondary-color, 0.1);
-            color: $secondary-color;
+          &.date {
+            color: $secondary;
+            font-size: 0.875rem;
           }
         }
         
-        &.actions {
-          flex: 0.5;
-          text-align: center;
+        @media (max-width: 1024px) {
+          padding: 0.625rem 1rem;
           
-          .view-button {
-            @include button-reset;
-            padding: 0.5rem 0.75rem;
-            border-radius: $border-radius;
-            background-color: rgba($primary-color, 0.1);
-            color: $primary-color;
+          &:before {
+            content: attr(data-label);
             font-size: 0.75rem;
             font-weight: 600;
-            transition: $transition-fast;
-            
-            i {
-              margin-right: 0.35rem;
-            }
-            
-            &:hover {
-              background-color: $primary-color;
-              color: $bg-white;
-            }
+            text-transform: uppercase;
+            color: $secondary;
+            display: block;
+            margin-bottom: 0.25rem;
           }
         }
       }
       
       @media (max-width: 1024px) {
         flex-direction: column;
-        align-items: flex-start;
         padding: 1rem;
-        position: relative;
+        border-bottom: 1px solid $gray-200;
         
         .cell {
           width: 100%;
-          padding: 0.35rem 0;
-          display: flex;
-          align-items: center;
-          
-          &:before {
-            content: attr(data-label);
-            flex: 0 0 40%;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: $secondary-color;
-            text-transform: uppercase;
-          }
           
           &.actions {
-            margin-top: 0.75rem;
-            justify-content: flex-end;
-            
-            .view-button {
-              width: 100%;
-              padding: 0.6rem;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-            }
+            margin-top: 0.5rem;
           }
         }
       }
@@ -572,113 +618,333 @@ $transition-normal: all 0.3s ease;
   }
 }
 
-// Modal de vista previa
-.pdf-modal {
+// Badges y botones de acción
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  letter-spacing: 0.025em;
+  
+  &.alta {
+    background-color: rgba($danger, 0.1);
+    color: $danger;
+  }
+  
+  &.media {
+    background-color: rgba($warning, 0.1);
+    color: $warning;
+  }
+  
+  &.baja {
+    background-color: rgba($success, 0.1);
+    color: $success;
+  }
+  
+  &.sin-prioridad {
+    background-color: rgba($secondary, 0.1);
+    color: $secondary;
+  }
+}
+
+.action-buttons {
+  @include flex(row, center, center, 0.5rem);
+  
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.action-button {
+  @include flex(row, center, center, 0.375rem);
+  background: transparent;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: $transition-fast;
+  
+  &.view {
+    background-color: rgba($primary, 0.08);
+    color: $primary;
+    
+    &:hover {
+      background-color: $primary;
+      color: $white;
+    }
+  }
+  
+  &.download {
+    background-color: rgba($info, 0.08);
+    color: $info;
+    
+    &:hover {
+      background-color: $info;
+      color: $white;
+    }
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  @media (max-width: 640px) {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Modal de vista previa */
+.pdf-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba($text-dark, 0.75);
+  right: 0;
+  bottom: 0;
+  background-color: rgba($gray-900, 0.75);
   backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: 50;
   @include flex(row, center, center);
   animation: fadeIn 0.3s ease-out;
+}
+
+.pdf-modal {
+  width: 90%;
+  max-width: 1000px;
+  height: 90vh;
+  background-color: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-lg;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
   
-  .modal-content {
-    width: 90%;
-    max-width: 900px;
-    height: 90%;
-    background-color: $bg-white;
-    border-radius: $border-radius;
-    box-shadow: $shadow-lg;
-    display: flex;
-    flex-direction: column;
+  .modal-header {
+    @include flex(row, space-between, center);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid $gray-200;
+    
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $gray-800;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100% - 3rem);
+    }
+    
+    .close-button {
+      @include flex(row, center, center);
+      background-color: transparent;
+      border: none;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      cursor: pointer;
+      color: $secondary;
+      transition: $transition-fast;
+      
+      &:hover {
+        background-color: rgba($danger, 0.1);
+        color: $danger;
+      }
+      
+      &:active {
+        transform: scale(0.9);
+      }
+    }
+  }
+  
+  .modal-body {
+    flex: 1;
     overflow: hidden;
     
-    .modal-header {
-      @include flex(row, space-between, center);
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid $border-color;
-      
-      h2 {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin: 0;
-        color: $text-dark;
-      }
-      
-      .close-button {
-        @include button-reset;
-        width: 36px;
-        height: 36px;
-        @include flex(row, center, center);
-        border-radius: 50%;
-        background-color: rgba($secondary-color, 0.1);
-        color: $secondary-color;
-        transition: $transition-fast;
-        
-        &:hover {
-          background-color: rgba($danger-color, 0.1);
-          color: $danger-color;
-        }
-      }
-      
-      @media (max-width: 480px) {
-        padding: 0.75rem 1rem;
-        
-        h2 {
-          font-size: 1rem;
-        }
-      }
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  }
+  
+  .modal-footer {
+    @include flex(row, flex-end, center);
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid $gray-200;
+  }
+  
+  .modal-action-button {
+    @include flex(row, center, center, 0.5rem);
+    background-color: $info;
+    color: $white;
+    border: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    border-radius: $border-radius;
+    cursor: pointer;
+    transition: $transition-fast;
+    
+    &:hover {
+      background-color: color.adjust($info, $lightness: -5%);
     }
     
-    .modal-body {
-      flex: 1;
-      overflow: hidden;
-      
-      .pdf-viewer {
-        width: 100%;
-        height: 100%;
-        
-        iframe {
-          width: 100%;
-          height: 100%;
-          border: none;
-        }
-      }
+    &:active {
+      transform: scale(0.98);
     }
   }
 }
 
-// Optimizaciones para atributos data en dispositivos pequeños
-@media (max-width: 1024px) {
-  .reports-table .table-body .table-row .cell {
-    &:nth-child(1):before {
-      content: "Título";
+/* Optimización para dispositivos móviles */
+@media (max-width: 768px) {
+  .header-wrapper {
+    padding: 1rem;
+  }
+  
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    
+    .btn-back {
+      font-size: 0.8125rem;
+      padding: 0.375rem 0.625rem;
     }
     
-    &:nth-child(2):before {
-      content: "Fecha";
+    .page-title {
+      font-size: 1.25rem;
     }
-    
-    &:nth-child(3):before {
-      content: "Empresa";
-    }
-    
-    &:nth-child(4):before {
-      content: "Trabajador";
-    }
-    
-    &:nth-child(5):before {
-      content: "Prioridad";
-    }
+  }
+  
+  .search-container {
+    margin-bottom: 1rem;
+  }
+  
+  .search-bar .search-input {
+    padding: 0.625rem 1rem 0.625rem 2.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .filters-section, .reports-content {
+    padding: 1rem;
+  }
+  
+  .filter-card {
+    padding: 0.75rem;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.125rem;
+  }
+  
+  .modal-action-button {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
   }
 }
 
-// Animaciones de interacción
-.table-row, .btn-back, .view-button, select, .search-input, .pdf-modal .close-button {
-  &:active {
-    transform: scale(0.98);
+/* Animaciones de elementos al cargar */
+.reports-container > * {
+  animation: fadeIn 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.top-bar {
+  animation-delay: 0.1s;
+}
+
+.search-container {
+  animation-delay: 0.2s;
+}
+
+.tab-navigation {
+  animation-delay: 0.3s;
+}
+
+.filters-section {
+  animation-delay: 0.4s;
+}
+
+.reports-content {
+  animation-delay: 0.5s;
+}
+
+/* Soporte para modo oscuro si está implementado en la aplicación */
+.dark .reports-container {
+  background-color: rgba($gray-900, 0.95);
+  color: $gray-100;
+  
+  .header-wrapper, .filter-card, .reports-table, .empty-state {
+    background-color: rgba($gray-800, 0.8);
+    border-color: rgba($gray-600, 0.5);
   }
+  
+  .page-title, h2 {
+    color: $white;
+  }
+  
+  .search-input, .filter-select {
+    background-color: rgba($gray-800, 0.8);
+    border-color: rgba($gray-600, 0.5);
+    color: $white;
+    
+    &::placeholder {
+      color: $gray-400;
+    }
+  }
+  
+  .tab-navigation {
+    border-bottom-color: rgba($gray-600, 0.5);
+  }
+  
+  .table-row:hover {
+    background-color: rgba($primary, 0.15);
+  }
+  
+  .cell-content {
+    color: $gray-300;
+    
+    &.title {
+      color: $white;
+    }
+  }
+  
+  .action-button.view, .action-button.download {
+    background-color: rgba($gray-600, 0.6);
+  }
+}
+
+/* Accesibilidad - focus visible */
+button:focus-visible, 
+select:focus-visible, 
+input:focus-visible {
+  outline: 2px solid $primary;
+  outline-offset: 2px;
+}
+
+/* Efecto de loading shimmer para mejora de UX durante carga */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, $gray-100 4%, $gray-200 25%, $gray-100 36%);
+  background-size: 1000px 100%;
+  border-radius: $border-radius;
 }

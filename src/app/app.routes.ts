@@ -81,6 +81,10 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard]
   },
   {
+    path: 'recuperar-contrasena',
+    loadComponent: () => import('./Components/recuperar-contrasena/recuperar-contrasena.component').then(m => m.RecuperarContrasenaComponent),
+  },
+  {
     path: '**',
     redirectTo: '',
     pathMatch: 'full'

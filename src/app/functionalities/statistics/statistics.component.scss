@@ -1,0 +1,271 @@
+// Variables
+$font-family: 'Roboto', sans-serif;
+
+// Colores
+$white: #ffffff;
+$background-color: #f7f9fc;
+$text-primary: #2d3748;
+$text-secondary: #4a5568;
+$text-tertiary: #718096;
+$border-color: #e2e8f0;
+$border-color-light: #f0f3f7;
+$primary-color: #3182ce;
+$success-color: #38a169;
+$warning-color: #d69e2e;
+
+// Sombras
+$shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 10px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 6px 12px rgba(0, 0, 0, 0.1);
+
+// Bordes
+$border-radius-md: 12px;
+$border-radius-lg: 16px;
+
+// Espaciado
+$spacing-xs: 5px;
+$spacing-sm: 10px;
+$spacing-md: 15px;
+$spacing-lg: 20px;
+$spacing-xl: 30px;
+$spacing-2xl: 40px;
+
+// Tipografía
+$font-size-xs: 13px;
+$font-size-sm: 14px;
+$font-size-md: 16px;
+$font-size-lg: 20px;
+$font-size-xl: 24px;
+$font-size-2xl: 36px;
+
+// Variables CSS
+$radius-md: var(--radius-md);
+
+// Mixins
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@mixin flex-center-y {
+  display: flex;
+  align-items: center;
+}
+
+@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+@mixin hover-lift {
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+// Reset
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: $font-family;
+}
+
+body {
+  background-color: $background-color;
+  color: #333;
+  line-height: 1.6;
+  font-size: $font-size-md;
+}
+
+// Dashboard principal
+.dashboard {
+  max-width: 1200px;
+  margin: $spacing-2xl auto;
+  padding: $spacing-lg;
+  background-color: $white;
+  box-shadow: $shadow-md;
+  border-radius: $border-radius-lg;
+}
+
+// Encabezado
+.dashboard-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xl;
+  padding-bottom: $spacing-md;
+  border-bottom: 2px solid #e4e8ec;
+  
+  h1 {
+    color: $text-primary;
+    font-size: $font-size-xl;
+    font-weight: 700;
+    margin-bottom: $spacing-sm;
+  }
+  
+  span {
+    color: $text-tertiary;
+    font-size: $font-size-sm;
+    font-weight: 500;
+  }
+}
+
+// Tarjetas de estadísticas
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: $spacing-lg;
+}
+
+.stat-card {
+  background-color: $white;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-md;
+  padding: $spacing-lg;
+  text-align: center;
+  box-shadow: $shadow-sm;
+  @include transition(transform 0.3s ease, box-shadow 0.3s ease);
+  
+  @include hover-lift;
+  
+  h3 {
+    color: $text-secondary;
+    margin-bottom: $spacing-sm;
+    font-size: $font-size-md;
+    text-transform: uppercase;
+  }
+  
+  .stat-value {
+    color: $primary-color;
+    font-size: $font-size-2xl;
+    font-weight: 800;
+  }
+}
+
+// Desglose detallado
+.detailed-breakdown {
+  margin-top: $spacing-2xl;
+  background-color: #f8fafc;
+  border-radius: $border-radius-md;
+  padding: $spacing-lg;
+  
+  h2 {
+    color: $text-primary;
+    margin-bottom: $spacing-lg;
+    font-size: $font-size-lg;
+    font-weight: 700;
+  }
+}
+
+// Tabla
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: $spacing-sm;
+  
+  th, td {
+    padding: $spacing-md $spacing-md;
+    text-align: left;
+    background-color: $white;
+    border-bottom: 2px solid $border-color-light;
+    font-size: $font-size-sm;
+  }
+  
+  th {
+    background-color: #edf2f7;
+    color: $text-primary;
+    font-weight: 600;
+  }
+  
+  td {
+    color: $text-secondary;
+  }
+  
+  tr:hover td {
+    background-color: #f8fafc;
+  }
+}
+
+// Estado
+.status-badge {
+  padding: 8px 12px;
+  border-radius: $border-radius-md;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: capitalize;
+  
+  &.status-completed {
+    background-color: $success-color;
+    color: $white;
+  }
+  
+  &.status-pending {
+    background-color: $warning-color;
+    color: $white;
+  }
+}
+
+// Botón de regreso
+.btn-back {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 2px solid transparent;
+  border-radius: $radius-md;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+  @include transition(all, 0.3s, cubic-bezier(0.4, 0, 0.2, 1));
+  z-index: 10;
+  cursor: pointer;
+  outline: none;
+}
+
+// Responsividad
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    text-align: center;
+    
+    h1 {
+      font-size: $font-size-lg;
+    }
+    
+    span {
+      margin-top: $spacing-xs;
+    }
+  }
+  
+  .stat-card {
+    padding: $spacing-md;
+    
+    .stat-value {
+      font-size: 28px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard {
+    padding: $spacing-md;
+  }
+  
+  .breakdown-table {
+    th, td {
+      padding: $spacing-sm;
+    }
+  }
+}

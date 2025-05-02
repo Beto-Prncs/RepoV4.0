@@ -1,0 +1,12 @@
+// Variables
+$container-width: 100vw;
+$container-height: 100vh;
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: $container-width;
+  height: $container-height;
+  
+}

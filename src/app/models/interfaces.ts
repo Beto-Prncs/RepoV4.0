@@ -1,16 +1,18 @@
 
-export interface Usuario {
-  IdUsuario: string;
-  Username: string;
-  Nombre: string;
-  Correo: string;
-  Departamento: string;
-  Rol: string;
-  Telefono: string;
-  Foto_Perfil?: string;
-  NivelAdmin?: string;
-  IdDepartamento?: string;
-}
+  export interface Usuario {
+    IdUsuario: string;
+    Username: string;
+    Nombre: string;
+    Correo: string;
+    Departamento: string;
+    Rol: string;
+    Telefono: string;
+    Foto_Perfil?: string;
+    NivelAdmin?: string;
+    IdDepartamento?: string;
+    createdBy?: string;
+    Password?: string;
+  }
   
   export interface Empresa {
     IdEmpresa: string;
@@ -60,5 +62,20 @@ export interface Usuario {
     prioridad: string;
     materialesUtilizados: string;
     codigoQR: string;
+  }
+
+
+  export interface AppConfig {
+    name: string;
+    language: string;
+    timezone: string;
+    theme: 'light' | 'dark';
+    textSize: number;
+    autoSave: boolean;
+    currency: string;
+    dateFormat: string;
+    autoLogout: boolean;
+    autoLogoutTime: string;
+    debugMode?: boolean;
   }
 

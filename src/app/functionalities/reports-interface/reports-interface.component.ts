@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
   selector: 'app-reports-interface',
   imports: [CommonModule],
   templateUrl: './reports-interface.component.html',
-  styleUrl: './reports-interface.component.css'
+  styleUrl: './reports-interface.component.scss'
 })
 export class ReportsInterfaceComponent {
 

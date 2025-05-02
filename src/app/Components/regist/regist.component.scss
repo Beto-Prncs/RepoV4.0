@@ -1,0 +1,187 @@
+/* Estilos generales para la página de registro */
+
+// Variables
+$color-primary: #2196F3;
+$color-primary-dark: #1976D2;
+$color-primary-light: #90caf9;
+$color-secondary: #e0e0e0;
+$color-secondary-dark: #bdbdbd;
+$color-error: #f44336;
+$color-success: #4CAF50;
+$color-text-primary: #333;
+$color-text-secondary: #777;
+$color-border: #ddd;
+$color-background: #f5f5f5;
+$color-white: white;
+$border-radius-small: 4px;
+$border-radius-medium: 8px;
+$box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+$padding-standard: 20px;
+$padding-small: 10px;
+$padding-medium: 15px;
+$margin-standard: 20px;
+$margin-small: 10px;
+$margin-medium: 15px;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin card-message {
+  color: $color-white;
+  padding: $padding-small;
+  margin-bottom: $margin-medium;
+  border-radius: $border-radius-small;
+  text-align: center;
+}
+
+@mixin button-base {
+  padding: $padding-small $padding-standard;
+  border: none;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s;
+}
+
+.container {
+  @include flex-center;
+  min-height: 100vh;
+  background-color: $color-background;
+}
+
+.card {
+  background-color: $color-white;
+  border-radius: $border-radius-medium;
+  box-shadow: $box-shadow;
+  width: 400px;
+  max-width: 90%;
+  overflow: hidden;
+}
+
+.app-logo {
+  display: block;
+  margin: $padding-standard auto;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.card-header {
+  background-color: $color-primary;
+  color: $color-white;
+  padding: $padding-medium;
+  text-align: center;
+  font-size: 1.2em;
+  border-bottom: 1px solid $color-border;
+}
+
+.card-body {
+  padding: $padding-standard;
+  
+  p {
+    color: $color-text-secondary;
+    margin-bottom: $margin-medium;
+    text-align: center;
+  }
+}
+
+.error-message {
+  @include card-message;
+  background-color: $color-error;
+}
+
+.success-message {
+  @include card-message;
+  background-color: $color-success;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  color: $color-text-primary;
+  font-weight: bold;
+}
+
+input {
+  &[type="text"],
+  &[type="email"],
+  &[type="tel"],
+  &[type="password"] {
+    width: calc(100% - 22px);
+    padding: $padding-small;
+    margin-bottom: $margin-medium;
+    border: 1px solid $color-border;
+    border-radius: $border-radius-small;
+    box-sizing: border-box;
+    font-size: 1em;
+  }
+}
+
+.show-password {
+  margin-bottom: $margin-medium;
+  display: flex;
+  align-items: center;
+  
+  label {
+    font-weight: normal;
+    margin-left: 5px;
+  }
+}
+
+.button-group {
+  display: flex;
+  gap: $padding-small;
+  margin-top: $padding-standard;
+}
+
+button[type="submit"] {
+  @include button-base;
+  background-color: $color-primary;
+  color: $color-white;
+  flex-grow: 1;
+  
+  &:hover {
+    background-color: $color-primary-dark;
+  }
+  
+  &:disabled {
+    background-color: $color-primary-light;
+    cursor: not-allowed;
+  }
+}
+
+.back-button {
+  @include button-base;
+  background-color: $color-secondary;
+  color: $color-text-primary;
+  
+  &:hover {
+    background-color: $color-secondary-dark;
+  }
+}
+
+.login-link {
+  text-align: center;
+  margin-top: $padding-standard;
+  color: $color-text-secondary;
+  
+  a {
+    color: $color-primary;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* Media query para pantallas más pequeñas */
+@media (max-width: 600px) {
+  .card {
+    margin: $padding-standard;
+  }
+}

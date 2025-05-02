@@ -11,6 +11,8 @@ import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { getStorage, provideStorage } from '@angular/fire/storage';
 import { TranslationModule } from './shared/modules/translation.module';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+
 
 
 const firebaseConfig = {
@@ -30,6 +32,7 @@ export const appConfig: ApplicationConfig = {
     provideFirestore(() => getFirestore()),
     importProvidersFrom(TranslationModule),
     provideStorage(() => getStorage()),
-    importProvidersFrom(NgxExtendedPdfViewerModule)
+    importProvidersFrom(NgxExtendedPdfViewerModule),
+    provideHttpClient(withInterceptorsFromDi())
   ]
 };

@@ -1,0 +1,711 @@
+// Importación de fuente profesional
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+// Variables
+$font-family: 'Inter', sans-serif;
+
+// Colores
+$primary-color: #3b82f6;
+$primary-hover: #2563eb;
+$primary-light: #eff6ff;
+$primary-dark: #1d4ed8;
+$secondary-color: #64748b;
+$danger-color: #ef4444;
+$danger-light: #fee2e2;
+$success-color: #22c55e;
+$success-light: #dcfce7;
+$warning-color: #f59e0b;
+$border-color: #e2e8f0;
+$background-color: #f8fafc;
+$card-background: #ffffff;
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$text-light: #94a3b8;
+$white: white;
+$black: rgba(0, 0, 0, 0.1);
+$notification-success-color: #34c759;
+$notification-success-bg: #ebf7ee;
+$notification-success-text: #1a7431;
+$notification-error-color: #ef4444;
+$notification-error-bg: #fef1f2;
+$notification-error-text: #991b1b;
+$overlay-bg: rgba(0, 0, 0, 0.5);
+$spotify-success: #1DB954;
+$spotify-error: #E22134;
+
+// Sombras
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+$hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+$logo-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+$notification-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+$button-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+// Bordes
+$radius-sm: 0.375rem;
+$radius-md: 0.5rem;
+$radius-lg: 0.75rem;
+
+// Espaciado
+$spacing-xs: 0.5rem;
+$spacing-sm: 0.75rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+$spacing-2xl: 2.5rem;
+$spacing-3xl: 3rem;
+
+// Tipografía
+$font-size-xs: 0.875rem;
+$font-size-sm: 0.925rem;
+$font-size-md: 1rem;
+$font-size-lg: 1.1rem;
+$font-size-xl: 1.25rem;
+$font-size-2xl: 1.75rem;
+$font-size-3xl: 2.25rem;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+@mixin hover-transform {
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $hover-shadow;
+  }
+}
+
+@mixin form-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  background-color: $white;
+  color: $text-primary;
+  font-size: $font-size-md;
+  @include transition;
+  font-family: $font-family;
+
+  &::placeholder {
+    color: $text-light;
+  }
+
+  &:hover {
+    border-color: $primary-color;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+}
+
+@mixin button-base {
+  padding: 0.875rem 2rem;
+  border-radius: $radius-md;
+  font-weight: 500;
+  font-size: $font-size-md;
+  @include transition(all, 0.2s, cubic-bezier(0.4, 0, 0.2, 1));
+  min-width: 140px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  font-family: $font-family;
+}
+
+@mixin linear-gradient($direction, $color1, $color2) {
+  background: linear-gradient($direction, $color1, $color2);
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes formSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+// Configuración base del componente
+:host {
+  display: block;
+  --primary-color: #{$primary-color};
+  --primary-hover: #{$primary-hover};
+  --primary-light: #{$primary-light};
+  --primary-dark: #{$primary-dark};
+  --secondary-color: #{$secondary-color};
+  --danger-color: #{$danger-color};
+  --danger-light: #{$danger-light};
+  --success-color: #{$success-color};
+  --success-light: #{$success-light};
+  --warning-color: #{$warning-color};
+  --border-color: #{$border-color};
+  --background-color: #{$background-color};
+  --card-background: #{$card-background};
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-light: #{$text-light};
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  font-family: $font-family;
+}
+
+// Scroll suave
+html {
+  scroll-behavior: smooth;
+}
+
+// Contenedor principal con fondo mejorado
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: $spacing-xl auto;
+  padding: 0 $spacing-lg;
+  @include linear-gradient(to bottom, var(--background-color), white);
+  min-height: 100vh;
+}
+
+// Tarjeta del dashboard mejorada
+.dashboard-card {
+  background-color: var(--card-background);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  @include transition;
+  margin: $spacing-md auto;
+  max-width: 1100px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $hover-shadow;
+  }
+}
+
+// Header mejorado con gradiente y efectos
+.card-header {
+  @include linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  padding: $spacing-2xl;
+  color: $white;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    @include linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1));
+    pointer-events: none;
+  }
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xl;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-logo {
+  width: 64px;
+  height: 64px;
+  padding: 0.75rem;
+  background-color: $white;
+  border-radius: var(--radius-lg);
+  box-shadow: $logo-shadow;
+  @include transition;
+  
+  &:hover {
+    transform: scale(1.05) rotate(5deg);
+  }
+}
+
+.header-text {
+  h1 {
+    margin: 0;
+    color: $white;
+    font-size: $font-size-3xl;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    text-shadow: $text-shadow;
+  }
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: $spacing-xs;
+  font-size: $font-size-lg;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+// Contenido principal con mejor espaciado
+.card-body {
+  padding: $spacing-3xl;
+  background-color: var(--card-background);
+}
+
+// Selector de tipo de cuenta mejorado
+.account-type-selector {
+  h2 {
+    text-align: center;
+    color: var(--text-primary);
+    font-size: $font-size-2xl;
+    font-weight: 600;
+    margin-bottom: $spacing-2xl;
+    letter-spacing: -0.025em;
+  }
+}
+
+.type-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: $spacing-xl;
+  padding: $spacing-md 0;
+}
+
+.type-card {
+  background-color: var(--card-background);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: $spacing-xl;
+  cursor: pointer;
+  @include transition(all, 0.3s, cubic-bezier(0.4, 0, 0.2, 1));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--primary-light);
+    opacity: 0;
+    @include transition;
+    border-radius: inherit;
+  }
+  
+  &:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    
+    &::before {
+      opacity: 0.1;
+    }
+    
+    .icon-container {
+      border-color: var(--primary-color);
+      transform: scale(1.1) rotate(5deg);
+    }
+  }
+  
+  &.selected {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: $spacing-md;
+      right: $spacing-md;
+      background: var(--primary-color);
+      color: $white;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      @include flex-center;
+      font-size: $font-size-xs;
+      font-weight: bold;
+    }
+  }
+  
+  h3 {
+    color: var(--text-primary);
+    font-size: $font-size-xl;
+    font-weight: 600;
+    margin: $spacing-md 0 $spacing-xs;
+  }
+  
+  p {
+    color: var(--text-secondary);
+    line-height: 1.5;
+    font-size: 0.95rem;
+  }
+}
+
+.icon-container {
+  background: $white;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  @include flex-center;
+  margin-bottom: $spacing-lg;
+  border: 2px solid var(--border-color);
+  @include transition;
+  position: relative;
+}
+
+.type-icon {
+  width: 40px;
+  height: 40px;
+  @include transition(transform, 0.3s, ease);
+  color: var(--primary-color);
+}
+
+// Formulario mejorado
+.creation-form {
+  max-width: 850px;
+  margin: $spacing-3xl auto 0;
+  animation: formSlideUp 0.5s ease-out;
+}
+
+.form-section {
+  background: $white;
+  border-radius: var(--radius-lg);
+  padding: $spacing-2xl;
+  margin-bottom: $spacing-2xl;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  @include transition;
+  
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+  
+  h3 {
+    color: var(--text-primary);
+    font-size: $font-size-xl;
+    font-weight: 600;
+    margin-bottom: $spacing-xl;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: $spacing-xl;
+}
+
+.form-group {
+  margin-bottom: $spacing-lg;
+  
+  label {
+    display: block;
+    color: var(--text-primary);
+    font-size: $font-size-sm;
+    font-weight: 500;
+    margin-bottom: $spacing-sm;
+  }
+  
+  input,
+  select {
+    @include form-input;
+  }
+  
+  // Validación visual mejorada
+  input {
+    &.ng-valid.ng-touched {
+      border-color: var(--success-color);
+      background-color: var(--success-light);
+    }
+    
+    &.ng-invalid.ng-touched {
+      border-color: var(--danger-color);
+      background-color: var(--danger-light);
+    }
+  }
+}
+
+// Mensajes de error mejorados
+.error-message {
+  color: var(--danger-color);
+  font-size: $font-size-xs;
+  margin-top: $spacing-sm;
+  padding: $spacing-sm;
+  background-color: var(--danger-light);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  animation: errorShake 0.4s ease-in-out;
+  
+  &::before {
+    content: '⚠️';
+    font-size: $font-size-md;
+  }
+}
+
+// Botones mejorados
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  margin-top: $spacing-3xl;
+  padding-top: $spacing-xl;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-primary,
+.btn-secondary {
+  @include button-base;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: $white;
+  border: none;
+  
+  &:not(:disabled) {
+    &:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: $button-shadow;
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+  
+  &:disabled {
+    background-color: var(--text-light);
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.btn-secondary {
+  background-color: $white;
+  color: var(--text-secondary);
+  border: 2px solid var(--border-color);
+  
+  &:hover {
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+  }
+}
+
+// Componentes de alerta
+.alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: $overlay-bg;
+  @include flex-center;
+  z-index: 9999;
+}
+
+.alert {
+  background-color: $white;
+  padding: $spacing-xl $spacing-2xl;
+  border-radius: $radius-lg;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  box-shadow: $notification-shadow;
+  min-width: 300px;
+  
+  &.success {
+    color: $spotify-success;
+    border-left: 4px solid $spotify-success;
+  }
+  
+  &.error {
+    color: $spotify-error;
+    border-left: 4px solid $spotify-error;
+  }
+}
+
+// Sistema de notificaciones
+.notifications-container {
+  position: fixed;
+  top: $spacing-xl;
+  right: $spacing-xl;
+  z-index: 1000;
+  min-width: 300px;
+  max-width: 450px;
+}
+
+.notification {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-sm;
+  box-shadow: $notification-shadow;
+  animation: slideIn 0.3s ease-out;
+  
+  &.success {
+    background-color: $notification-success-bg;
+    border-left: 4px solid $notification-success-color;
+    color: $notification-success-text;
+  }
+  
+  &.error {
+    background-color: $notification-error-bg;
+    border-left: 4px solid $notification-error-color;
+    color: $notification-error-text;
+  }
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin-right: $spacing-md;
+}
+
+.notification-content {
+  flex-grow: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: $font-size-md;
+}
+
+.notification-message {
+  font-size: $font-size-xs;
+  line-height: 1.4;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: currentColor;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  @include transition(opacity, 0.2s);
+  
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Responsive mejorado
+@media (max-width: 768px) {
+  .container {
+    margin: $spacing-md;
+    padding: 0;
+  }
+
+  .card-header {
+    padding: $spacing-xl $spacing-lg;
+  }
+
+  .header-text h1 {
+    font-size: $font-size-2xl;
+  }
+
+  .card-body {
+    padding: $spacing-lg;
+  }
+
+  .type-options {
+    grid-template-columns: 1fr;
+  }
+
+  .form-section {
+    padding: $spacing-lg;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: $spacing-lg;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: $spacing-md;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .icon-container {
+    width: 60px;
+    height: 60px;
+  }
+
+  .type-icon {
+    width: 30px;
+    height: 30px;
+  }
+}

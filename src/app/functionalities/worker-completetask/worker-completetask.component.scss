@@ -1,0 +1,151 @@
+// Variables
+$font-family: 'Inter', sans-serif;
+
+// Colores
+$primary-color: #1a237e;
+$text-secondary: #64748b;
+$text-tertiary: #4b5563;
+$success-bg: #ecfdf5;
+$success-text: #047857;
+$border-color: #e2e8f0;
+$white: white;
+
+// Sombras
+$shadow-sm: 0 8px 30px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.1);
+
+// Bordes
+$border-radius-lg: 20px;
+$border-radius-full: 9999px;
+
+// Espaciado
+$spacing-xs: 0.5rem;
+$spacing-sm: 0.875rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+$spacing-2xl: 2.5rem;
+
+// Tipografía
+$font-size-xs: 0.875rem;
+$font-size-sm: 0.95rem;
+$font-size-md: 1.25rem;
+$font-size-lg: 1.875rem;
+
+// Mixins
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+@mixin transition($property: all, $duration: 0.4s, $timing: cubic-bezier(0.165, 0.84, 0.44, 1)) {
+  transition: $property $duration $timing;
+}
+
+@mixin card-hover-effect {
+  &:hover {
+    transform: translateY(-8px) rotate3d(1, 1, 0, 2deg);
+    box-shadow: $shadow-lg;
+  }
+}
+
+// Estilos
+.tasks-container {
+  padding: $spacing-xl;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h2 {
+  color: $primary-color;
+  font-size: $font-size-lg;
+  font-weight: 600;
+  margin-bottom: $spacing-lg;
+  letter-spacing: -0.025em;
+}
+
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: $spacing-xl;
+  perspective: 1000px;
+}
+
+.task-card {
+  background: $white;
+  border-radius: $border-radius-lg;
+  padding: $spacing-2xl $spacing-xl;
+  text-align: center;
+  @include transition;
+  box-shadow: $shadow-sm;
+  position: relative;
+  overflow: hidden;
+  
+  @include card-hover-effect;
+}
+
+.task-header {
+  margin-bottom: $spacing-lg;
+}
+
+.task-title {
+  color: $primary-color;
+  font-size: $font-size-md;
+  font-weight: 600;
+  margin-bottom: $spacing-xs;
+}
+
+.task-description {
+  color: $text-secondary;
+  font-size: $font-size-sm;
+  line-height: 1.5;
+}
+
+.task-status {
+  display: inline-block;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $border-radius-full;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  margin-top: $spacing-md;
+  
+  &.completed {
+    background-color: $success-bg;
+    color: $success-text;
+  }
+}
+
+.completion-details {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $border-color;
+  text-align: left;
+  
+  p {
+    color: $text-tertiary;
+    font-size: $font-size-xs;
+    margin-bottom: $spacing-xs;
+    @include flex-between;
+  }
+  
+  strong {
+    color: $primary-color;
+    font-weight: 500;
+  }
+}
+
+// Media queries
+@media (max-width: 768px) {
+  .tasks-container {
+    padding: $spacing-md;
+  }
+
+  .tasks-grid {
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
+  }
+
+  .completion-details {
+    padding: $spacing-md;
+  }
+}

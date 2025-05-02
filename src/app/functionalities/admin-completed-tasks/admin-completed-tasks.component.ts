@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-admin-completed-tasks',
   imports: [],
   templateUrl: './admin-completed-tasks.component.html',
-  styleUrl: './admin-completed-tasks.component.css'
+  styleUrl: './admin-completed-tasks.component.scss'
 })
 export class AdminCompletedTasksComponent {
 

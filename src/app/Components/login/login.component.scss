@@ -1,454 +1,563 @@
-// Variables
-$font-family-base: 'Roboto', sans-serif;
-$font-size-base: 1rem;
+// Variables (aprovechando las variables globales pero definiendo específicas para este componente)
+$card-bg: #ffffff;
+$primary-color: #2563eb; // Color azul principal consistente
+$primary-hover: #1e40af; // Azul más oscuro para hover
+$accent-color: #4ade80; // Verde para acentos
+$google-btn-bg: #ffffff;
+$google-btn-bg-hover: #f9fafb;
+$input-bg: #f9fafb;
+$divider-color: #e5e7eb;
+$box-shadow-card: 0 10px 25px rgba(0, 0, 0, 0.08);
+$box-shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
 
-// Colors
-$color-primary: #3182ce;
-$color-primary-dark: #2b6cb0;
-$color-text-primary: #1a365d;
-$color-text-secondary: #4a5568;
-$color-text-tertiary: #718096;
-$color-text-dark: #2d3748;
-$color-bg-light: #f0f4f8;
-$color-bg-light-accent: #d9e2ec;
-$color-white: #ffffff;
-$color-border-light: #e2e8f0;
-$color-border-medium: #cbd5e0;
-$color-bg-input: #f8fafc;
-$color-error: #f87171;
-$color-error-bg: #fee2e2;
-$color-error-dark: #991b1b;
+// Keyframes para animaciones
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-// Shadows
-$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
-$shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.1);
-$shadow-focus: 0 0 0 4px rgba(49, 130, 206, 0.15);
-$shadow-button-hover: 0 4px 12px rgba(49, 130, 206, 0.25);
-$shadow-error-focus: 0 0 0 4px rgba(248, 113, 113, 0.15);
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(15px, -15px) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
 
-// Border radius
-$border-radius-sm: 8px;
-$border-radius-md: 12px;
-$border-radius-lg: 20px;
-$border-radius-full: 50%;
+@keyframes float2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-15px, 15px) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
 
-// Transitions
-$transition-base: all 0.3s ease;
+@keyframes float3 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(10px, 20px) scale(1.08); }
+  100% { transform: translate(0, 0) scale(1); }
+}
 
-// Breakpoints
-$breakpoint-sm: 480px;
-$breakpoint-md: 768px;
-$breakpoint-lg: 992px;
-$breakpoint-xl: 1200px;
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
 
-// Spacing
-$spacing-xs: 0.5rem;
-$spacing-sm: 0.75rem;
-$spacing-md: 1rem;
-$spacing-lg: 1.5rem;
-$spacing-xl: 2rem;
-$spacing-xxl: 3rem;
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-// Mixins
+@keyframes pulse {
+  0% { transform: scale(0.95); }
+  70% { transform: scale(1); }
+  100% { transform: scale(0.95); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+// Mixins útiles
 @mixin flex-center {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
 }
 
 @mixin flex-between {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
-@mixin gradient-primary {
-  background: linear-gradient(135deg, $color-primary, $color-primary-dark);
+@mixin transition($property: all, $duration: 0.3s) {
+  transition: $property $duration cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@mixin gradient-background {
-  background: linear-gradient(135deg, $color-bg-light 0%, $color-bg-light-accent 100%);
-}
-
-@mixin responsive($breakpoint) {
-  @if $breakpoint == sm {
-    @media screen and (max-width: $breakpoint-sm) {
-      @content;
-    }
-  } @else if $breakpoint == md {
-    @media screen and (max-width: $breakpoint-md) {
-      @content;
-    }
-  } @else if $breakpoint == lg {
-    @media screen and (max-width: $breakpoint-lg) {
-      @content;
-    }
-  } @else if $breakpoint == xl {
-    @media screen and (max-width: $breakpoint-xl) {
-      @content;
-    }
-  }
-}
-
-@mixin input-base {
-  width: 100%;
-  padding: $spacing-md $spacing-lg;
-  font-size: $font-size-base;
-  border: 2px solid $color-border-light;
-  border-radius: $border-radius-md;
-  background-color: $color-bg-input;
-  transition: $transition-base;
-  margin-bottom: $spacing-lg;
-  color: $color-text-dark;
-  box-sizing: border-box;
-  
-  &:hover {
-    border-color: $color-border-medium;
-  }
-  
-  &:focus {
-    outline: none;
-    border-color: $color-primary;
-    box-shadow: $shadow-focus;
-  }
-}
-
-@mixin button-reset {
-  all: unset;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-// Keyframes
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
-}
-
-// Main Styles
-.container {
-  @include flex-center;
+// Estilos del contenedor principal
+.login-container {
   min-height: 100vh;
-  @include gradient-background;
-  font-family: $font-family-base;
-  padding: $spacing-xl;
-  margin: 0;
-  box-sizing: border-box;
+  width: 100%;
+  background: linear-gradient(135deg, #f8fafc, #e0f2fe);
+  @include flex-center;
   position: relative;
   overflow: hidden;
+  padding: 1rem;
   
-  // Animated background elements
-  &::before,
-  &::after {
-    content: '';
-    position: fixed;
-    width: 1000px;
-    height: 1000px;
-    border-radius: $border-radius-full;
-    background: linear-gradient(45deg, rgba(43, 108, 176, 0.1), rgba(43, 108, 176, 0.05));
-    pointer-events: none;
-    z-index: 0;
-  }
-  
-  &::before {
-    top: -400px;
-    left: -200px;
-    animation: float 15s infinite alternate ease-in-out;
-  }
-  
-  &::after {
-    bottom: -400px;
-    right: -200px;
-    animation: float 20s infinite alternate-reverse ease-in-out;
-  }
-  
-  @include responsive(md) {
-    padding: $spacing-md;
+  @media (min-width: 768px) {
+    padding: 1.5rem;
   }
 }
 
-@keyframes float {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
+// Elementos de fondo animados
+.background-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  opacity: 0.5;
+  z-index: 0;
+  
+  &.background-blob-1 {
+    top: -10%;
+    left: -10%;
+    width: 550px;
+    height: 550px;
+    background: rgba(37, 99, 235, 0.1);
+    animation: float 20s ease-in-out infinite;
   }
-  100% {
-    transform: translate(20px, 20px) rotate(5deg);
+  
+  &.background-blob-2 {
+    bottom: -15%;
+    right: -15%;
+    width: 600px;
+    height: 600px;
+    background: rgba(37, 99, 235, 0.07);
+    animation: float2 25s ease-in-out infinite;
+  }
+  
+  &.background-blob-3 {
+    top: 40%;
+    right: 10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(74, 222, 128, 0.08);
+    animation: float3 15s ease-in-out infinite;
   }
 }
 
-.card {
-  background: $color-white;
-  border-radius: $border-radius-lg;
-  padding: $spacing-xxl;
+// Tarjeta de login
+.login-card {
   width: 100%;
-  max-width: 500px;
-  box-shadow: $shadow-lg;
-  text-align: center;
+  max-width: 430px;
+  background: $card-bg;
+  border-radius: 16px;
+  box-shadow: $box-shadow-card;
+  overflow: hidden;
+  z-index: 10;
   position: relative;
-  z-index: 1;
+  @include transition;
+  animation: fadeIn 0.6s ease-out;
   
-  @include responsive(md) {
-    padding: $spacing-xl;
+  @media (max-width: 480px) {
+    max-width: 100%;
   }
   
-  @include responsive(sm) {
-    padding: $spacing-lg;
-    border-radius: $border-radius-md;
-  }
-  
-  &-header {
-    font-size: 2.25rem;
-    font-weight: 700;
-    color: $color-text-primary;
-    margin-bottom: $spacing-lg;
-    
-    @include responsive(md) {
-      font-size: 1.75rem;
-    }
-    
-    @include responsive(sm) {
-      font-size: 1.5rem;
-      margin-bottom: $spacing-md;
-    }
-  }
-  
-  &-body {
-    p {
-      font-size: 1.1rem;
-      color: $color-text-secondary;
-      margin-bottom: $spacing-xl;
-      line-height: 1.5;
-      
-      @include responsive(sm) {
-        font-size: $font-size-base;
-        margin-bottom: $spacing-lg;
-      }
-    }
-    
-    label {
-      display: block;
-      text-align: left;
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: $color-text-dark;
-      margin-bottom: $spacing-xs;
-      
-      a {
-        text-decoration: none;
-        color: $color-primary;
-        font-weight: 500;
-        transition: color 0.3s ease;
-        
-        &:hover {
-          color: $color-primary-dark;
-        }
-      }
-    }
-    
-    input {
-      @include input-base;
-      
-      &[type="checkbox"] {
-        width: auto;
-        height: auto;
-        margin-right: $spacing-sm;
-        cursor: pointer;
-      }
-    }
-    
-    .input-error {
-      border-color: $color-error !important;
-      
-      &:focus {
-        box-shadow: $shadow-error-focus;
-      }
-    }
-    
-    button {
-      width: 100%;
-      padding: $spacing-md 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      text-align: center;
-      border-radius: $border-radius-md;
-      transition: $transition-base;
-      cursor: pointer;
-    }
+  &:hover {
+    box-shadow: $box-shadow-card-hover;
+    transform: translateY(-5px);
   }
 }
 
-// Logo styles
+// Encabezado de la tarjeta
+.card-header {
+  padding: 2.5rem 2rem 1.5rem;
+  @include flex-column;
+  align-items: center;
+  text-align: center;
+  
+  @media (max-width: 480px) {
+    padding: 1.75rem 1.5rem 1rem;
+  }
+}
+
+// Logo
+.logo-container {
+  width: 110px;
+  height: 110px;
+  margin-bottom: 1.75rem;
+  @include transition(transform, 0.5s);
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+  
+  @media (max-width: 480px) {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 1.25rem;
+  }
+}
+
 .app-logo {
-  width: 180px;
-  height: 180px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  margin: 0 auto $spacing-lg;
+}
+
+// Textos de bienvenida
+.welcome-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1e293b; // Color más oscuro para mejor contraste
+  margin-bottom: 0.5rem;
   
-  @include responsive(md) {
-    width: 140px;
-    height: 140px;
-  }
-  
-  @include responsive(sm) {
-    width: 120px;
-    height: 120px;
-    margin-bottom: $spacing-md;
+  @media (max-width: 480px) {
+    font-size: 1.75rem;
   }
 }
 
-// Auth options
-.auth-options {
-  margin-bottom: $spacing-lg;
+.welcome-subtitle {
+  font-size: 1.125rem;
+  color: #64748b; // Color secundario
+  margin-bottom: 1.5rem;
+  
+  @media (max-width: 480px) {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
 }
 
-// Remember me checkbox
-.remember-me {
+// Cuerpo del formulario
+.card-body {
+  padding: 0 2.5rem 2.5rem;
+  
+  @media (max-width: 480px) {
+    padding: 0 1.5rem 1.75rem;
+  }
+}
+
+// Mensaje de error
+.error-message {
+  background-color: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #ef4444;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+// Botón de Google
+.btn-google {
+  width: 100%;
+  @include flex-center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  background-color: $google-btn-bg;
+  color: #4b5563;
+  border: 1.5px solid $divider-color;
+  border-radius: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  @include transition;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  
+  &:hover:not(:disabled) {
+    background-color: $google-btn-bg-hover;
+    border-color: darken($divider-color, 5%);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .google-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    
+    svg {
+      width: 100%;
+      height: 100%;
+      fill: #4b5563;
+    }
+    
+    @media (max-width: 480px) {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Divisor
+.divider {
+  position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: $spacing-xl;
-  padding: $spacing-xs 0;
+  text-align: center;
+  margin: 1.5rem 0;
   
-  label {
-    margin: 0;
-    font-size: 0.95rem;
-    color: $color-text-secondary;
-    cursor: pointer;
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid $divider-color;
+  }
+  
+  span {
+    padding: 0 1rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: lowercase;
   }
 }
 
-// Error message styles
-.error-message {
-  background-color: $color-error-bg;
-  border: 1px solid $color-error;
-  color: $color-error-dark;
-  padding: $spacing-md;
-  border-radius: $border-radius-md;
-  margin-bottom: $spacing-lg;
-  font-size: 0.95rem;
-  text-align: center;
-  animation: shake 0.5s ease-in-out;
+// Formulario
+.login-form {
+  @include flex-column;
+  gap: 1.5rem;
 }
 
-// Auth buttons
-.auth-button {
-  @include button-reset;
+// Grupo de formulario
+.form-group {
+  @include flex-column;
+  gap: 0.5rem;
   
-  &-google {
-    @include button-reset;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    margin-left: 0.25rem;
+  }
+  
+  .input-wrapper {
+    position: relative;
     width: 100%;
-    padding: 0.875rem 1.5rem;
-    background-color: $color-white;
-    border: 2px solid $color-border-light;
-    border-radius: $border-radius-md;
-    transition: $transition-base;
-    margin-bottom: $spacing-md;
-    box-shadow: $shadow-sm;
     
-    &:hover {
-      background-color: $color-bg-input;
-      border-color: $color-border-medium;
-      box-shadow: $shadow-md;
-    }
-    
-    &:active {
-      transform: translateY(1px);
-      box-shadow: $shadow-sm;
-    }
-    
-    .google-icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 12px;
-      flex-shrink: 0;
+    .input-icon {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      color: #94a3b8;
+      pointer-events: none;
       
-      svg {
+      .icon {
         width: 100%;
         height: 100%;
       }
     }
-    
-    span {
-      color: $color-text-secondary;
-      font-size: $font-size-base;
-      font-weight: 500;
-      font-family: $font-family-base;
-    }
-    
-    @include responsive(md) {
-      padding: 0.75rem 1rem;
-      
-      .google-icon {
-        width: 20px;
-        height: 20px;
-        margin-right: 8px;
-      }
-      
-      span {
-        font-size: 0.95rem;
-      }
-    }
   }
   
-  &-primary {
-    @include button-reset;
+  input {
     width: 100%;
-    padding: $spacing-md 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    @include gradient-primary;
-    color: $color-white;
-    border: none;
-    border-radius: $border-radius-md;
-    text-align: center;
-    transition: $transition-base;
+    padding: 0.875rem 1rem;
+    padding-right: 2.5rem; // Espacio para el icono
+    background-color: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    color: #1e293b;
+    font-size: 1rem;
+    @include transition;
     
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: $shadow-button-hover;
+    &::placeholder {
+      color: #94a3b8;
     }
     
-    &:active {
-      transform: translateY(1px);
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      outline: none;
     }
     
-    @include responsive(sm) {
-      padding: 0.875rem 0;
-      font-size: 1rem;
+    &.input-error {
+      border-color: #ef4444;
+      
+      &:focus {
+        box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.1);
+      }
     }
   }
 }
 
-// Divider between auth options
-.divider {
+// Contenedor de opciones (recordarme y olvidé contraseña)
+.options-container {
+  @include flex-between;
+  margin-top: 0.5rem;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+// Checkbox recordarme
+.remember-me {
   display: flex;
   align-items: center;
-  text-align: center;
-  margin: $spacing-lg 0;
+  gap: 0.5rem;
   
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    border-bottom: 2px solid $color-border-light;
+  input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    position: relative;
+    @include transition;
+    
+    &:checked {
+      background-color: $primary-color;
+      border-color: $primary-color;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 5px;
+        width: 5px;
+        height: 10px;
+        border-right: 2px solid white;
+        border-bottom: 2px solid white;
+        transform: rotate(45deg);
+      }
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      outline: none;
+    }
   }
   
-  span {
-    padding: 0 $spacing-md;
-    color: $color-text-tertiary;
+  label {
     font-size: 0.875rem;
-    font-weight: 500;
-    text-transform: uppercase;
+    color: #64748b;
+    cursor: pointer;
   }
 }
 
-// Login form
-.login-form {
-  button {
-    @extend .auth-button-primary;
+// Link olvidé contraseña
+.forgot-password {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $primary-color;
+  cursor: pointer;
+  @include transition(color);
+  
+  &:hover {
+    color: $primary-hover;
+    text-decoration: underline;
   }
+}
+
+// Botón de login - Nuevo estilo monocromático elegante
+.btn-login {
+  width: 100%;
+  padding: 0.9rem;
+  margin-top: 1rem;
+  background-color: $primary-color;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  @include transition;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+  
+  &:hover:not(:disabled) {
+    background-color: $primary-hover;
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
+    transform: translateY(-2px);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    
+    &:hover {
+      transform: none;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    }
+  }
+}
+
+// Loader
+.loader {
+  @include flex-center;
+  gap: 0.5rem;
+  
+  .spinner {
+    width: 20px;
+    height: 20px;
+    animation: spin 1.5s linear infinite;
+  }
+  
+  .path {
+    stroke: white;
+    stroke-linecap: round;
+    animation: dash 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes dash {
+    0% {
+      stroke-dasharray: 1, 150;
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dasharray: 90, 150;
+      stroke-dashoffset: -35;
+    }
+    100% {
+      stroke-dasharray: 90, 150;
+      stroke-dashoffset: -124;
+    }
+  }
+}
+
+// Media queries adicionales para responsividad
+@media (max-width: 390px) {
+  .card-header {
+    padding: 1.25rem 1.25rem 0.5rem;
+  }
+  
+  .card-body {
+    padding: 0 1.25rem 1.25rem;
+  }
+  
+  .logo-container {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .btn-google, .btn-login {
+    padding: 0.75rem 1rem;
+  }
+}
+
+.password-toggle {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.input-icon {
+  cursor: pointer;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }

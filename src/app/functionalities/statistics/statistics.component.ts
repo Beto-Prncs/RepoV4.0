@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
   selector: 'app-statistics',
   imports: [],
   templateUrl: './statistics.component.html',
-  styleUrl: './statistics.component.css'
+  styleUrl: './statistics.component.scss'
 })
 export class StatisticsComponent {
   

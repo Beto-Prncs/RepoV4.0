@@ -1,0 +1,128 @@
+<div class="container">
+    <div class="card">
+      <img src="icons/logo_Repo.png" alt="Logo de la Aplicación" class="app-logo" />
+      <div class="card-header">Recuperación de Contraseña</div>
+      <div class="card-body">
+        <!-- Paso 1: Ingreso de correo -->
+        <div *ngIf="step === 1">
+          <p>Ingresa tu correo electrónico para recibir instrucciones de recuperación</p>
+          
+          <div *ngIf="message" class="message" [ngClass]="{'error': messageType === 'error', 'success': messageType === 'success'}">
+            {{ message }}
+          </div>
+          
+          <form class="reset-form">
+            <label>Correo electrónico</label>
+            <input
+              type="email"
+              placeholder="Ingresa tu correo"
+              [(ngModel)]="email"
+              name="email"
+              [class.input-error]="messageType === 'error'">
+            
+            <button 
+              type="button" 
+              (click)="sendRecoveryEmail()" 
+              class="auth-button-primary"
+              [disabled]="isLoading || !email">
+              <span *ngIf="!isLoading">Enviar instrucciones</span>
+              <span *ngIf="isLoading" class="loader-container">
+                <svg class="spinner" viewBox="0 0 50 50">
+                  <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                </svg>
+                Enviando...
+              </span>
+            </button>
+            
+            <button type="button" (click)="goToLogin()" class="auth-button-secondary">
+              Volver al inicio de sesión
+            </button>
+          </form>
+        </div>
+        
+        <!-- Paso 2: Confirmación de envío -->
+        <div *ngIf="step === 2">
+          <div class="success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+              <path d="M22 4L12 14.01l-3-3"></path>
+            </svg>
+          </div>
+          <h2>Correo enviado</h2>
+          <p>Hemos enviado instrucciones para recuperar tu contraseña a <strong>{{ email }}</strong></p>
+          <p>Revisa tu bandeja de entrada y sigue las instrucciones en el correo.</p>
+          <button type="button" (click)="goToLogin()" class="auth-button-primary">
+            Volver al inicio de sesión
+          </button>
+        </div>
+        
+        <!-- Paso 3: Ingreso de nueva contraseña (después de clic en link de correo) -->
+        <div *ngIf="step === 3">
+          <h2>Establece una nueva contraseña</h2>
+          
+          <div *ngIf="message" class="message" [ngClass]="{'error': messageType === 'error', 'success': messageType === 'success'}">
+            {{ message }}
+          </div>
+          
+          <form class="reset-form">
+            <label>Nueva contraseña</label>
+            <div class="password-input">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                placeholder="Nueva contraseña"
+                [(ngModel)]="newPassword"
+                name="newPassword"
+                [class.input-error]="messageType === 'error'">
+              <button
+                type="button"
+                class="toggle-password"
+                (click)="togglePasswordVisibility()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M3 3l18 18" [style.display]="showPassword ? 'inline' : 'none'"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <label>Confirmar contraseña</label>
+            <input
+              type="password"
+              placeholder="Confirmar contraseña"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              [class.input-error]="messageType === 'error'">
+            
+            <button 
+              type="button" 
+              (click)="resetPassword()" 
+              class="auth-button-primary"
+              [disabled]="isLoading || !newPassword || !confirmPassword">
+              <span *ngIf="!isLoading">Cambiar contraseña</span>
+              <span *ngIf="isLoading" class="loader-container">
+                <svg class="spinner" viewBox="0 0 50 50">
+                  <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                </svg>
+                Procesando...
+              </span>
+            </button>
+          </form>
+        </div>
+        
+        <!-- Paso 4: Confirmación de cambio exitoso -->
+        <div *ngIf="step === 4">
+          <div class="success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+              <path d="M22 4L12 14.01l-3-3"></path>
+            </svg>
+          </div>
+          <h2>¡Contraseña actualizada!</h2>
+          <p>Tu contraseña ha sido cambiada exitosamente.</p>
+          <button type="button" (click)="goToLogin()" class="auth-button-primary">
+            Iniciar sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>

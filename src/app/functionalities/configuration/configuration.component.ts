@@ -5,33 +5,8 @@ import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TranslateStore } from '@ngx-translate/core'; // Añadido para resolver el error
 import { Preferences } from '@capacitor/preferences';
+import { Usuario, AppConfig } from '../../models/interfaces';
 
-// Interfaces para los modelos de datos
-interface Usuario {
-  IdUsuario: string;
-  Username: string;
-  Nombre: string;
-  Correo: string;
-  Departamento: string;
-  Rol: string;
-  Telefono: string;
-  Foto_Perfil?: string;
-}
-
-// Interfaz para la configuración de la aplicación
-interface AppConfig {
-  name: string;
-  language: string;
-  timezone: string;
-  theme: 'light' | 'dark';
-  textSize: number;
-  autoSave: boolean;
-  currency: string;
-  dateFormat: string;
-  autoLogout: boolean;
-  autoLogoutTime: string;
-  debugMode?: boolean;
-}
 
 interface Language {
   code: string;
@@ -59,7 +34,7 @@ interface DateFormat {
   standalone: true,
   imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './configuration.component.html',
-  styleUrl: './configuration.component.css',
+  styleUrl: './configuration.component.scss',
   providers: [TranslateStore]
 })
 export class ConfigurationComponent implements OnInit {

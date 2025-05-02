@@ -1,38 +1,35 @@
 import { CanActivateFn } from '@angular/router';
 import { inject } from '@angular/core';
-import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { AuthService } from '../services/auth.service';
 
 export const adminGuard: CanActivateFn = async (route, state) => {
-  const auth = inject(Auth);
+  const authService = inject(AuthService);
   const router = inject(Router);
-  const firestore = inject(Firestore);
-
-  const user = auth.currentUser;
-
-  if (!user) {
-    router.navigate(['/login']);
-    return false;
-  }
-
-  try {
-    // Verificar rol de admin
-    const userDoc = await getDoc(doc(firestore, 'Usuario', user.uid));
+  
+  // Usar el método getCurrentUser que ya has implementado
+  const user = await authService.getCurrentUser();
+  
+  if (user) {
+    // Verificar que el usuario es admin
+    const isAdmin = await authService.isAdmin(user.uid);
     
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
+    if (isAdmin) {
+      return true; // Usuario es admin, permite acceso
+    } else {
+      // No es admin, verificar si es trabajador
+      const isWorker = await authService.isWorker(user.uid);
       
-      if (userData['Rol'] === 'admin') {
-        return true; // Es admin, permite acceso
+      if (isWorker) {
+        router.navigate(['/worker']);
+      } else {
+        router.navigate(['/login']);
       }
+      
+      return false;
     }
-
-    // No es admin o documento no encontrado
-    router.navigate(['/login']);
-    return false;
-  } catch (error) {
-    console.error('Error verificando rol de admin:', error);
+  } else {
+    // No hay usuario autenticado
     router.navigate(['/login']);
     return false;
   }

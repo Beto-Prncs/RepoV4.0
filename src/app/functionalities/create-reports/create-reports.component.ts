@@ -39,7 +39,7 @@ import { first } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './create-reports.component.html',
-  styleUrls: ['./create-reports.component.css']
+  styleUrls: ['./create-reports.component.scss']
 })
 export class CreateReportsComponent implements OnInit {
   private readonly firestore: Firestore = inject(Firestore);

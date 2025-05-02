@@ -1,0 +1,343 @@
+// Variables
+$font-family: 'Inter', sans-serif;
+
+// Colores
+$white: #ffffff;
+$primary-color: #3498db;
+$primary-hover: #2980b9;
+$success-color: #2ecc71;
+$text-primary: #2c3e50;
+$text-secondary: #6c757d;
+$text-tertiary: #495057;
+$border-color: #ced4da;
+$border-light: #e9ecef;
+$bg-light: #f8f9fa;
+$disabled-color: #bdc3c7;
+
+// Sombras
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+$focus-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+
+// Bordes
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-full: 50%;
+
+// Espaciado
+$spacing-xs: 0.5rem;
+$spacing-sm: 0.75rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+
+// Tipografía
+$font-size-xs: 0.875rem;
+$font-size-sm: 1rem;
+$font-size-md: 1.25rem;
+$font-size-lg: 1.75rem;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+@mixin flex-gap($gap) {
+  display: flex;
+  gap: $gap;
+}
+
+@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+@mixin form-element {
+  width: 100%;
+  padding: $spacing-sm;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
+  color: $text-tertiary;
+  @include transition(border-color, 0.15s, ease-in-out);
+  
+  &:focus {
+    border-color: $primary-color;
+    outline: none;
+    box-shadow: $focus-shadow;
+  }
+}
+
+@mixin button-base {
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $border-radius-sm;
+  font-weight: 500;
+  @include transition;
+  cursor: pointer;
+  border: none;
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Container and card styles */
+.container {
+  max-width: 1200px;
+  margin: $spacing-xl auto;
+  padding: 0 $spacing-md;
+}
+
+.dashboard-card {
+  background: $white;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-sm;
+}
+
+/* Header styles */
+.card-header {
+  background: $bg-light;
+  padding: $spacing-lg;
+  border-bottom: 1px solid $border-light;
+  border-radius: $border-radius-md $border-radius-md 0 0;
+}
+
+.header-content {
+  @include flex-gap($spacing-md);
+  align-items: center;
+}
+
+.dashboard-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.header-text {
+  h1 {
+    color: $text-primary;
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: 600;
+  }
+}
+
+.subtitle {
+  color: $text-secondary;
+  margin: $spacing-xs 0 0;
+  font-size: $font-size-sm;
+}
+
+/* Card body styles */
+.card-body {
+  padding: $spacing-xl;
+}
+
+/* Steps indicator styles */
+.steps {
+  @include flex-between;
+  margin-bottom: $spacing-xl;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: $border-light;
+    z-index: 1;
+  }
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  
+  &-number {
+    width: 48px;
+    height: 48px;
+    background: $white;
+    border: 2px solid $border-light;
+    border-radius: $border-radius-full;
+    @include flex-center;
+    font-weight: 600;
+    color: $text-secondary;
+    margin-bottom: $spacing-xs;
+    @include transition;
+  }
+  
+  &-title {
+    color: $text-secondary;
+    font-size: $font-size-xs;
+    font-weight: 500;
+  }
+  
+  &.active {
+    .step-number {
+      background: $primary-color;
+      border-color: $primary-color;
+      color: $white;
+    }
+    
+    .step-title {
+      color: $primary-color;
+    }
+  }
+  
+  &.completed {
+    .step-number {
+      background: $success-color;
+      border-color: $success-color;
+      color: $white;
+    }
+  }
+}
+
+/* Form group styles */
+.form-group {
+  margin-bottom: $spacing-lg;
+  
+  label {
+    display: block;
+    margin-bottom: $spacing-xs;
+    color: $text-primary;
+    font-weight: 500;
+  }
+  
+  input,
+  select,
+  textarea {
+    @include form-element;
+  }
+}
+
+/* Step content styles */
+.step-content {
+  animation: fadeIn 0.3s ease-in-out;
+  
+  h2 {
+    color: $text-primary;
+    font-size: $font-size-md;
+    margin: $spacing-xl 0 $spacing-md;
+    font-weight: 600;
+  }
+}
+
+/* Button styles */
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  margin-top: $spacing-xl;
+  padding-top: $spacing-md;
+  border-top: 1px solid $border-light;
+}
+
+.btn-primary,
+.btn-secondary {
+  @include button-base;
+}
+
+.btn-primary {
+  background: $primary-color;
+  color: $white;
+  
+  &:hover {
+    background: $primary-hover;
+  }
+  
+  &:disabled {
+    background: $disabled-color;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  background: $bg-light;
+  color: $text-primary;
+  border: 1px solid $border-color;
+  
+  &:hover {
+    background: $border-light;
+  }
+}
+
+/* File input styling */
+input[type="file"] {
+  padding: $spacing-xs;
+  border: 1px dashed $border-color;
+  border-radius: $border-radius-sm;
+  background: $bg-light;
+  
+  &:hover {
+    background: $border-light;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    margin: $spacing-md;
+    padding: 0;
+  }
+  
+  .card-header {
+    padding: $spacing-md;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .steps {
+    flex-direction: column;
+    gap: $spacing-md;
+    align-items: flex-start;
+    
+    &::before {
+      display: none;
+    }
+  }
+  
+  .step {
+    flex-direction: row;
+    gap: $spacing-md;
+    
+    &-number {
+      margin-bottom: 0;
+    }
+  }
+  
+  .form-group {
+    margin-bottom: $spacing-md;
+  }
+  
+  .step-actions {
+    flex-direction: column;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}

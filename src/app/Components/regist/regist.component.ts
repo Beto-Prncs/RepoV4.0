@@ -20,7 +20,7 @@ interface AccountData {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './regist.component.html',
-  styleUrl: './regist.component.css'
+  styleUrl: './regist.component.scss'
 })
 export class RegistComponent {
   showPassword = false;

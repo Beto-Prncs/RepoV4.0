@@ -1,14 +1,16 @@
 <div class="container">
   <!-- Sistema de notificaciones -->
   <div class="notifications-container">
-    <div *ngFor="let notification of notifications" 
-         class="notification" 
-         [ngClass]="notification.type">
+    <div *ngFor="let notification of notifications"
+      class="notification"
+      [ngClass]="notification.type">
       <div class="notification-icon">
-        <svg *ngIf="notification.type === 'success'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <svg *ngIf="notification.type === 'success'"
+          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
         </svg>
-        <svg *ngIf="notification.type === 'error'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <svg *ngIf="notification.type === 'error'" xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
         </svg>
       </div>
@@ -51,14 +53,16 @@
       <div class="account-type-selector">
         <h2>Seleccione el tipo de cuenta a crear</h2>
         <div class="type-options">
-          <div class="type-card" [class.selected]="selectedType === 'worker'" (click)="selectAccountType('worker')">
+          <div class="type-card" [class.selected]="selectedType === 'worker'"
+            (click)="selectAccountType('worker')">
             <div class="icon-container">
               <img src="./icons/empleadoC.png" alt="Trabajador" class="type-icon"/>
             </div>
             <h3>Cuenta de Trabajador</h3>
             <p>Crear cuenta para nuevo empleado</p>
           </div>
-          <div class="type-card" [class.selected]="selectedType === 'admin'" (click)="selectAccountType('admin')">
+          <div class="type-card" [class.selected]="selectedType === 'admin'"
+            (click)="selectAccountType('admin')">
             <div class="icon-container">
               <img src="./icons/agregar.png" alt="Administrador" class="type-icon"/>
             </div>
@@ -69,7 +73,8 @@
       </div>
 
       <!-- Formulario de Creación -->
-      <form #createAccountForm="ngForm" (ngSubmit)="onSubmit(createAccountForm)" *ngIf="selectedType">
+      <form #createAccountForm="ngForm"
+        (ngSubmit)="onSubmit(createAccountForm)" *ngIf="selectedType">
         <h2>{{ selectedType === 'worker' ? 'Crear Cuenta de Trabajador' : 'Crear Cuenta de Administrador' }}</h2>
 
         <!-- Información Personal -->
@@ -208,7 +213,7 @@
               <div class="error-message" *ngIf="departmentInput.invalid && departmentInput.touched">
                 Seleccione un departamento
               </div>
-
+              
               <!-- Campo para departamento personalizado -->
               <div *ngIf="showCustomDepartment" class="custom-field">
                 <input
@@ -232,18 +237,22 @@
                 (change)="onAdminLevelChange($event)"
                 required
                 #adminLevelInput="ngModel"
+                [disabled]="isAdminLevelRestricted"
               >
                 <option value="">Seleccione un nivel</option>
-                <option *ngFor="let level of adminLevels" [value]="level">
+                <option *ngFor="let level of getAvailableAdminLevels()" [value]="level">
                   {{level === 'otro' ? 'Otro nivel' : 'Nivel ' + level}}
                 </option>
               </select>
               <div class="error-message" *ngIf="adminLevelInput.invalid && adminLevelInput.touched">
                 Seleccione un nivel de administración
               </div>
-
+              <div *ngIf="isAdminLevelRestricted" class="info-message">
+                Como administrador nivel {{ currentAdminLevel }}, solo puede crear administradores de nivel 2.
+              </div>
+              
               <!-- Campo para nivel de administración personalizado -->
-              <div *ngIf="showCustomAdminLevel" class="custom-field">
+              <div *ngIf="showCustomAdminLevel && !isAdminLevelRestricted" class="custom-field">
                 <input
                   type="text"
                   id="customAdminLevel"
