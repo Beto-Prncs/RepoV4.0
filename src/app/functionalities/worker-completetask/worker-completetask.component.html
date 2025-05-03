@@ -1,41 +1,55 @@
 <div class="tasks-container">
-  <button class="btn-back" (click)="goBack()">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <button type="button" class="btn-back" (click)="goBack()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round">
       <line x1="19" y1="12" x2="5" y2="12"></line>
       <polyline points="12 19 5 12 12 5"></polyline>
     </svg>
     Atrás
   </button>
-
   <h2>Reportes Completados</h2>
-
+  
   <!-- Mensajes de estado -->
   <div *ngIf="errorMessage" class="alert alert-error">
+    <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+    stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
     {{ errorMessage }}
   </div>
-
   <div *ngIf="successMessage" class="alert alert-success">
+    <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+    stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
     {{ successMessage }}
   </div>
-
+  
   <!-- Estado de carga -->
   <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
     <p>Cargando reportes completados...</p>
   </div>
-
+  
   <!-- Sin reportes -->
   <div *ngIf="!isLoading && completedTasks.length === 0" class="no-tasks">
     <p>No hay reportes completados.</p>
   </div>
-
+  
   <!-- Lista de reportes completados -->
   <div *ngIf="!isLoading && completedTasks.length > 0" class="tasks-grid">
     <div *ngFor="let task of completedTasks" class="task-card">
       <div class="task-header">
         <h3>{{task.Tipo_Trabajo}}</h3>
-        <span class="task-date">Completado: {{formatDate(task.fechaCompletado || task.fecha)}}</span>
+        <span class="task-date">Completado: 
+          {{formatDate(task.fechaCompletado || task.fecha)}}</span>
       </div>
-
       <div class="task-content">
         <!-- Información principal -->
         <div class="task-info">
@@ -45,27 +59,95 @@
           <p *ngIf="task.location" class="task-location">
             <strong>Ubicación:</strong> {{task.location}}
           </p>
-          
           <!-- Etiquetas de estado y prioridad -->
           <div class="task-tags">
-            <span class="status-badge" [ngClass]="getStatusClass(task.estado)">
+            <span class="status-badge"
+              [ngClass]="getStatusClass(task.estado)">
               {{task.estado}}
             </span>
-            <span *ngIf="task.priority" class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+            <span *ngIf="task.priority" class="priority-badge"
+              [ngClass]="getPriorityClass(task.priority)">
               {{task.priority}}
             </span>
+            <!-- Badge para disponibilidad de PDF -->
+            <span *ngIf="task.reportePdfGenerado || task.pdfUrl" class="pdf-badge" 
+            title="PDF disponible" (click)="openPdfViewer(task, $event)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+              stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              PDF
+            </span>
           </div>
-
           <p *ngIf="task.departamento" class="task-department">
             <strong>Departamento:</strong> {{task.departamento}}
           </p>
         </div>
-
+        
         <!-- Descripción de completación -->
         <div *ngIf="task.descripcionCompletado" class="completion-description">
-          <strong>Descripción de completación:</strong>
+          <strong>Descripción del trabajo</strong>
           <p>{{task.descripcionCompletado}}</p>
         </div>
+        
+        <!-- Materiales utilizados -->
+        <div *ngIf="task.materialesUtilizados" class="materials-description">
+          <strong>Materiales utilizados</strong>
+          <p>{{task.materialesUtilizados}}</p>
+        </div>
+        
+        <!-- Botones para ver y descargar PDF -->
+        <div class="task-actions">
+          <button type="button" class="btn-view-pdf" (click)="openPdfViewer(task, $event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" 
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+            stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Ver PDF
+          </button>
+          <button type="button" class="btn-download-pdf" (click)="startDownload(task, $event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" 
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+            stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Descargar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal para visor de PDF -->
+  <div *ngIf="showPdfViewer" class="pdf-modal">
+    <div class="pdf-modal-content">
+      <div class="pdf-modal-header">
+        <h3>Reporte: {{ selectedReport?.Tipo_Trabajo }}</h3>
+        <button type="button" class="btn-close" (click)="closePdfViewer()">&times;</button>
+      </div>
+      <div class="pdf-modal-body">
+        <div class="pdf-preview-container">
+          <ng-container *ngIf="pdfUrl">
+            <iframe [src]="pdfUrl" width="100%" height="100%" frameborder="0"></iframe>
+          </ng-container>
+          <div *ngIf="!pdfUrl" class="pdf-loading">
+            <div class="spinner"></div>
+            <p>Cargando PDF...</p>
+          </div>
+        </div>
+      </div>
+      <div class="pdf-modal-footer">
+        <button type="button" class="btn-cancel" (click)="closePdfViewer()">Cerrar</button>
+        <button type="button" class="btn-download" (click)="startDownload(selectedReport, $event)">Descargar PDF</button>
       </div>
     </div>
   </div>

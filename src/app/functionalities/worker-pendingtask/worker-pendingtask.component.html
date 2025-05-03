@@ -1,4 +1,4 @@
-<!-- worker-pendingtask.component.html con soporte para tareas y reportes -->
+<!-- worker-pendingtask.component.html con integración de cámara y evidencias simplificada -->
 <div class="tasks-container">
   <!-- Botón de regreso -->
   <button (click)="goBack()" class="btn-back">
@@ -9,7 +9,6 @@
     Volver
   </button>
   <h2>Trabajos Pendientes</h2>
-  
   <!-- Mensajes de alerta -->
   @if (errorMessage) {
     <div class="alert alert-error">
@@ -21,7 +20,6 @@
       {{ errorMessage }}
     </div>
   }
-  
   @if (successMessage) {
     <div class="alert alert-success">
       <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -31,7 +29,6 @@
       {{ successMessage }}
     </div>
   }
-  
   <!-- Estado de carga -->
   @if (isLoading) {
     <div class="loading-state">
@@ -42,57 +39,11 @@
     <div class="pending-work-container">
       <!-- Tabs de navegación para los tipos de trabajos -->
       <div class="work-tabs">
-        <button class="tab-button" [class.active]="activeTab === 'tasks'" (click)="activeTab = 'tasks'">
-          Tareas
-          <span class="counter">{{ pendingTasks.length }}</span>
-        </button>
         <button class="tab-button" [class.active]="activeTab === 'reportes'" (click)="activeTab = 'reportes'">
           Reportes
           <span class="counter">{{ pendingReportes.value.length }}</span>
         </button>
       </div>
-      
-      <!-- Sección de Tareas -->
-      @if (activeTab === 'tasks') {
-        @if (pendingTasks.length === 0) {
-          <div class="no-reports">
-            <p>No hay tareas pendientes en este momento.</p>
-          </div>
-        } @else {
-          <!-- Lista de tareas pendientes -->
-          <div class="tasks-grid">
-            @for (task of pendingTasks; track task.id) {
-              <div class="task-card" (click)="selectTask(task)" [class.selected]="selectedTask?.id === task.id">
-                <div class="task-header">
-                  <h3 class="task-title">{{ task.title }}</h3>
-                  <span class="priority-badge priority-{{ task.priority | lowercase }}">{{ task.priority }}</span>
-                </div>
-                <div class="task-info">
-                  <div class="task-date">
-                    <strong>Fecha de creación</strong>
-                    <span>{{ task.createdAt.toDate() | date:'dd/MM/yyyy' }}</span>
-                  </div>
-                  <div class="task-description">
-                    <strong>Descripción</strong>
-                    <p>{{ task.description }}</p>
-                  </div>
-                  <div class="task-department">
-                    <strong>Departamento</strong>
-                    <span>{{ task.department }}</span>
-                  </div>
-                  @if (task.location) {
-                    <div class="task-location">
-                      <strong>Ubicación</strong>
-                      <span>{{ task.location }}</span>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        }
-      }
-      
       <!-- Sección de Reportes -->
       @if (activeTab === 'reportes') {
         @if (pendingReportes.value.length === 0) {
@@ -137,78 +88,13 @@
       }
     </div>
   }
-  
-  <!-- Formulario para TAREAS seleccionadas -->
-  @if (selectedTask && !selectedReporte) {
-    <h2>Completar tarea: {{ selectedTask.title }}</h2>
-    <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
-      <div class="completion-form">
-        <div class="form-group">
-          <label for="notes">
-            Notas de finalización <span class="required">*</span>
-          </label>
-          <textarea
-            id="notes"
-            formControlName="notes"
-            rows="4"
-            [class.error]="reportForm.get('notes')?.invalid && reportForm.get('notes')?.touched"
-            placeholder="Describe cómo se completó la tarea..."></textarea>
-          @if (reportForm.get('notes')?.invalid && reportForm.get('notes')?.touched) {
-            <span class="error-text">Este campo es requerido</span>
-          }
-          <span class="helper-text">Describe detalladamente cómo se resolvió la tarea</span>
-        </div>
-      </div>
-      
-      <!-- Sección de imágenes/evidencias para tareas -->
-      <div class="images-section">
-        <h4>Evidencia fotográfica</h4>
-        <div class="image-input">
-          <button type="button" class="btn-upload" (click)="openCameraModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-              <circle cx="12" cy="13" r="4"></circle>
-            </svg>
-            Agregar foto
-          </button>
-        </div>
-        
-        @if (evidenceImages.length > 0) {
-          <div class="image-previews">
-            @for (image of evidenceImages; track $index; let i = $index) {
-              <div class="image-preview-container">
-                <img [src]="image" alt="Evidencia {{ i + 1 }}" class="image-preview">
-                <button type="button" class="btn-remove-image" (click)="removeEvidenceImage(i)">×</button>
-              </div>
-            }
-          </div>
-        }
-      </div>
-      
-      <!-- Acciones de tarea -->
-      <div class="task-actions">
-        <button type="button" class="btn-preview" (click)="previewReport()" [disabled]="reportForm.invalid">
-          Vista previa
-        </button>
-        <button type="submit" class="btn-complete" [disabled]="reportForm.invalid || isLoading">
-          @if (isLoading) {
-            <span class="spinner-small"></span>
-            Enviando...
-          } @else {
-            Completar tarea
-          }
-        </button>
-      </div>
-    </form>
-  }
-  
   <!-- Formulario para REPORTES seleccionados -->
-  @if (selectedReporte && !selectedTask) {
+  @if (selectedReporte) {
     <h2>Completar reporte: {{ selectedReporte.Tipo_Trabajo }}</h2>
     <div class="completion-form">
       <div class="form-group">
         <label for="completionDescription">
-          Descripción de la completación <span class="required">*</span>
+          Descripción de trabajo <span class="required">*</span>
         </label>
         <textarea
           id="completionDescription"
@@ -221,7 +107,6 @@
           <span class="error-text">Este campo es requerido</span>
         }
       </div>
-      
       <div class="form-group">
         <label for="materialsUsed">
           Materiales utilizados <span class="required">*</span>
@@ -237,117 +122,151 @@
           <span class="error-text">Este campo es requerido</span>
         }
       </div>
-      
-      <!-- Componente de firma para reportes -->
-      <div class="form-group signature-container">
-        <label>
-          Firma digital <span class="required">*</span>
-        </label>
-        <div class="signature-box" [class.error]="showErrors && isSignatureEmpty()">
-          <canvas #signatureCanvas></canvas>
-          <div class="signature-actions">
-            <button type="button" class="btn-clear" (click)="clearSignature()">Limpiar</button>
-            <button type="button" class="btn-save" (click)="saveSignature()">Guardar firma</button>
+      <!-- Sección integrada de evidencias fotográficas -->
+      <div class="form-group evidence-section">
+        <label>Evidencia fotográfica</label>
+        <!-- Visor de imagen actual y galería -->
+        <div class="evidence-container">
+          <!-- Vista previa de la imagen actual (si existe) -->
+          <div class="current-image-container">
+            @if (imgUrl) {
+              <img [src]="imgUrl" alt="Imagen actual" class="current-image">
+            } @else {
+              <div class="no-image-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <p>Sin imagen</p>
+              </div>
+            }
           </div>
-        </div>
-        @if (showErrors && isSignatureEmpty()) {
-          <span class="error-text">La firma es requerida</span>
-        }
-      </div>
-      
-      <!-- Acciones de reporte -->
-      <div class="task-actions">
-        <button type="button" class="btn-preview" (click)="previewPdf(selectedReporte)" 
-                [disabled]="!completionDescription.trim() || !materialsUsed.trim() || isSignatureEmpty()">
-          Vista previa PDF
-        </button>
-        <button type="button" class="btn-complete" 
-                (click)="markAsCompleted(selectedReporte)"
-                [disabled]="!completionDescription.trim() || !materialsUsed.trim() || isSignatureEmpty() || isSubmitting">
-          @if (isSubmitting) {
-            <span class="spinner-small"></span>
-            Enviando...
-          } @else {
-            Completar reporte
-          }
-        </button>
-      </div>
-    </div>
-  }
-  
-  <!-- Modal de la cámara -->
-  @if (showCameraModal) {
-    <div class="pdf-modal">
-      <div class="pdf-modal-content camera-modal-content">
-        <div class="pdf-modal-header">
-          <h3>Capturar evidencia fotográfica</h3>
-          <button class="btn-close" (click)="closeCameraModal()">&times;</button>
-        </div>
-        <div class="pdf-modal-body">
-          <!-- Componente de cámara -->
-          <app-camera></app-camera>
-        </div>
-        <div class="pdf-modal-footer">
-          <button class="btn-cancel" (click)="closeCameraModal()">Cancelar</button>
-          <button class="btn-confirm" (click)="saveEvidenceImages()">Guardar imágenes</button>
-        </div>
-      </div>
-    </div>
-  }
-  
-  <!-- Modal de vista previa para tareas -->
-  @if (showPreviewModal) {
-    <div class="pdf-modal">
-      <div class="pdf-modal-content">
-        <div class="pdf-modal-header">
-          <h3>Vista previa del reporte</h3>
-          <button class="btn-close" (click)="closePreviewModal()">&times;</button>
-        </div>
-        <div class="pdf-modal-body">
-          <!-- Contenido de la vista previa -->
-          <div class="preview-content">
-            <h3>{{ selectedTask.title }}</h3>
-            <p><strong>Notas:</strong> {{ reportForm.value.notes }}</p>
-            <p><strong>Estado:</strong> Completado</p>
-            @if (evidenceImages.length > 0) {
-              <h4>Evidencias</h4>
-              <div class="image-previews">
-                @for (image of evidenceImages; track $index) {
-                  <div class="image-preview-container">
-                    <img [src]="image" alt="Evidencia" class="image-preview">
+          <!-- Controles de captura/carga de imágenes -->
+          <div class="evidence-controls">
+            <!-- Botón para tomar foto con la cámara -->
+            <button type="button" class="btn-evidence btn-camera" (click)="takePicture()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <span>Tomar foto</span>
+            </button>
+            <!-- Botón para subir foto desde el dispositivo -->
+            <label class="btn-evidence btn-upload">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Subir imagen</span>
+              <input
+                type="file"
+                accept="image/*"
+                (change)="handleFileUpload($event)"
+                style="display:none">
+            </label>
+            <!-- Botón para añadir la imagen actual a evidencias -->
+            @if (imgUrl) {
+              <button type="button" class="btn-evidence btn-add" (click)="addToEvidence()" [disabled]="!imgUrl">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span>Añadir a evidencias</span>
+              </button>
+            }
+          </div>
+          <!-- Miniaturas de fotos en galería -->
+          @if (photos.length > 0) {
+            <div class="photos-gallery">
+              <h4>Galería de fotos</h4>
+              <div class="gallery-thumbnails">
+                @for (photo of photos; track $index; let i = $index) {
+                  <div class="thumbnail" [class.selected]="imgUrl === photo.url" (click)="setMainPhoto(photo)">
+                    <img [src]="photo.url" alt="Foto {{ i + 1 }}">
+                    <button class="delete-thumbnail" (click)="deletePhoto(i); $event.stopPropagation()">×</button>
                   </div>
                 }
+              </div>
+            </div>
+          }
+        </div>
+       <!-- Visualización de evidencias añadidas -->
+       @if (evidenceImages.length > 0) {
+        <div class="added-evidence">
+          <h4>Evidencias añadidas</h4>
+          <div class="evidence-previews">
+            @for (image of evidenceImages; track $index; let i = $index) {
+              <div class="evidence-preview-container">
+                <img [src]="image" alt="Evidencia {{ i + 1 }}" class="evidence-preview">
+                <button type="button" class="remove-evidence" (click)="removeEvidenceImage(i)">×</button>
               </div>
             }
           </div>
         </div>
-        <div class="pdf-modal-footer">
-          <button class="btn-cancel" (click)="closePreviewModal()">Cerrar</button>
-          <button class="btn-confirm" (click)="submitReport()">Enviar reporte</button>
+      }
+    </div>
+    <!-- Componente de firma para reportes -->
+    <div class="form-group signature-container">
+      <label>
+        Firma digital <span class="required">*</span>
+      </label>
+      <div class="signature-box" [class.error]="showErrors && isSignatureEmpty()">
+        <canvas #signatureCanvas></canvas>
+        <div class="signature-actions">
+          <button type="button" class="btn-clear" (click)="clearSignature()">Limpiar</button>
+          <button type="button" class="btn-save" (click)="saveSignature()">Guardar firma</button>
         </div>
       </div>
+      @if (showErrors && isSignatureEmpty()) {
+        <span class="error-text">La firma es requerida</span>
+      }
     </div>
-  }
-  
-  <!-- Modal de vista previa de PDF para reportes -->
-  @if (showPdfPreview) {
-    <div class="pdf-modal">
-      <div class="pdf-modal-content">
-        <div class="pdf-modal-header">
-          <h3>Vista previa del PDF</h3>
-          <button class="btn-close" (click)="closePdfPreview()">&times;</button>
-        </div>
-        <div class="pdf-modal-body">
-          <!-- Visor de PDF -->
-          <div class="pdf-preview-container">
+    <!-- Acciones de reporte -->
+    <div class="task-actions">
+      <button type="button" class="btn-preview" (click)="previewPdf(selectedReporte)" [disabled]="!completionDescription.trim() || !materialsUsed.trim() || isSignatureEmpty()">
+        Vista previa PDF
+      </button>
+      <button type="button" class="btn-download" (click)="downloadPDF(selectedReporte)" [disabled]="!completionDescription.trim() || !materialsUsed.trim() || isSignatureEmpty()">
+        Descargar PDF
+      </button>
+      <button type="button" class="btn-complete" (click)="markAsCompleted(selectedReporte)" [disabled]="!completionDescription.trim() || !materialsUsed.trim() || isSignatureEmpty() || isSubmitting">
+        @if (isSubmitting) {
+          <span class="spinner-small"></span>
+          Enviando...
+        } @else {
+          Completar reporte
+        }
+      </button>
+    </div>
+  </div>
+}
+<!-- Modal de vista previa de PDF para reportes -->
+@if (showPdfPreview) {
+  <div class="pdf-modal">
+    <div class="pdf-modal-content">
+      <div class="pdf-modal-header">
+        <h3>Vista previa del PDF</h3>
+        <button class="btn-close" (click)="closePdfPreview()">&times;</button>
+      </div>
+      <div class="pdf-modal-body">
+        <!-- Visor de PDF -->
+        <div class="pdf-preview-container">
+          @if (safePdfUrl) {
+            <iframe [src]="safePdfUrl" width="100%" height="100%" frameborder="0"></iframe>
+          } @else {
             <pdf-viewer [src]="pdfSrc" [render-text]="true" [original-size]="false"></pdf-viewer>
-          </div>
-        </div>
-        <div class="pdf-modal-footer">
-          <button class="btn-cancel" (click)="closePdfPreview()">Cerrar</button>
-          <button class="btn-confirm" (click)="confirmCompletion()">Confirmar y enviar</button>
+          }
         </div>
       </div>
+      <div class="pdf-modal-footer">
+        <button class="btn-cancel" (click)="closePdfPreview()">Cerrar</button>
+        <button class="btn-download" (click)="downloadPDF(selectedReporte)">Descargar PDF</button>
+        <button class="btn-confirm" (click)="confirmCompletion()">Confirmar y enviar</button>
+      </div>
     </div>
-  }
+  </div>
+}
 </div>

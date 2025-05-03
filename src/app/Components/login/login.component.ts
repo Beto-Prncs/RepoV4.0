@@ -6,7 +6,6 @@ import {
   Auth,
   User,
   signInWithEmailAndPassword,
-  fetchSignInMethodsForEmail
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -59,76 +58,75 @@ export class LoginComponent implements OnInit {
       return;
     }
   
+    // Validar formato de email
+    if (!this.isValidEmail(this.usuario.identifier)) {
+      this.showAuthError('Por favor, ingrese un correo electrónico válido');
+      return;
+    }
+  
     this.isLoading = true;
     try {
-      // Verificar si es un correo electrónico válido
-      if (!this.isValidEmail(this.usuario.identifier)) {
-        this.showAuthError('Por favor, ingrese un correo electrónico válido');
-        this.isLoading = false;
-        return;
-      }
+      const userEmail = this.usuario.identifier;
   
-      // Verificar si existe en Firestore para validar contraseña
+      // Buscar el usuario en Firestore para verificar la contraseña
       try {
-        console.log('Buscando usuario por email en Firestore:', this.usuario.identifier);
-        const usersRef = collection(this.firestore, 'Usuario');
-        const q = query(usersRef, where('Correo', '==', this.usuario.identifier));
+        console.log('Buscando usuario por email:', userEmail); 
+        const usersRef = collection(this.firestore, 'Usuario'); 
+        const q = query(usersRef, where('Correo', '==', userEmail)); 
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-          console.log('Usuario no encontrado en Firestore');
-          this.showAuthError('Usuario no encontrado');
-          this.isLoading = false;
-          return;
-        }
-        
-        const userData = querySnapshot.docs[0].data();
-        
-        // Verificar si la contraseña en Firestore coincide
-        if (userData['Password'] !== this.usuario.password) {
-          console.log('La contraseña en Firestore no coincide con la ingresada');
-          this.showAuthError('Contraseña incorrecta');
-          this.isLoading = false;
-          return;
+          console.log('Usuario no encontrado por email en Firestore');
+          // No mostramos error aquí, continuamos con la autenticación de Firebase
+        } else {
+          const userData = querySnapshot.docs[0].data(); 
+          const userId = querySnapshot.docs[0].id;
+          
+          // Verificar si la contraseña en Firestore coincide
+          if (userData['Password'] !== this.usuario.password) {
+            console.log('La contraseña en Firestore no coincide con la ingresada'); 
+            this.showAuthError('Contraseña incorrecta');
+            this.isLoading = false;
+            return;
+          }
         }
       } catch (error) {
-        console.error('Error al verificar usuario en Firestore:', error);
-        this.showAuthError('Error al verificar usuario');
-        this.isLoading = false;
-        return;
+        console.error('Error buscando usuario por email:', error);
+        // No mostramos error aquí, continuamos con la autenticación de Firebase
       }
   
       // Intentar iniciar sesión con Firebase Auth
       try {
-        console.log('Intentando login con Firebase Auth para email:', this.usuario.identifier);
+        console.log('Intentando login con Firebase Auth para email:', userEmail); 
         const userCredential = await signInWithEmailAndPassword(
-          this.auth,
-          this.usuario.identifier,
+          this.auth, 
+          userEmail,
           this.usuario.password
         );
         
-        // Si llegamos aquí, el login con Firebase Auth fue exitoso
+        // Si llegamos aquí, el login con Firebase Auth fue exitoso 
         console.log('Login con Firebase Auth exitoso');
-        
         // Procesamos el login exitoso
         await this.processUserLogin(userCredential.user);
       } catch (authError: any) {
         console.error('Error en autenticación con Firebase:', authError);
-        // Manejar errores específicos de Firebase Auth
-        if (authError.code === 'auth/user-not-found') {
+        // Manejar errores específicos de Firebase Auth 
+        if (authError.code === 'auth/user-not-found') { 
           this.showAuthError('Usuario no encontrado');
-        } else if (authError.code === 'auth/wrong-password') {
+        } else if (authError.code === 'auth/wrong-password') { 
           this.showAuthError('Contraseña incorrecta');
-        } else if (authError.code === 'auth/invalid-credential') {
+        } else if (authError.code === 'auth/invalid-credential') { 
           this.showAuthError('Credenciales inválidas');
+        } else if (authError.code === 'auth/invalid-email') {
+          this.showAuthError('Correo electrónico inválido');
         } else {
           this.showAuthError('Error de autenticación: ' + authError.message);
         }
         this.isLoading = false;
       }
     } catch (error: any) {
-      console.error('Error general en login:', error);
-      this.showAuthError('Error al iniciar sesión');
+      console.error('Error general en login:', error); 
+      this.showAuthError('Error al iniciar sesión'); 
       this.isLoading = false;
     }
   }
@@ -140,25 +138,7 @@ export class LoginComponent implements OnInit {
   }
 
   // Nuevo método para buscar usuario por username
-  public async getUserByUsername(username: string): Promise<Usuario | null> {
-    try {
-      const usersRef = collection(this.firestore, 'Usuario');
-      const q = query(usersRef, where('Username', '==', username));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0];
-        return {
-          ...userDoc.data() as Usuario,
-          IdUsuario: userDoc.id
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error buscando usuario por username:', error);
-      return null;
-    }
-  }
+  
 
   async signInWithGoogle(): Promise<void> {
     this.isLoading = true;
@@ -320,96 +300,5 @@ export class LoginComponent implements OnInit {
   }
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
-  }
-
-  async checkUserExistence(): Promise<void> 
-  {
-    const identifier = this.usuario.identifier;
-    
-    console.log('Verificando existencia de usuario para:', identifier);
-    
-    // 1. Verificar si es un email válido
-    if (this.isValidEmail(identifier)) {
-      console.log('El identificador es un email válido');
-      
-      // Verificar existencia en Firebase Auth
-      try {
-        const methods = await fetchSignInMethodsForEmail(this.auth, identifier);
-        console.log('Métodos de inicio disponibles:', methods);
-        
-        if (methods && methods.length > 0) {
-          console.log('El usuario existe en Firebase Auth');
-        } else {
-          console.log('El usuario NO existe en Firebase Auth');
-        }
-      } catch (error) {
-        console.error('Error verificando métodos de inicio:', error);
-      }
-    } else {
-      console.log('El identificador NO es un email válido, buscando por Username');
-    }
-    
-    // 2. Listar todos los usuarios de Firestore para debugging
-    try {
-      console.log('Listando todos los usuarios en Firestore:');
-      const usersRef = collection(this.firestore, 'Usuario');
-      const snapshot = await getDocs(usersRef);
-      
-      console.log('Total de usuarios en Firestore:', snapshot.size);
-      
-      // Listar usuarios para debug (atención a los campos Correo y Username)
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        console.log(`Usuario ${doc.id}: Email=${data['Correo'] || 'N/A'}, Username=${data['Username'] || 'N/A'}, Rol=${data['Rol'] || 'N/A'}, Password=${data['Password'] ? '[EXISTE]' : 'N/A'}`);
-      });
-      
-    } catch (error) {
-      console.error('Error listando usuarios:', error);
-    }
-  }
-
-  async verifyFirebaseAuthUsers(): Promise<void> {
-    try {
-      // No podemos listar directamente todos los usuarios de Firebase Auth desde el cliente
-      // Pero podemos verificar si el usuario actual está autenticado
-      const currentUser = this.auth.currentUser;
-      
-      if (currentUser) {
-        console.log('Usuario actualmente autenticado:', currentUser.email);
-        console.log('UID del usuario autenticado:', currentUser.uid);
-        
-        // Verificar si este usuario existe en Firestore
-        try {
-          const userDoc = await getDoc(doc(this.firestore, 'Usuario', currentUser.uid));
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            console.log('Usuario encontrado en Firestore:', userData);
-            console.log('Correo en Firestore:', userData['Correo']);
-            console.log('Username en Firestore:', userData['Username']);
-          } else {
-            console.log('¡Alerta! Usuario autenticado pero NO existe en Firestore con su UID');
-            
-            // Buscar por correo electrónico
-            const usersRef = collection(this.firestore, 'Usuario');
-            const q = query(usersRef, where('Correo', '==', currentUser.email));
-            const querySnapshot = await getDocs(q);
-            
-            if (!querySnapshot.empty) {
-              console.log('Usuario encontrado por correo pero con diferente ID:', 
-                         querySnapshot.docs[0].id);
-            } else {
-              console.log('No se encontró usuario por correo en Firestore');
-            }
-          }
-        } catch (error) {
-          console.error('Error verificando usuario en Firestore:', error);
-        }
-      } else {
-        console.log('No hay usuario actualmente autenticado');
-      }
-    } catch (error) {
-      console.error('Error verificando usuarios de Firebase Auth:', error);
-    }
   }
 }

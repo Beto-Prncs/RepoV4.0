@@ -42,7 +42,10 @@ interface Notification {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './create-accounts.component.html',
-  styleUrl: './create-accounts.component.scss'
+  styleUrls: [
+    './create-accounts.component.scss',
+    './create-accounts-animations.css'
+  ]
 })
 export class CreateAccountsComponent implements OnInit {
   private auth: Auth = inject(Auth);

@@ -1,59 +1,320 @@
-<button class="btn-back" (click)="goBack()">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12"></line>
-      <polyline points="12 19 5 12 12 5"></polyline>
-    </svg>
-    Atrás
-  </button>
-<div class="dashboard">
-    <div class="dashboard-header">
-        <h1>Estadísticas de Reportes de Trabajo</h1>
-        <span>Período: Enero 2024</span>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Total de Reportes</h3>
-            <div class="stat-value">24</div>
+<div class="statistics-container">
+    <!-- Cabecera con navegación y título -->
+    <header class="header-wrapper">
+      <div class="top-bar">
+        <button class="btn-back" (click)="goBack()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Atrás</span>
+        </button>
+        <h1 class="page-title">Estadísticas de Reportes</h1>
+      </div>
+    </header>
+  
+    <!-- Sección de filtros con diseño de tarjetas -->
+    <section class="filters-section">
+      <div class="filters-header">
+        <h2>Filtros de Estadísticas</h2>
+        <div class="date-range">
+          <div class="filter-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Período: </span>
+          </div>
+          <select id="period-filter" [(ngModel)]="selectedPeriod" (change)="applyFilters()" class="filter-select">
+            <option value="week">Última semana</option>
+            <option value="month">Último mes</option>
+            <option value="quarter">Último trimestre</option>
+            <option value="year">Último año</option>
+            <option value="custom">Personalizado</option>
+          </select>
+          @if (selectedPeriod === 'custom') {
+            <div class="custom-date-range">
+              <div class="date-input">
+                <label for="start-date">Desde:</label>
+                <input type="date" id="start-date" [(ngModel)]="startDate" (change)="applyFilters()">
+              </div>
+              <div class="date-input">
+                <label for="end-date">Hasta:</label>
+                <input type="date" id="end-date" [(ngModel)]="endDate" (change)="applyFilters()">
+              </div>
+            </div>
+          }
         </div>
-        <div class="stat-card">
-            <h3>Reportes Completados</h3>
-            <div class="stat-value">18</div>
+      </div>
+  
+      <div class="filters-grid">
+        <div class="filter-card company">
+          <div class="filter-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <label for="company-filter">Empresa</label>
+          </div>
+          <select id="company-filter" [(ngModel)]="selectedCompany" (change)="applyFilters()" class="filter-select">
+            <option value="">Todas las empresas</option>
+            @for (company of companies$ | async; track company.IdEmpresa) {
+              <option [value]="company.IdEmpresa">{{ company.Nombre }}</option>
+            }
+          </select>
         </div>
-        <div class="stat-card">
-            <h3>Reportes Pendientes</h3>
-            <div class="stat-value">6</div>
+  
+        <div class="filter-card department">
+          <div class="filter-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+              <line x1="9" y1="4" x2="9" y2="20"></line>
+              <line x1="15" y1="4" x2="15" y2="20"></line>
+              <line x1="4" y1="9" x2="20" y2="9"></line>
+              <line x1="4" y1="15" x2="20" y2="15"></line>
+            </svg>
+            <label for="department-filter">Departamento</label>
+          </div>
+          <select id="department-filter" [(ngModel)]="selectedDepartment" (change)="onDepartmentChange()" class="filter-select">
+            <option value="">Todos los departamentos</option>
+            @for (department of availableDepartments; track department) {
+              <option [value]="department">{{ department }}</option>
+            }
+          </select>
         </div>
-    </div>
-
-    <div class="detailed-breakdown">
+  
+        <div class="filter-card worker">
+          <div class="filter-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <label for="worker-filter">Trabajador</label>
+          </div>
+          <select id="worker-filter" [(ngModel)]="selectedWorker" (change)="applyFilters()" class="filter-select">
+            <option value="">Todos los trabajadores</option>
+            @if (selectedDepartment) {
+              @for (dept of workersByDepartment$ | async; track dept.departamento) {
+                @if (dept.departamento === selectedDepartment) {
+                  @for (worker of dept.workers; track worker.IdUsuario) {
+                    <option [value]="worker.IdUsuario">{{ worker.Nombre }}</option>
+                  }
+                }
+              }
+            } @else {
+              @for (worker of workers$ | async; track worker.IdUsuario) {
+                <option [value]="worker.IdUsuario">{{ worker.Nombre }} ({{ worker.Departamento }})</option>
+              }
+            }
+          </select>
+        </div>
+  
+        <div class="filter-card chart-type">
+          <div class="filter-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <label for="chart-type-filter">Tipo de Gráfico</label>
+          </div>
+          <select id="chart-type-filter" [(ngModel)]="selectedChartType" (change)="updateChartType()" class="filter-select">
+            <option value="bar">Barras</option>
+            <option value="line">Líneas</option>
+            <option value="pie">Circular</option>
+            <option value="doughnut">Dona</option>
+            <option value="polar">Polar</option>
+          </select>
+        </div>
+  
+        <div class="filter-card data-type">
+          <div class="filter-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <label for="data-type-filter">Tipo de Datos</label>
+          </div>
+          <select id="data-type-filter" [(ngModel)]="selectedDataType" (change)="applyFilters()" class="filter-select">
+            <option value="status">Por Estado</option>
+            <option value="priority">Por Prioridad</option>
+            <option value="department">Por Departamento</option>
+            <option value="company">Por Empresa</option>
+            <option value="time">Tiempo de Resolución</option>
+          </select>
+        </div>
+      </div>
+  
+      <button class="btn-reset-filters" (click)="resetFilters()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0z"/>
+          <path d="M12 8v8"/>
+          <path d="M8 12h8"/>
+        </svg>
+        Limpiar filtros
+      </button>
+    </section>
+  
+    <!-- Mensajes de estado -->
+    @if (errorMessage) {
+      <div class="error-message">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+    
+    @if (isLoading) {
+      <div class="loading-indicator">
+        <div class="spinner-container">
+          <div class="spinner"></div>
+        </div>
+        <span>Cargando estadísticas...</span>
+      </div>
+    }
+  
+    <!-- Dashboard de estadísticas -->
+    <div class="dashboard">
+      <!-- Tarjetas de resumen -->
+      <div class="summary-cards">
+        <div class="stat-card total">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <h3>Total Reportes</h3>
+            <div class="stat-value">{{ totalReports }}</div>
+          </div>
+        </div>
+        
+        <div class="stat-card completed">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <h3>Completados</h3>
+            <div class="stat-value">{{ completedReports }}</div>
+            <div class="stat-percentage">{{ completionRate }}%</div>
+          </div>
+        </div>
+        
+        <div class="stat-card pending">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <h3>Pendientes</h3>
+            <div class="stat-value">{{ pendingReports }}</div>
+            <div class="stat-percentage">{{ pendingRate }}%</div>
+          </div>
+        </div>
+        
+        <div class="stat-card avg-time">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <h3>Tiempo Promedio</h3>
+            <div class="stat-value">{{ avgCompletionTime }}</div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Contenedor principal de gráficos -->
+      <div class="charts-container">
+        <!-- Gráfico principal -->
+        <div class="chart-wrapper main-chart">
+          <h3>{{ chartTitle }}</h3>
+          <div class="chart-container">
+            <canvas #mainChart></canvas>
+          </div>
+        </div>
+        
+        <!-- Gráficos secundarios -->
+        <div class="secondary-charts">
+          <div class="chart-wrapper">
+            <h3>Reportes por Prioridad</h3>
+            <div class="chart-container">
+              <canvas #priorityChart></canvas>
+            </div>
+          </div>
+          
+          <div class="chart-wrapper">
+            <h3>Eficiencia por Trabajador</h3>
+            <div class="chart-container">
+              <canvas #efficiencyChart></canvas>
+            </div>
+          </div>
+  
+          <div class="chart-wrapper">
+            <h3>Distribución de Tiempos de Resolución</h3>
+            <div class="chart-container">
+              <canvas #timeDistributionChart></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Tabla de desglose detallado -->
+      <div class="detailed-breakdown">
         <h2>Desglose Detallado</h2>
-        <table class="breakdown-table">
+        <div class="table-responsive">
+          <table class="breakdown-table">
             <thead>
-                <tr>
-                    <th>Empleado</th>
-                    <th>Total Reportes</th>
-                    <th>Completados</th>
-                    <th>Pendientes</th>
-                    <th>Estado</th>
-                </tr>
+              <tr>
+                <th>Trabajador</th>
+                <th>Total Reportes</th>
+                <th>Completados</th>
+                <th>Pendientes</th>
+                <th>Tiempo Promedio</th>
+                <th>Eficiencia</th>
+              </tr>
             </thead>
             <tbody>
+              @for (worker of workerStats; track worker.id) {
                 <tr>
-                    <td>Juan Pérez</td>
-                    <td>8</td>
-                    <td>6</td>
-                    <td>2</td>
-                    <td><span class="status-badge status-completed">Activo</span></td>
+                  <td>{{ worker.name }}</td>
+                  <td>{{ worker.totalReports }}</td>
+                  <td>{{ worker.completedReports }}</td>
+                  <td>{{ worker.pendingReports }}</td>
+                  <td>{{ worker.avgTime }}</td>
+                  <td>
+                    <div class="efficiency-bar-container">
+                      <div class="efficiency-bar" [style.width.%]="worker.efficiency" 
+                        [ngClass]="{
+                          'high': worker.efficiency >= 80,
+                          'medium': worker.efficiency >= 50 && worker.efficiency < 80,
+                          'low': worker.efficiency < 50
+                        }"></div>
+                      <span>{{ worker.efficiency }}%</span>
+                    </div>
+                  </td>
                 </tr>
+              }
+              @if (workerStats.length === 0) {
                 <tr>
-                    <td>María González</td>
-                    <td>6</td>
-                    <td>4</td>
-                    <td>2</td>
-                    <td><span class="status-badge status-pending">En Progreso</span></td>
+                  <td colspan="6" class="no-data">No hay datos disponibles para mostrar.</td>
                 </tr>
+              }
             </tbody>
-        </table>
+          </table>
+        </div>
+      </div>
     </div>
-</div>
+  </div>

@@ -1,81 +1,125 @@
+// src/app/models/interfaces.ts
 
-  export interface Usuario {
-    IdUsuario: string;
-    Username: string;
-    Nombre: string;
-    Correo: string;
-    Departamento: string;
-    Rol: string;
-    Telefono: string;
-    Foto_Perfil?: string;
-    NivelAdmin?: string;
-    IdDepartamento?: string;
-    createdBy?: string;
-    Password?: string;
-  }
-  
-  export interface Empresa {
-    IdEmpresa: string;
-    Nombre: string;
-    Correo: string;
-    Direccion: string;
-    Sector: string;
-  }
-  
-  export interface Reporte {
-    IdReporte?: string;
-    IdEmpresa: string;
-    IdUsuario: string;
-    Tipo_Trabajo: string;
-    estado: string;
-    fecha: Date;
-    jobDescription: string;
-    location: string;
-    priority: string;
-    departamento: string;
-    fechaCompletado?: Date;
-    descripcionCompletado?: string;
-    fechaActualizacion?: Date;
-    materialesUtilizados?: string;
+export interface Usuario {
+  IdUsuario: string;
+  Nombre: string;
+  Email?: string;
+  Password?: string;
+  Rol: 'admin' | 'worker' | 'user';
+  Username?: string;
+  Telefono?: string;
+  Direccion?: string;
+  Status?: 'activo' | 'inactivo';
+  NivelAdmin?: string;
+  CreatedBy?: string;
+  CreatedAt?: Date;
+  // Added missing properties
+  Foto_Perfil?: string;
+  Correo?: string;
+  Departamento?: string;
+  createdBy?: string; // lowercase version also used in code
 }
-  
-  export interface Department {
-    id: string;
-    name: string;
-  }
-  
-  export interface FormStep {
-    title: string;
-    isValid?: boolean;
-  }
-  
-  export interface ReportPDFData {
-    trabajador: string;
-    empresa: string;
-    nombreReporte: string;
-    ubicacion: string;
-    fecha: string;
-    problema: string;
-    descripcion: string;
-    solucion: string;
-    departamento: string;
-    prioridad: string;
-    materialesUtilizados: string;
-    codigoQR: string;
-  }
 
+export interface Empresa {
+  IdEmpresa: string;
+  Nombre: string;
+  Direccion?: string;
+  Telefono?: string;
+  Email?: string;
+  Descripcion?: string;
+  Logo?: string;
+  IdUsuario?: string;
+  Status?: 'activo' | 'inactivo';
+  CreatedAt?: Date;
+}
 
-  export interface AppConfig {
-    name: string;
-    language: string;
-    timezone: string;
-    theme: 'light' | 'dark';
-    textSize: number;
-    autoSave: boolean;
-    currency: string;
-    dateFormat: string;
-    autoLogout: boolean;
-    autoLogoutTime: string;
-    debugMode?: boolean;
-  }
+export interface Reporte {
+  IdReporte: string;
+  Tipo_Trabajo: string;
+  IdUsuario: string;
+  IdEmpresa?: string;
+  estado: string;
+  fecha: Date;
+  fechaCompletado?: Date;
+  fechaActualizacion?: Date;
+  jobDescription?: string;
+  descripcionCompletado?: string;
+  location?: string;
+  departamento?: string;
+  priority?: string;
+  materialesUtilizados?: string;
+  firmaDigital?: string;
+  evidenceImages?: string[];
+  reporteGenerado?: boolean;
+  // Campos para PDF
+  pdfUrl?: string;
+  reportePdfGenerado?: boolean;
+  fechaGeneracionPdf?: Date;
+}
 
+export interface Task {
+  id?: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'completed';
+  dueDate?: Date;
+  assignedTo?: string;
+  priority?: 'low' | 'medium' | 'high';
+  createdBy?: string;
+  createdAt?: Date;
+  completedAt?: Date;
+  completionNotes?: string;
+  attachments?: string[];
+}
+
+export interface Departamento {
+  IdDepartamento?: string;
+  Nombre: string;
+  Descripcion?: string;
+  IdEmpresa?: string;
+  Status?: 'activo' | 'inactivo';
+  CreatedAt?: Date;
+}
+
+export interface TipoTrabajo {
+  IdTipo?: string;
+  Nombre: string;
+  Descripcion?: string;
+  IdEmpresa?: string;
+  Status?: 'activo' | 'inactivo';
+  CreatedAt?: Date;
+}
+
+export interface PhotoItem {
+  url: string;
+  date: Date;
+  name?: string;
+}
+
+export interface ReportItem {
+  id?: string;
+  title: string;
+  description?: string;
+  date: Date;
+  location?: string;
+  signature?: string;
+  photos: PhotoItem[];
+  status: 'draft' | 'submitted';
+}
+
+// Additional interfaces required by other components
+export interface AppConfig {
+  idioma: string;
+  tema: string;
+  notificaciones: boolean;
+}
+
+export interface FormStep {
+  isValid: boolean;
+  id: number;
+  label: string;
+  completed: boolean;
+  current: boolean;
+}
+
+export type Department = string;

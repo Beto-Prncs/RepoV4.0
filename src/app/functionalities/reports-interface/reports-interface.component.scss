@@ -1,299 +1,57 @@
-// Variables
-$font-family: 'Inter', sans-serif;
+// reports-interface.component.scss
+// Este archivo contiene estilos específicos para la interfaz de reportes
 
-// Colores
-$white: white;
-$background-color: #f8fafc;
-$text-primary: #1e293b;
-$text-secondary: #64748b;
-$text-tertiary: #475569;
-$primary-color: #2563eb;
-$primary-light: #3b82f6;
-$border-color: #e2e8f0;
-$icon-bg-default: #f0f9ff;
-$icon-bg-hover: #bfdbfe;
-
-// Sombras
-$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-$shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-
-// Bordes
-$border-radius-sm: 8px;
-$border-radius-md: 16px;
-$border-radius-full: 50%;
-
-// Espaciado
-$spacing-xs: 0.5rem;
-$spacing-sm: 0.75rem;
-$spacing-md: 1rem;
-$spacing-lg: 1.25rem;
-$spacing-xl: 1.5rem;
-$spacing-2xl: 2rem;
-$spacing-3xl: 2.5rem;
-$spacing-4xl: 3rem;
-
-// Tipografía
-$font-size-xs: 0.875rem;
-$font-size-sm: 1rem;
-$font-size-md: 1.25rem;
-$font-size-lg: 1.5rem;
-$font-size-xl: 1.75rem;
-$font-size-2xl: 2.25rem;
-
-// Dimensiones
-$icon-size-md: 20px;
-$icon-container-size: 88px;
-$icon-container-size-mobile: 72px;
-$icon-size-mobile: 32px;
-$content-max-width: 1200px;
-$card-min-width: 320px;
-
-// Mixins
-@mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+// Transiciones suaves para mejorar la experiencia de usuario
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
 
-@mixin flex-align-center {
-  display: flex;
-  align-items: center;
-}
-
-@mixin flex-column {
+// Asegurarnos de que las tarjetas tengan alturas iguales
+.card-equal-height {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
-@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
-  transition: $property $duration $timing;
+// Mejora de accesibilidad para focus
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
 }
 
-@mixin linear-gradient($direction, $color1, $color2) {
-  background: linear-gradient($direction, $color1, $color2);
-}
-
-@mixin hover-transform($x: 0, $y: -5px, $scale: 1.02) {
-  &:hover {
-    transform: translateY($y) translateX($x) scale($scale);
+// Optimización para pantallas de alta densidad
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .border-hairline {
+    border-width: 0.5px;
   }
 }
 
-// Estilos principales
-.reports-interface-container {
-  min-height: 100vh;
-  background-color: $background-color;
-  padding: $spacing-2xl;
-  position: relative;
+// Ajustes para preferencias de reducción de movimiento
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-.content-wrapper {
-  max-width: $content-max-width;
-  margin: 0 auto;
-}
-
-.back-button {
-  position: absolute;
-  top: $spacing-2xl;
-  left: $spacing-2xl;
-  @include flex-align-center;
-  gap: $spacing-xs;
-  padding: $spacing-sm $spacing-lg;
-  background-color: $white;
-  border: 1px solid $border-color;
-  border-radius: $border-radius-sm;
-  color: $text-tertiary;
-  font-weight: 500;
-  cursor: pointer;
-  @include transition(all, 0.2s);
-  box-shadow: $shadow-sm;
-  
-  &:hover {
-    background-color: $background-color;
-    transform: translateX(-2px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+// Estilos específicos para la versión impresa
+@media print {
+  .no-print {
+    display: none;
   }
   
-  svg {
-    width: $icon-size-md;
-    height: $icon-size-md;
-  }
-}
-
-.page-title {
-  color: $text-primary;
-  font-size: $font-size-2xl;
-  font-weight: 700;
-  text-align: center;
-  margin: $spacing-4xl 0;
-  letter-spacing: -0.025em;
-}
-
-.cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax($card-min-width, 1fr));
-  gap: $spacing-3xl;
-  padding: $spacing-md;
-  margin-top: $spacing-2xl;
-}
-
-.option-card {
-  background: $white;
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-md;
-  @include transition(all, 0.3s, cubic-bezier(0.4, 0, 0.2, 1));
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  
-  @include hover-transform;
-  
-  &:hover {
-    box-shadow: $shadow-lg;
-    
-    &::before {
-      opacity: 1;
-    }
-    
-    .icon-container {
-      background: $icon-bg-hover;
-      transform: scale(1.1);
-      
-      svg {
-        transform: scale(1.1);
-      }
-    }
-    
-    .card-footer {
-      svg {
-        transform: translateX(4px);
-      }
-    }
+  body {
+    background: white !important;
+    color: black !important;
   }
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    @include linear-gradient(to right, $primary-light, $primary-color);
-    opacity: 0;
-    @include transition(opacity, 0.2s);
-  }
-}
-
-.card-content {
-  padding: $spacing-3xl;
-  @include flex-column;
-  align-items: center;
-  gap: $spacing-xl;
-  
-  h2 {
-    color: $text-primary;
-    font-size: $font-size-lg;
-    font-weight: 600;
-    margin: 0;
-    text-align: center;
-  }
-  
-  p {
-    color: $text-secondary;
-    font-size: $font-size-sm;
-    line-height: 1.6;
-    text-align: center;
-    margin: 0;
-  }
-}
-
-.icon-container {
-  background: $icon-bg-default;
-  width: $icon-container-size;
-  height: $icon-container-size;
-  border-radius: $border-radius-full;
-  @include flex-center;
-  margin-bottom: $spacing-xs;
-  @include transition;
-  
-  svg {
-    color: $primary-color;
-    @include transition(transform, 0.3s);
-  }
-}
-
-.card-footer {
-  @include flex-align-center;
-  gap: $spacing-sm;
-  margin-top: $spacing-md;
-  padding-top: $spacing-md;
-  border-top: 1px solid $border-color;
-  width: 100%;
-  justify-content: center;
-  
-  svg {
-    color: $primary-color;
-    @include transition(transform, 0.2s);
-  }
-}
-
-.action-text {
-  color: $primary-color;
-  font-weight: 500;
-  font-size: $font-size-xs;
-}
-
-// Media queries
-@media (max-width: 768px) {
-  .reports-interface-container {
-    padding: $spacing-md;
-  }
-
-  .back-button {
-    top: $spacing-md;
-    left: $spacing-md;
-    padding: $spacing-xs $spacing-md;
-  }
-
-  .page-title {
-    font-size: $font-size-xl;
-    margin: $spacing-4xl 0 $spacing-2xl;
-  }
-
-  .cards-container {
-    grid-template-columns: 1fr;
-    gap: $spacing-xl;
-    padding: $spacing-xs;
-  }
-
-  .card-content {
-    padding: $spacing-2xl;
-  }
-
-  .icon-container {
-    width: $icon-container-size-mobile;
-    height: $icon-container-size-mobile;
-    
-    svg {
-      width: $icon-size-mobile;
-      height: $icon-size-mobile;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .page-title {
-    font-size: $font-size-lg;
-  }
-
-  .card-content {
-    h2 {
-      font-size: $font-size-md;
-    }
-
-    p {
-      font-size: $font-size-xs;
-    }
+  .container {
+    max-width: 100% !important;
+    width: 100% !important;
   }
 }

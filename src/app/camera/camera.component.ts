@@ -1,243 +1,181 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Capacitor } from '@capacitor/core';
-import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { NgIf, NgFor, DatePipe, NgClass } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { CameraService, PhotoItem, ReportItem } from '../services/camera.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-camera',
   standalone: true,
-  imports: [CommonModule],
+  imports: [NgIf, NgFor, DatePipe, NgClass, FormsModule],
   templateUrl: './camera.component.html',
   styleUrl: './camera.component.scss'
 })
-export class CameraComponent implements OnInit, AfterViewInit {
-  // Referencia al elemento de vista previa de la cámara
-  @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
-  @ViewChild('canvasElement') canvasElement!: ElementRef<HTMLCanvasElement>;
-  
-  // Propiedades de la cámara
-  stream: MediaStream | null = null;
-  isInitialized = false;
-  isCameraActive = false;
-  isMobile = false;
-  hasCameraPermission = false;
-  cameraError = '';
-  
-  // Propiedades de la galería de imágenes
-  imageGallery: string[] = [];
-  selectedTab: 'camera' | 'gallery' = 'camera';
-  
-  constructor() {
-    // Detectar si estamos en un dispositivo móvil
-    this.isMobile = Capacitor.isNativePlatform() || 
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+export class CameraComponent implements OnInit, OnDestroy {
+  switchTab(arg0: string) {
+    throw new Error('Method not implemented.');
   }
+  imageGallery: any;
+  stopCamera() {
+    throw new Error('Method not implemented.');
+  }
+isGalleryEmpty(): any {
+throw new Error('Method not implemented.');
+}
+  cameraService: CameraService = inject(CameraService);
+
+  // Propiedades para la interfaz
+  imgUrl: string = '';
+  errorMessage: string = '';
+  loading: boolean = false;
+  
+  // Propiedades para los reportes de mantenimiento
+  currentReport: ReportItem = this.getEmptyReport();
+  reports: ReportItem[] = [];
+  
+  // Propiedad para el reporte seleccionado en Vista Detallada
+  selectedReport: ReportItem | null = null;
+  showDetailView: boolean = false;
+  
+  // Suscripciones
+  private subscriptions: Subscription[] = [];
 
   ngOnInit() {
-    console.log('Inicializando componente de cámara');
-    console.log('¿Es dispositivo móvil?', this.isMobile);
-  }
+    // Suscribirse a los reportes
+    this.subscriptions.push(
+      this.cameraService.reports$.subscribe(reports => {
+        this.reports = reports;
+      })
+    );
 
-  ngAfterViewInit() {
-    // Inicializar la cámara después de que la vista esté lista
-    this.initializeCamera();
-  }
-
-  // Cambiar entre las pestañas de cámara y galería
-  switchTab(tab: 'camera' | 'gallery') {
-    this.selectedTab = tab;
-    if (tab === 'camera' && !this.isCameraActive && this.isInitialized) {
-      this.startCamera();
-    }
-  }
-
-  // Inicializar la cámara
-  async initializeCamera() {
-    try {
-      if (this.isMobile) {
-        // En dispositivos móviles, verificamos los permisos de la cámara
-        const permissionStatus = await Camera.checkPermissions();
-        this.hasCameraPermission = permissionStatus.camera === 'granted';
-        
-        if (!this.hasCameraPermission) {
-          const requestResult = await Camera.requestPermissions();
-          this.hasCameraPermission = requestResult.camera === 'granted';
+    // Suscribirse al borrador de reporte
+    this.subscriptions.push(
+      this.cameraService.draftReport$.subscribe(draft => {
+        if (draft) {
+          this.currentReport = {...draft};
         }
-        
-        if (!this.hasCameraPermission) {
-          this.cameraError = 'Se requieren permisos de cámara para esta función.';
-          return;
-        }
-      } else {
-        // En navegadores web, usamos la API MediaDevices
-        await this.startCamera();
-      }
-      
-      this.isInitialized = true;
-    } catch (error) {
-      console.error('Error al inicializar la cámara:', error);
-      this.cameraError = 'No se pudo inicializar la cámara. Por favor, verifica los permisos.';
-    }
+      })
+    );
   }
 
-  // Iniciar la cámara web en navegadores
-  async startCamera() {
-    try {
-      if (this.isMobile) {
-        // En móviles no usamos el stream directamente, sino la API de Capacitor
-        return;
-      }
-      
-      // Para navegadores web, usamos la API MediaDevices
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment', // Usar cámara trasera si está disponible
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-      
-      if (this.videoElement && this.videoElement.nativeElement) {
-        this.videoElement.nativeElement.srcObject = this.stream;
-        this.isCameraActive = true;
-      }
-    } catch (error) {
-      console.error('Error al iniciar la cámara:', error);
-      this.cameraError = 'No se pudo acceder a la cámara. Por favor, verifica los permisos.';
-    }
-  }
-
-  // Detener la cámara web
-  stopCamera() {
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
-    }
-    
-    if (this.videoElement && this.videoElement.nativeElement) {
-      this.videoElement.nativeElement.srcObject = null;
-    }
-    
-    this.isCameraActive = false;
-  }
-
-  // Tomar una foto desde la cámara web o dispositivo móvil
-  async takePhoto() {
-    try {
-      if (this.isMobile) {
-        // En dispositivos móviles, usamos la API de Capacitor
-        const image = await Camera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          resultType: CameraResultType.DataUrl,
-          source: CameraSource.Camera,
-          promptLabelHeader: 'Tomar foto',
-          promptLabelCancel: 'Cancelar',
-          promptLabelPhoto: 'Galería',
-          promptLabelPicture: 'Cámara'
-        });
-        
-        if (image.dataUrl) {
-          this.imageGallery.push(image.dataUrl);
-          
-          // Proporcionar retroalimentación táctil
-          if (Capacitor.isPluginAvailable('Haptics')) {
-            Haptics.impact({ style: ImpactStyle.Medium }).catch(err => 
-              console.log('Error de haptics:', err)
-            );
-          }
-        }
-      } else {
-        // En navegadores web, capturamos la imagen del video
-        if (this.videoElement && this.videoElement.nativeElement && this.canvasElement && this.canvasElement.nativeElement) {
-          const video = this.videoElement.nativeElement;
-          const canvas = this.canvasElement.nativeElement;
-          
-          // Establecer dimensiones del canvas iguales al video
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          
-          // Dibujar el frame actual del video en el canvas
-          const context = canvas.getContext('2d');
-          if (context) {
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Convertir a data URL y guardar en la galería
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-            this.imageGallery.push(dataUrl);
-            
-            // Cambiar a la pestaña de galería después de tomar la foto
-            this.selectedTab = 'gallery';
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error al tomar la foto:', error);
-      
-      // Si el usuario canceló, no mostramos error
-      if (error instanceof Error && error.message.includes('cancelled')) {
-        return;
-      }
-      
-      this.cameraError = 'Error al capturar la imagen. Por favor, inténtalo de nuevo.';
-      setTimeout(() => this.cameraError = '', 3000);
-    }
-  }
-
-  // Seleccionar una foto de la galería del dispositivo
-  async selectFromGallery() {
-    try {
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: true,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Photos,
-      });
-      
-      if (image.dataUrl) {
-        this.imageGallery.push(image.dataUrl);
-        this.selectedTab = 'gallery';
-      }
-    } catch (error) {
-      console.error('Error al seleccionar la foto:', error);
-      
-      // Si el usuario canceló, no mostramos error
-      if (error instanceof Error && error.message.includes('cancelled')) {
-        return;
-      }
-      
-      this.cameraError = 'Error al seleccionar la imagen. Por favor, inténtalo de nuevo.';
-      setTimeout(() => this.cameraError = '', 3000);
-    }
-  }
-
-  // Eliminar una foto de la galería
-  removePhoto(index: number) {
-    if (index >= 0 && index < this.imageGallery.length) {
-      this.imageGallery.splice(index, 1);
-      
-      // Retroalimentación táctil al eliminar
-      if (this.isMobile && Capacitor.isPluginAvailable('Haptics')) {
-        Haptics.impact({ style: ImpactStyle.Light }).catch(err => 
-          console.log('Error de haptics:', err)
-        );
-      }
-    }
-  }
-
-  // Limpiar todas las fotos
-  clearAllPhotos() {
-    this.imageGallery = [];
-  }
-
-  // Método para verificar si la galería está vacía
-  isGalleryEmpty(): boolean {
-    return this.imageGallery.length === 0;
-  }
-
-  // Cleanup cuando el componente se destruye
   ngOnDestroy() {
-    this.stopCamera();
+    // Guardar el reporte actual como borrador antes de destruir el componente
+    this.saveDraftReport();
+    
+    // Cancelar todas las suscripciones
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  // Método para tomar una foto
+  async takePicture() {
+    this.errorMessage = '';
+    try {
+      this.loading = true;
+      
+      try {
+        const photoUrl = await this.cameraService.takePicture();
+        // Establecer la foto para el reporte actual
+        this.currentReport.imageUrl = photoUrl;
+        this.imgUrl = photoUrl;
+        
+        // Guardar el borrador actual
+        this.saveDraftReport();
+      } catch (error) {
+        if (String(error).includes('Not implemented on web')) {
+          throw new Error('Esta función no está disponible en navegadores web. Por favor, usa la aplicación móvil.');
+        } else {
+          throw error;
+        }
+      }
+      
+      if (!this.imgUrl) {
+        throw new Error('No se obtuvo una imagen válida');
+      }
+      
+      this.loading = false;
+    } catch (error) {
+      console.error('Error al capturar imagen:', error);
+      this.errorMessage = String(error);
+      this.loading = false;
+    }
+  }
+
+  // Métodos para los reportes de mantenimiento
+  saveReport() {
+    // Completar datos del reporte
+    if (!this.currentReport.id) {
+      const reportNumber = (this.reports.length + 1).toString().padStart(3, '0');
+      this.currentReport.id = "EQ-2024-" + reportNumber;
+    }
+    
+    this.currentReport.timestamp = new Date();
+    this.currentReport.technician = this.cameraService.getTechnicianName();
+    
+    if (!this.currentReport.status) {
+      this.currentReport.status = 'Activo';
+    }
+    
+    if (!this.currentReport.description) {
+      this.currentReport.description = 'Filtro de aire obstruido, necesita limpieza inmediata para evitar sobrecalentamiento.';
+    }
+    
+    // Añadir al servicio
+    this.cameraService.addReport({...this.currentReport});
+    
+    // Resetear el reporte actual
+    this.currentReport = this.getEmptyReport();
+    this.imgUrl = '';
+  }
+
+  viewReportDetails(report: ReportItem) {
+    this.selectedReport = {...report};
+    this.showDetailView = true;
+    this.imgUrl = report.imageUrl;
+    console.log('Viewing report details:', report);
+  }
+
+  closeDetailView() {
+    this.selectedReport = null;
+    this.showDetailView = false;
+  }
+
+  deleteReport(index: number) {
+    // Si estamos viendo los detalles del reporte que se va a eliminar, cerramos la vista
+    if (this.selectedReport && this.selectedReport.id === this.reports[index].id) {
+      this.closeDetailView();
+    }
+    this.cameraService.deleteReport(index);
+  }
+
+  // Guardar borrador del reporte actual
+  saveDraftReport() {
+    // Solo guardar si hay algún dato ingresado
+    if (this.currentReport.id || this.currentReport.imageUrl || this.currentReport.description) {
+      this.cameraService.saveDraftReport({...this.currentReport});
+    }
+  }
+
+  // Método auxiliar para crear un reporte vacío
+  private getEmptyReport(): ReportItem {
+    return {
+      id: '',
+      imageUrl: '',
+      timestamp: new Date(),
+      technician: '',
+      status: 'Activo',
+      description: ''
+    };
+  }
+
+  // Método para actualizar el estado de un reporte
+  updateReportStatus(report: ReportItem, newStatus: string) {
+    const index = this.reports.findIndex(r => r.id === report.id);
+    if (index !== -1) {
+      const updatedReport = {...report, status: newStatus};
+      this.cameraService.updateReport(index, updatedReport);
+      if (this.selectedReport && this.selectedReport.id === report.id) {
+        this.selectedReport = updatedReport;
+      }
+    }
   }
 }

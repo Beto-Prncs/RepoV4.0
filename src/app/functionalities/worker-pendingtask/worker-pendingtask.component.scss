@@ -3,14 +3,19 @@ $border-radius: 6px;
 $primary-color: #1a237e;
 $primary-light: #e8eaf6;
 $primary-dark: #0e1446;
+$accent-color: #3f83f8;
+$text-primary: #1e293b;
 $text-secondary: #6c757d;
 $error-color: #dc3545;
 $success-color: #28a745;
+$warning-color: #f59e0b;
+$info-color: #0ea5e9; // Added info color for download button
+$border-color: #ddd;
+$light-bg: #f0f0f0;
 $transition: all 0.2s ease-in-out;
-
+$box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 // Import the Sass color module to use color functions
 @use "sass:color";
-
 // Define the button-reset mixin if it doesn't exist elsewhere
 @mixin button-reset {
   background: none;
@@ -20,38 +25,34 @@ $transition: all 0.2s ease-in-out;
   font: inherit;
   cursor: pointer;
 }
-
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .tasks-container {
   padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  
   h2 {
     margin-bottom: 1.5rem;
     color: $primary-dark;
   }
-  
   .btn-back {
-    @include button-reset;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: $text-secondary;
     margin-bottom: 1rem;
-    transition: $transition;
-    
     &:hover {
       color: $primary-color;
       transform: translateX(-3px);
     }
-    
     svg {
       width: 16px;
       height: 16px;
     }
   }
 }
-
 // PDF/Camera Modal
 .pdf-modal {
   position: fixed;
@@ -65,7 +66,6 @@ $transition: all 0.2s ease-in-out;
   justify-content: center;
   z-index: 1000;
   animation: modalFadeIn 0.3s ease-out;
-  
   .pdf-modal-content {
     background-color: white;
     border-radius: $border-radius;
@@ -76,26 +76,22 @@ $transition: all 0.2s ease-in-out;
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    
-    // Hacer el modal más grande para la cámara
+    // Make modal larger for camera
     &.camera-modal-content {
       max-width: 900px;
       height: 90vh;
     }
-    
     .pdf-modal-header {
       padding: 1rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid $primary-light;
-      
       h3 {
         margin: 0;
         color: $primary-dark;
         font-size: 1.25rem;
       }
-      
       .btn-close {
         background: none;
         border: none;
@@ -104,27 +100,23 @@ $transition: all 0.2s ease-in-out;
         color: $text-secondary;
         cursor: pointer;
         transition: $transition;
-        
         &:hover {
           color: $error-color;
           transform: scale(1.1);
         }
       }
     }
-    
     .pdf-modal-body {
       flex-grow: 1;
       padding: 1.5rem;
       overflow-y: auto;
-      
-      // Estilos específicos para el cuerpo del modal cuando contiene el componente de cámara
+      // Specific styles for modal body containing camera component
       app-camera {
         display: block;
         width: 100%;
         height: 100%;
         min-height: 400px;
       }
-      
       .preview-content {
         h3 {
           color: $primary-dark;
@@ -132,27 +124,27 @@ $transition: all 0.2s ease-in-out;
           margin-top: 0;
           margin-bottom: 1rem;
         }
-        
         p {
           margin-bottom: 1rem;
-          
           strong {
             color: $primary-color;
           }
         }
-        
         h4 {
           color: $primary-dark;
           margin-top: 1.5rem;
           margin-bottom: 0.75rem;
         }
       }
-      
-      // Contenedor del visor de PDF
+      // PDF viewer container
       .pdf-preview-container {
         height: 70vh;
         overflow-y: auto;
-        
+        iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
         ::ng-deep {
           pdf-viewer {
             display: block;
@@ -161,14 +153,12 @@ $transition: all 0.2s ease-in-out;
         }
       }
     }
-    
     .pdf-modal-footer {
       padding: 1rem 1.5rem;
       display: flex;
       justify-content: flex-end;
       gap: 1rem;
       border-top: 1px solid $primary-light;
-      
       button {
         padding: 0.6rem 1.2rem;
         font-weight: 500;
@@ -176,23 +166,28 @@ $transition: all 0.2s ease-in-out;
         cursor: pointer;
         transition: $transition;
       }
-      
       .btn-cancel {
         background-color: white;
         color: $text-secondary;
         border: 1px solid $primary-light;
-        
         &:hover {
           background-color: $primary-light;
           color: $primary-dark;
         }
       }
-      
+      .btn-download {
+        background-color: $info-color;
+        color: white;
+        border: none;
+        &:hover {
+          background-color: color.adjust($info-color, $lightness: -10%);
+          transform: translateY(-2px);
+        }
+      }
       .btn-confirm {
         background-color: $primary-color;
         color: white;
         border: none;
-        
         &:hover {
           background-color: color.adjust($primary-color, $lightness: -5%);
           transform: translateY(-2px);
@@ -201,77 +196,63 @@ $transition: all 0.2s ease-in-out;
     }
   }
 }
-
-// Estilos específicos para el componente de cámara dentro del modal
-::ng-deep .camera-container {
-  height: 100%;
-  min-height: 400px;
-  
-  .camera-tabs {
-    margin-top: 0 !important;
+// Alerts and messages
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: $border-radius;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  &.alert-error {
+    background-color: lighten($error-color, 35%);
+    color: darken($error-color, 10%);
   }
-  
-  .camera-view, .gallery-view {
-    flex-grow: 1;
+  &.alert-success {
+    background-color: lighten($success-color, 40%);
+    color: darken($success-color, 10%);
   }
-  
-  .web-camera, .mobile-camera {
-    min-height: 300px;
-    max-height: 500px;
-  }
-  
-  // Estilos adicionales para la galería dentro del componente de cámara
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+  .alert-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
   }
 }
-
-// Responsive
-@media screen and (max-width: 768px) {
-  .tasks-container {
-    padding: 1rem;
+// Loading state
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem;
+  color: $text-secondary;
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
   }
-  
-  .tasks-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .task-actions {
-    flex-direction: column;
-    
-    button {
-      width: 100%;
-    }
-  }
-  
-  .pdf-modal {
-    .pdf-modal-content {
-      width: 95%;
-      max-height: 95vh;
-    }
-  }
-  
-  .image-previews {
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+  p {
+    font-size: 1rem;
   }
 }
-
-// Animación de entrada y salida para modales
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-// Tabs para tareas y reportes
+// Tabs for work types
 .work-tabs {
   display: flex;
   margin-bottom: 20px;
   border-bottom: 1px solid #ddd;
-  
+  overflow-x: auto;
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: $text-secondary;
+    border-radius: 2px;
+  }
   .tab-button {
     padding: 10px 20px;
     border: none;
@@ -280,13 +261,12 @@ $transition: all 0.2s ease-in-out;
     font-size: 16px;
     position: relative;
     transition: $transition;
-    
+    white-space: nowrap;
     &.active {
       font-weight: bold;
       color: $primary-color;
       border-bottom: 2px solid $primary-color;
     }
-    
     .counter {
       display: inline-block;
       background-color: #e0e0e0;
@@ -299,71 +279,18 @@ $transition: all 0.2s ease-in-out;
       font-size: 12px;
       margin-left: 6px;
     }
-    
     &.active .counter {
       background-color: $primary-color;
       color: white;
     }
   }
 }
-
-// Alerts y mensajes
-.alert {
-  padding: 0.75rem 1rem;
-  border-radius: $border-radius;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  
-  &.alert-error {
-    background-color: lighten($error-color, 35%);
-    color: darken($error-color, 10%);
-  }
-  
-  &.alert-success {
-    background-color: lighten($success-color, 40%);
-    color: darken($success-color, 10%);
-  }
-  
-  .alert-icon {
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-  }
-}
-
-// Estado de carga
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2.5rem;
-  color: $text-secondary;
-  
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid $primary-color;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
-  }
-  
-  p {
-    font-size: 1rem;
-  }
-}
-
-// Grid de tareas y reportes
+// Grid of tasks and reports
 .tasks-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
-  
   .task-card {
     border: 1px solid #ddd;
     border-radius: $border-radius;
@@ -371,119 +298,117 @@ $transition: all 0.2s ease-in-out;
     cursor: pointer;
     transition: $transition;
     background-color: white;
-    
     &:hover {
       transform: translateY(-3px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    
     &.selected {
       border-color: $primary-color;
       background-color: $primary-light;
       box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
     }
-    
     .task-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 0.75rem;
-      
       .task-title {
         margin: 0;
         font-size: 1rem;
         font-weight: 600;
       }
-      
       .priority-badge {
         padding: 0.25rem 0.5rem;
         border-radius: $border-radius;
         font-size: 0.75rem;
         font-weight: 500;
-        
-        &.priority-high {
+        &.priority-high, &.priority-alta {
           background-color: lighten($error-color, 35%);
           color: darken($error-color, 10%);
         }
-        
-        &.priority-medium {
+        &.priority-medium, &.priority-media {
           background-color: #fff8e1;
           color: #ff8f00;
         }
-        
-        &.priority-low {
+        &.priority-low, &.priority-baja {
           background-color: #e8f5e9;
           color: #388e3c;
         }
-        
         &.priority-normal {
           background-color: $primary-light;
           color: $primary-color;
         }
       }
     }
-    
     .task-info {
       > div {
         margin-bottom: 0.5rem;
       }
-      
       strong {
         display: block;
         font-size: 0.75rem;
         color: $text-secondary;
         margin-bottom: 0.25rem;
       }
-      
       .task-description {
         p {
           margin: 0;
           font-size: 0.875rem;
           color: #333;
           display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
           overflow: hidden;
         }
       }
     }
   }
 }
-
-// Mensaje de no hay reportes
+// Message when no reports
 .no-reports {
   text-align: center;
   padding: 2.5rem;
   color: $text-secondary;
   background-color: #f9f9f9;
   border-radius: $border-radius;
-  
   p {
-    margin: 0;
+    margin: 0 0 1rem;
     font-size: 1rem;
   }
+  .btn-take-photo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: $primary-color;
+    color: white;
+    border: none;
+    border-radius: $border-radius;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    transition: $transition;
+    &:hover {
+      background-color: $primary-dark;
+      transform: translateY(-2px);
+    }
+    .button-icon {
+      font-size: 1.25rem;
+    }
+  }
 }
-
-// Formularios
+// Form styles
 .completion-form {
   background-color: #f9f9f9;
   border-radius: $border-radius;
   padding: 1.25rem;
   margin-bottom: 1.25rem;
-  
   .form-group {
     margin-bottom: 1rem;
-    
     label {
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
-      
       .required {
         color: $error-color;
       }
     }
-    
     textarea {
       width: 100%;
       padding: 0.75rem;
@@ -491,19 +416,16 @@ $transition: all 0.2s ease-in-out;
       border-radius: $border-radius;
       font-size: 0.875rem;
       font-family: inherit;
-      
       &.error {
         border-color: $error-color;
       }
     }
-    
     .error-text {
       color: $error-color;
       font-size: 0.75rem;
       margin-top: 0.25rem;
       display: block;
     }
-    
     .helper-text {
       color: $text-secondary;
       font-size: 0.75rem;
@@ -513,90 +435,221 @@ $transition: all 0.2s ease-in-out;
   }
 }
 
-// Sección de imágenes
-.images-section {
-  margin-bottom: 1.25rem;
+// Evidence section in forms
+.evidence-section {
+  margin-top: 1.25rem;
   
-  h4 {
-    margin-top: 0;
-    margin-bottom: 0.75rem;
-    font-size: 1rem;
-    color: $primary-dark;
-  }
-  
-  .image-input {
-    margin-bottom: 0.75rem;
+  .evidence-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
     
-    .btn-upload {
+    .current-image-container {
+      background-color: #f2f2f2;
+      border-radius: $border-radius;
+      height: 200px;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      background-color: $primary-color;
-      color: white;
-      border: none;
-      border-radius: $border-radius;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: $transition;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid #ddd;
       
-      &:hover {
-        background-color: $primary-dark;
+      .current-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+      
+      .no-image-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: $text-secondary;
+        
+        svg {
+          margin-bottom: 0.5rem;
+          opacity: 0.5;
+        }
+        
+        p {
+          margin: 0;
+          font-size: 0.875rem;
+        }
+      }
+    }
+    
+    .evidence-controls {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      
+      .btn-evidence {
+        flex: 1;
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        border-radius: $border-radius;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: $transition;
+        border: none;
+        
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
+        svg {
+          flex-shrink: 0;
+        }
+        
+        &.btn-camera {
+          background-color: $primary-color;
+          color: white;
+          
+          &:hover:not(:disabled) {
+            background-color: $primary-dark;
+          }
+        }
+        
+        &.btn-upload {
+          background-color: $primary-light;
+          color: $primary-dark;
+          
+          &:hover:not(:disabled) {
+            background-color: darken($primary-light, 5%);
+          }
+        }
+        
+        &.btn-add {
+          background-color: $success-color;
+          color: white;
+          
+          &:hover:not(:disabled) {
+            background-color: darken($success-color, 10%);
+          }
+        }
+      }
+    }
+    
+    .photos-gallery {
+      margin-top: 1rem;
+      
+      h4 {
+        font-size: 0.875rem;
+        color: $text-secondary;
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+      }
+      
+      .gallery-thumbnails {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+        
+        .thumbnail {
+          position: relative;
+          aspect-ratio: 1;
+          border-radius: $border-radius;
+          overflow: hidden;
+          border: 2px solid transparent;
+          cursor: pointer;
+          
+          &.selected {
+            border-color: $primary-color;
+          }
+          
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          .delete-thumbnail {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            
+            &:hover {
+              background-color: $error-color;
+            }
+          }
+        }
       }
     }
   }
   
-  .image-previews {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 0.75rem;
+  .added-evidence {
+    margin-top: 1.25rem;
     
-    .image-preview-container {
-      position: relative;
-      width: 100%;
-      padding-top: 100%; // Para mantener la relación de aspecto 1:1
-      border-radius: $border-radius;
-      overflow: hidden;
-      border: 1px solid #ddd;
+    h4 {
+      font-size: 0.875rem;
+      color: $text-secondary;
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+    }
+    
+    .evidence-previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.75rem;
       
-      .image-preview {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      
-      .btn-remove-image {
-        position: absolute;
-        top: 0.25rem;
-        right: 0.25rem;
-        background-color: rgba(0, 0, 0, 0.5);
-        color: white;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        padding: 0;
-        font-size: 1.25rem;
-        line-height: 1;
-        cursor: pointer;
-        transition: $transition;
+      .evidence-preview-container {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: $border-radius;
+        overflow: hidden;
+        border: 1px solid #ddd;
         
-        &:hover {
-          background-color: rgba(220, 53, 69, 0.8);
-          transform: scale(1.1);
+        .evidence-preview {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .remove-evidence {
+          position: absolute;
+          top: 0.25rem;
+          right: 0.25rem;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background-color: rgba(0, 0, 0, 0.6);
+          color: white;
+          border: none;
+          font-size: 0.875rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          
+          &:hover {
+            background-color: $error-color;
+          }
         }
       }
     }
   }
 }
 
-// Firma digital
+// Signature container styles
 .signature-container {
   margin-top: 1.25rem;
   
@@ -611,6 +664,11 @@ $transition: all 0.2s ease-in-out;
     
     &.error {
       border-color: $error-color;
+    }
+    
+    &.active-signing {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
     }
     
     canvas {
@@ -656,7 +714,7 @@ $transition: all 0.2s ease-in-out;
   }
 }
 
-// Acciones de tarea y reporte
+// Task action buttons
 .task-actions {
   display: flex;
   justify-content: space-between;
@@ -701,6 +759,16 @@ $transition: all 0.2s ease-in-out;
     }
   }
   
+  .btn-download {
+    background-color: $info-color;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background-color: darken($info-color, 10%);
+      transform: translateY(-2px);
+    }
+  }
+  
   .btn-complete {
     background-color: $primary-color;
     color: white;
@@ -708,6 +776,58 @@ $transition: all 0.2s ease-in-out;
     &:hover:not(:disabled) {
       background-color: $primary-dark;
       transform: translateY(-2px);
+    }
+  }
+}
+
+// Animations
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Responsive styles
+@media screen and (max-width: 768px) {
+  .tasks-container {
+    padding: 1rem;
+  }
+  
+  .tasks-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .task-actions {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+  
+  .pdf-modal {
+    .pdf-modal-content {
+      width: 95%;
+      max-height: 95vh;
+    }
+  }
+  
+  .evidence-section {
+    .evidence-controls {
+      flex-direction: column;
+    }
+    
+    .evidence-previews, .gallery-thumbnails {
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+  }
+  
+  .signature-container {
+    .signature-box {
+      height: 150px;
     }
   }
 }

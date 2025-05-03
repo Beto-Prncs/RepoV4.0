@@ -1,271 +1,545 @@
-// Variables
-$font-family: 'Roboto', sans-serif;
+@use 'sass:map';
+@use 'sass:color';
 
-// Colores
-$white: #ffffff;
-$background-color: #f7f9fc;
-$text-primary: #2d3748;
-$text-secondary: #4a5568;
-$text-tertiary: #718096;
-$border-color: #e2e8f0;
-$border-color-light: #f0f3f7;
-$primary-color: #3182ce;
-$success-color: #38a169;
-$warning-color: #d69e2e;
+// Variables principales de colores basadas en Tailwind
+$colors: (
+  primary: #3b82f6,
+  primary-dark: #2563eb,
+  secondary: #64748b,
+  accent: #0ea5e9,
+  success: #10b981,
+  warning: #f59e0b,
+  danger: #ef4444,
+  gray-50: #f9fafb,
+  gray-100: #f3f4f6,
+  gray-200: #e5e7eb,
+  gray-300: #d1d5db,
+  gray-400: #9ca3af,
+  gray-500: #6b7280,
+  gray-600: #4b5563,
+  gray-700: #374151,
+  gray-800: #1f2937,
+  gray-900: #111827
+);
 
-// Sombras
-$shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
-$shadow-md: 0 4px 10px rgba(0, 0, 0, 0.1);
-$shadow-lg: 0 6px 12px rgba(0, 0, 0, 0.1);
+// Variables de espaciado y bordes
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+$spacing-2xl: 2.5rem;
+$spacing-3xl: 3rem;
 
-// Bordes
-$border-radius-md: 12px;
-$border-radius-lg: 16px;
+$border-radius-sm: 0.25rem;
+$border-radius-md: 0.5rem;
+$border-radius-lg: 0.75rem;
+$border-radius-xl: 1rem;
 
-// Espaciado
-$spacing-xs: 5px;
-$spacing-sm: 10px;
-$spacing-md: 15px;
-$spacing-lg: 20px;
-$spacing-xl: 30px;
-$spacing-2xl: 40px;
+// Mixins útiles
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-// Tipografía
-$font-size-xs: 13px;
-$font-size-sm: 14px;
-$font-size-md: 16px;
-$font-size-lg: 20px;
-$font-size-xl: 24px;
-$font-size-2xl: 36px;
-
-// Variables CSS
-$radius-md: var(--radius-md);
-
-// Mixins
 @mixin flex-between {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
 }
 
-@mixin flex-center-y {
-  display: flex;
-  align-items: center;
-}
-
-@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
-  transition: $property $duration $timing;
-}
-
-@mixin hover-lift {
+@mixin card-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: $shadow-lg;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 }
 
-// Reset
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: $font-family;
-}
-
-body {
-  background-color: $background-color;
-  color: #333;
-  line-height: 1.6;
-  font-size: $font-size-md;
-}
-
-// Dashboard principal
-.dashboard {
-  max-width: 1200px;
-  margin: $spacing-2xl auto;
-  padding: $spacing-lg;
-  background-color: $white;
-  box-shadow: $shadow-md;
-  border-radius: $border-radius-lg;
-}
-
-// Encabezado
-.dashboard-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: $spacing-xl;
-  padding-bottom: $spacing-md;
-  border-bottom: 2px solid #e4e8ec;
+@mixin responsive-grid($columns-mobile, $columns-tablet, $columns-desktop) {
+  display: grid;
+  grid-template-columns: repeat($columns-mobile, 1fr);
+  gap: $spacing-md;
   
-  h1 {
-    color: $text-primary;
-    font-size: $font-size-xl;
-    font-weight: 700;
-    margin-bottom: $spacing-sm;
+  @media (min-width: 640px) {
+    grid-template-columns: repeat($columns-tablet, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat($columns-desktop, 1fr);
+  }
+}
+
+// Estilos globales para el componente
+.statistics-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: $spacing-md;
+  color: map.get($colors, "gray-800");
+  background-color: map.get($colors, "gray-50");
+  min-height: 100vh;
+  
+  @media (min-width: 768px) {
+    padding: $spacing-lg;
+  }
+}
+
+// Estilos para la cabecera
+.header-wrapper {
+  margin-bottom: $spacing-xl;
+  
+  .top-bar {
+    @include flex-between;
+    margin-bottom: $spacing-md;
+    padding-bottom: $spacing-md;
+    border-bottom: 1px solid map.get($colors, "gray-200");
+    
+    .btn-back {
+      @include flex-center;
+      background-color: transparent;
+      color: map.get($colors, "gray-600");
+      border: none;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-md;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      svg {
+        margin-right: $spacing-xs;
+      }
+      
+      &:hover {
+        color: map.get($colors, "primary");
+        background-color: rgba(map.get($colors, "primary"), 0.05);
+      }
+    }
+    
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: map.get($colors, "gray-800");
+      margin: 0;
+      
+      @media (min-width: 768px) {
+        font-size: 1.75rem;
+      }
+    }
+  }
+}
+
+// Sección de filtros
+.filters-section {
+  background-color: white;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-xl;
+  @include card-shadow;
+  
+  .filters-header {
+    @include flex-between;
+    flex-wrap: wrap;
+    margin-bottom: $spacing-lg;
+    
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+      color: map.get($colors, "gray-800");
+    }
+    
+    .date-range {
+      @media (max-width: 639px) {
+        width: 100%;
+        margin-top: $spacing-md;
+      }
+      
+      .filter-header {
+        @include flex-center;
+        margin-bottom: $spacing-xs;
+        
+        svg {
+          margin-right: $spacing-xs;
+          color: map.get($colors, "primary");
+        }
+        
+        span {
+          font-weight: 500;
+          color: map.get($colors, "gray-700");
+        }
+      }
+      
+      .custom-date-range {
+        display: flex;
+        gap: $spacing-md;
+        margin-top: $spacing-sm;
+        
+        @media (max-width: 480px) {
+          flex-direction: column;
+          gap: $spacing-sm;
+        }
+        
+        .date-input {
+          display: flex;
+          align-items: center;
+          gap: $spacing-xs;
+          
+          label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: map.get($colors, "gray-600");
+          }
+          
+          input[type="date"] {
+            padding: $spacing-xs $spacing-sm;
+            border: 1px solid map.get($colors, "gray-300");
+            border-radius: $border-radius-sm;
+            font-size: 0.875rem;
+            
+            &:focus {
+              outline: none;
+              border-color: map.get($colors, "primary");
+              box-shadow: 0 0 0 2px rgba(map.get($colors, "primary"), 0.2);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .filters-grid {
+    @include responsive-grid(1, 2, 3);
+    margin-bottom: $spacing-lg;
+    
+    .filter-card {
+      background-color: map.get($colors, "gray-50");
+      border-radius: $border-radius-md;
+      padding: $spacing-md;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      
+      .filter-header {
+        @include flex-center;
+        justify-content: flex-start;
+        margin-bottom: $spacing-sm;
+        
+        svg {
+          color: map.get($colors, "primary");
+          margin-right: $spacing-xs;
+        }
+        
+        label {
+          font-weight: 500;
+          color: map.get($colors, "gray-700");
+          font-size: 0.9rem;
+        }
+      }
+      
+      .filter-select {
+        width: 100%;
+        padding: $spacing-sm;
+        border: 1px solid map.get($colors, "gray-300");
+        border-radius: $border-radius-sm;
+        background-color: white;
+        font-size: 0.9rem;
+        
+        &:focus {
+          outline: none;
+          border-color: map.get($colors, "primary");
+          box-shadow: 0 0 0 2px rgba(map.get($colors, "primary"), 0.2);
+        }
+      }
+    }
+  }
+  
+  .btn-reset-filters {
+    @include flex-center;
+    background-color: map.get($colors, "gray-100");
+    color: map.get($colors, "gray-600");
+    border: none;
+    padding: $spacing-sm $spacing-lg;
+    border-radius: $border-radius-md;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 auto;
+    
+    svg {
+      margin-right: $spacing-xs;
+    }
+    
+    &:hover {
+      background-color: map.get($colors, "gray-200");
+      color: map.get($colors, "gray-800");
+    }
+  }
+}
+
+// Mensajes de estado
+.error-message {
+  @include flex-center;
+  justify-content: flex-start;
+  background-color: rgba(map.get($colors, "danger"), 0.1);
+  color: map.get($colors, "danger");
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
+  margin-bottom: $spacing-lg;
+  
+  svg {
+    margin-right: $spacing-sm;
+  }
+}
+
+.loading-indicator {
+  @include flex-center;
+  flex-direction: column;
+  padding: $spacing-xl 0;
+  
+  .spinner-container {
+    margin-bottom: $spacing-md;
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(map.get($colors, "primary"), 0.2);
+      border-radius: 50%;
+      border-top-color: map.get($colors, "primary");
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   }
   
   span {
-    color: $text-tertiary;
-    font-size: $font-size-sm;
+    color: map.get($colors, "gray-600");
     font-weight: 500;
   }
 }
 
-// Tarjetas de estadísticas
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: $spacing-lg;
-}
-
-.stat-card {
-  background-color: $white;
-  border: 1px solid $border-color;
-  border-radius: $border-radius-md;
-  padding: $spacing-lg;
-  text-align: center;
-  box-shadow: $shadow-sm;
-  @include transition(transform 0.3s ease, box-shadow 0.3s ease);
-  
-  @include hover-lift;
-  
-  h3 {
-    color: $text-secondary;
-    margin-bottom: $spacing-sm;
-    font-size: $font-size-md;
-    text-transform: uppercase;
-  }
-  
-  .stat-value {
-    color: $primary-color;
-    font-size: $font-size-2xl;
-    font-weight: 800;
-  }
-}
-
-// Desglose detallado
-.detailed-breakdown {
-  margin-top: $spacing-2xl;
-  background-color: #f8fafc;
-  border-radius: $border-radius-md;
-  padding: $spacing-lg;
-  
-  h2 {
-    color: $text-primary;
-    margin-bottom: $spacing-lg;
-    font-size: $font-size-lg;
-    font-weight: 700;
-  }
-}
-
-// Tabla
-.breakdown-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: $spacing-sm;
-  
-  th, td {
-    padding: $spacing-md $spacing-md;
-    text-align: left;
-    background-color: $white;
-    border-bottom: 2px solid $border-color-light;
-    font-size: $font-size-sm;
-  }
-  
-  th {
-    background-color: #edf2f7;
-    color: $text-primary;
-    font-weight: 600;
-  }
-  
-  td {
-    color: $text-secondary;
-  }
-  
-  tr:hover td {
-    background-color: #f8fafc;
-  }
-}
-
-// Estado
-.status-badge {
-  padding: 8px 12px;
-  border-radius: $border-radius-md;
-  font-size: $font-size-xs;
-  font-weight: 600;
-  text-transform: capitalize;
-  
-  &.status-completed {
-    background-color: $success-color;
-    color: $white;
-  }
-  
-  &.status-pending {
-    background-color: $warning-color;
-    color: $white;
-  }
-}
-
-// Botón de regreso
-.btn-back {
-  position: absolute;
-  top: 1.25rem;
-  left: 1.25rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  background-color: transparent;
-  color: var(--text-secondary);
-  border: 2px solid transparent;
-  border-radius: $radius-md;
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  font-size: 0.95rem;
-  @include transition(all, 0.3s, cubic-bezier(0.4, 0, 0.2, 1));
-  z-index: 10;
-  cursor: pointer;
-  outline: none;
-}
-
-// Responsividad
-@media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    text-align: center;
+// Dashboard de estadísticas
+.dashboard {
+  .summary-cards {
+    @include responsive-grid(1, 2, 4);
+    margin-bottom: $spacing-xl;
     
-    h1 {
-      font-size: $font-size-lg;
-    }
-    
-    span {
-      margin-top: $spacing-xs;
+    .stat-card {
+      background-color: white;
+      border-radius: $border-radius-lg;
+      padding: $spacing-lg;
+      display: flex;
+      align-items: center;
+      @include card-shadow;
+      
+      .stat-icon {
+        @include flex-center;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        margin-right: $spacing-md;
+        
+        svg {
+          color: white;
+        }
+      }
+      
+      &.total .stat-icon {
+        background-color: map.get($colors, "primary");
+      }
+      
+      &.completed .stat-icon {
+        background-color: map.get($colors, "success");
+      }
+      
+      &.pending .stat-icon {
+        background-color: map.get($colors, "warning");
+      }
+      
+      &.avg-time .stat-icon {
+        background-color: map.get($colors, "accent");
+      }
+      
+      .stat-info {
+        flex: 1;
+        
+        h3 {
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: map.get($colors, "gray-600");
+          margin: 0 0 $spacing-xs 0;
+        }
+        
+        .stat-value {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: map.get($colors, "gray-800");
+        }
+        
+        .stat-percentage {
+          color: map.get($colors, "gray-500");
+          font-size: 0.875rem;
+          margin-top: $spacing-xs;
+        }
+      }
     }
   }
   
-  .stat-card {
-    padding: $spacing-md;
-    
-    .stat-value {
-      font-size: 28px;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-grid {
+  .charts-container {
+    display: grid;
     grid-template-columns: 1fr;
+    gap: $spacing-lg;
+    margin-bottom: $spacing-xl;
+    
+    @media (min-width: 1024px) {
+      grid-template-columns: 1.5fr 1fr;
+    }
+    
+    .chart-wrapper {
+      background-color: white;
+      border-radius: $border-radius-lg;
+      padding: $spacing-lg;
+      @include card-shadow;
+      height: 100%;
+      
+      h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: map.get($colors, "gray-800");
+        margin: 0 0 $spacing-md 0;
+        text-align: center;
+      }
+      
+      .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+      }
+    }
+    
+    .main-chart {
+      height: 100%;
+      
+      .chart-container {
+        height: 400px;
+        
+        @media (min-width: 1024px) {
+          height: 100%;
+          min-height: 350px;
+        }
+      }
+    }
+    
+    .secondary-charts {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: $spacing-lg;
+      
+      @media (min-width: 768px) and (max-width: 1023px) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      @media (min-width: 1024px) {
+        grid-template-columns: 1fr;
+      }
+      
+      .chart-wrapper {
+        .chart-container {
+          height: 230px;
+        }
+      }
+    }
   }
   
-  .dashboard {
-    padding: $spacing-md;
-  }
-  
-  .breakdown-table {
-    th, td {
-      padding: $spacing-sm;
+  .detailed-breakdown {
+    background-color: white;
+    border-radius: $border-radius-lg;
+    padding: $spacing-lg;
+    @include card-shadow;
+    margin-bottom: $spacing-xl;
+    
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 $spacing-lg 0;
+      color: map.get($colors, "gray-800");
+    }
+    
+    .table-responsive {
+      overflow-x: auto;
+      
+      .breakdown-table {
+        width: 100%;
+        border-collapse: collapse;
+        
+        th, td {
+          padding: $spacing-sm $spacing-md;
+          text-align: left;
+          border-bottom: 1px solid map.get($colors, "gray-200");
+        }
+        
+        th {
+          font-weight: 600;
+          color: map.get($colors, "gray-700");
+          background-color: map.get($colors, "gray-50");
+          position: sticky;
+          top: 0;
+        }
+        
+        tr {
+          &:hover td {
+            background-color: map.get($colors, "gray-50");
+          }
+        }
+        
+        .no-data {
+          text-align: center;
+          padding: $spacing-xl;
+          color: map.get($colors, "gray-500");
+        }
+        
+        .efficiency-bar-container {
+          width: 100%;
+          background-color: map.get($colors, "gray-200");
+          border-radius: $border-radius-sm;
+          height: 8px;
+          position: relative;
+          
+          .efficiency-bar {
+            height: 100%;
+            border-radius: $border-radius-sm;
+            
+            &.high {
+              background-color: map.get($colors, "success");
+            }
+            
+            &.medium {
+              background-color: map.get($colors, "warning");
+            }
+            
+            &.low {
+              background-color: map.get($colors, "danger");
+            }
+          }
+          
+          span {
+            position: absolute;
+            right: -30px;
+            top: -2px;
+            font-size: 0.75rem;
+            color: map.get($colors, "gray-600");
+            font-weight: 500;
+          }
+        }
+      }
     }
   }
 }

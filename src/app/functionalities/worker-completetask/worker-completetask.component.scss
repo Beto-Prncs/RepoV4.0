@@ -3,10 +3,16 @@ $font-family: 'Inter', sans-serif;
 
 // Colores
 $primary-color: #1a237e;
+$primary-light: #e8eaf6;
+$primary-dark: #0e1446;
+$accent-color: #3f83f8;
+$text-primary: #1e293b;
 $text-secondary: #64748b;
 $text-tertiary: #4b5563;
 $success-bg: #ecfdf5;
 $success-text: #047857;
+$error-color: #dc3545;
+$info-color: #0ea5e9;
 $border-color: #e2e8f0;
 $white: white;
 
@@ -16,6 +22,7 @@ $shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.1);
 
 // Bordes
 $border-radius-lg: 20px;
+$border-radius: 6px;
 $border-radius-full: 9999px;
 
 // Espaciado
@@ -36,6 +43,7 @@ $font-size-lg: 1.875rem;
 @mixin flex-between {
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 @mixin transition($property: all, $duration: 0.4s, $timing: cubic-bezier(0.165, 0.84, 0.44, 1)) {
@@ -54,98 +62,462 @@ $font-size-lg: 1.875rem;
   padding: $spacing-xl;
   max-width: 1200px;
   margin: 0 auto;
+
+  h2 {
+    color: $primary-color;
+    font-size: $font-size-lg;
+    font-weight: 600;
+    margin-bottom: $spacing-lg;
+    letter-spacing: -0.025em;
+  }
+
+  .btn-back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: $spacing-md;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $text-secondary;
+    font-weight: 500;
+    @include transition();
+
+    &:hover {
+      color: $primary-color;
+      transform: translateX(-3px);
+    }
+  }
 }
 
-h2 {
-  color: $primary-color;
-  font-size: $font-size-lg;
-  font-weight: 600;
-  margin-bottom: $spacing-lg;
-  letter-spacing: -0.025em;
+// Loading state
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem;
+  color: $text-secondary;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: $spacing-md;
+  }
+
+  p {
+    font-size: $font-size-sm;
+  }
 }
 
+// Tasks grid
 .tasks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: $spacing-xl;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: $spacing-lg;
   perspective: 1000px;
 }
 
 .task-card {
   background: $white;
   border-radius: $border-radius-lg;
-  padding: $spacing-2xl $spacing-xl;
-  text-align: center;
-  @include transition;
+  padding: $spacing-lg;
   box-shadow: $shadow-sm;
   position: relative;
   overflow: hidden;
-  
+  @include transition();
   @include card-hover-effect;
-}
 
-.task-header {
-  margin-bottom: $spacing-lg;
-}
+  .task-header {
+    margin-bottom: $spacing-md;
+    
+    h3 {
+      color: $primary-color;
+      font-size: $font-size-md;
+      font-weight: 600;
+      margin-bottom: $spacing-xs;
+    }
 
-.task-title {
-  color: $primary-color;
-  font-size: $font-size-md;
-  font-weight: 600;
-  margin-bottom: $spacing-xs;
-}
+    .task-date {
+      display: block;
+      color: $text-secondary;
+      font-size: $font-size-xs;
+      margin-top: $spacing-xs;
+    }
+  }
 
-.task-description {
-  color: $text-secondary;
-  font-size: $font-size-sm;
-  line-height: 1.5;
-}
+  .task-content {
+    .task-info {
+      margin-bottom: $spacing-md;
 
-.task-status {
-  display: inline-block;
-  padding: $spacing-xs $spacing-md;
-  border-radius: $border-radius-full;
-  font-size: $font-size-xs;
-  font-weight: 500;
-  margin-top: $spacing-md;
-  
-  &.completed {
-    background-color: $success-bg;
-    color: $success-text;
+      p {
+        margin-bottom: $spacing-xs;
+        font-size: $font-size-sm;
+        
+        strong {
+          color: $primary-color;
+          font-weight: 500;
+        }
+      }
+
+      .task-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $spacing-xs;
+        margin: $spacing-sm 0;
+
+        .status-badge, .priority-badge, .pdf-badge {
+          padding: 0.25rem 0.5rem;
+          border-radius: $border-radius-full;
+          font-size: $font-size-xs;
+          font-weight: 500;
+        }
+
+        .status-completed {
+          background-color: $success-bg;
+          color: $success-text;
+        }
+
+        .status-pending {
+          background-color: #fff8e1;
+          color: #ff8f00;
+        }
+
+        .priority-high {
+          background-color: lighten($error-color, 35%);
+          color: darken($error-color, 10%);
+        }
+
+        .priority-medium {
+          background-color: #fff8e1;
+          color: #ff8f00;
+        }
+
+        .priority-low {
+          background-color: #e8f5e9;
+          color: #388e3c;
+        }
+        
+        .pdf-badge {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background-color: #edf2f7;
+          color: #425a70;
+          
+          svg {
+            width: 14px;
+            height: 14px;
+          }
+          
+          &:hover {
+            background-color: #e2e8f0;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+
+    .completion-description, .materials-description {
+      margin-top: $spacing-sm;
+      padding-top: $spacing-sm;
+      border-top: 1px solid $border-color;
+
+      strong {
+        display: block;
+        color: $primary-color;
+        font-size: $font-size-xs;
+        margin-bottom: $spacing-xs;
+      }
+
+      p {
+        font-size: $font-size-sm;
+        color: $text-tertiary;
+        line-height: 1.5;
+        margin: 0;
+      }
+    }
+
+    .materials-description {
+      margin-top: $spacing-sm;
+      padding-top: $spacing-sm;
+      border-top: 1px solid $border-color;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: $spacing-sm;
+      margin-top: $spacing-lg;
+      
+      button {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: $spacing-sm;
+        border-radius: $border-radius;
+        cursor: pointer;
+        font-size: $font-size-xs;
+        font-weight: 500;
+        @include transition();
+        border: none;
+        
+        svg {
+          flex-shrink: 0;
+        }
+        
+        &.btn-view-pdf {
+          background-color: $primary-light;
+          color: $primary-color;
+          
+          &:hover {
+            background-color: $primary-color;
+            color: white;
+            transform: translateY(-2px);
+          }
+        }
+        
+        &.btn-download-pdf {
+          background-color: $info-color;
+          color: white;
+          
+          &:hover {
+            background-color: darken($info-color, 10%);
+            transform: translateY(-2px);
+          }
+        }
+      }
+    }
   }
 }
 
-.completion-details {
-  margin-top: $spacing-lg;
-  padding-top: $spacing-lg;
-  border-top: 1px solid $border-color;
-  text-align: left;
+// No tasks message
+.no-tasks {
+  text-align: center;
+  padding: 3rem;
+  background-color: $primary-light;
+  border-radius: $border-radius-lg;
+  color: $primary-color;
   
   p {
-    color: $text-tertiary;
-    font-size: $font-size-xs;
-    margin-bottom: $spacing-xs;
-    @include flex-between;
-  }
-  
-  strong {
-    color: $primary-color;
+    font-size: $font-size-md;
     font-weight: 500;
   }
 }
 
-// Media queries
-@media (max-width: 768px) {
+// Alerts
+.alert {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  &.alert-error {
+    background-color: lighten($error-color, 35%);
+    color: darken($error-color, 10%);
+    border-left: 4px solid $error-color;
+  }
+  
+  &.alert-success {
+    background-color: $success-bg;
+    color: $success-text;
+    border-left: 4px solid $success-text;
+  }
+
+  .alert-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+}
+
+// Modal styles for PDF viewer
+.pdf-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: modalFadeIn 0.3s ease-out;
+  
+  .pdf-modal-content {
+    background-color: white;
+    border-radius: $border-radius;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    
+    .pdf-modal-header {
+      padding: $spacing-md $spacing-lg;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid $primary-light;
+      
+      h3 {
+        margin: 0;
+        color: $primary-dark;
+        font-size: $font-size-md;
+      }
+      
+      .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        line-height: 1;
+        color: $text-secondary;
+        cursor: pointer;
+        @include transition();
+        
+        &:hover {
+          color: $error-color;
+          transform: scale(1.1);
+        }
+      }
+    }
+    
+    .pdf-modal-body {
+      flex-grow: 1;
+      padding: $spacing-md;
+      overflow-y: auto;
+      
+      .pdf-preview-container {
+        height: 70vh;
+        overflow-y: auto;
+        border: 1px solid $border-color;
+        background-color: #f9f9f9;
+        
+        iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+        
+        .pdf-loading {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          flex-direction: column;
+          color: $text-secondary;
+          
+          .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid $primary-color;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: $spacing-md;
+          }
+          
+          p {
+            margin-top: $spacing-md;
+          }
+        }
+      }
+    }
+    
+    .pdf-modal-footer {
+      padding: $spacing-md $spacing-lg;
+      display: flex;
+      justify-content: flex-end;
+      gap: $spacing-md;
+      border-top: 1px solid $primary-light;
+      
+      button {
+        padding: 0.6rem 1.2rem;
+        font-weight: 500;
+        border-radius: $border-radius;
+        cursor: pointer;
+        @include transition();
+        border: none;
+        
+        &.btn-cancel {
+          background-color: white;
+          color: $text-secondary;
+          border: 1px solid $primary-light;
+          
+          &:hover {
+            background-color: $primary-light;
+            color: $primary-dark;
+          }
+        }
+        
+        &.btn-download {
+          background-color: $info-color;
+          color: white;
+          
+          &:hover {
+            background-color: darken($info-color, 10%);
+            transform: translateY(-2px);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Responsive styles
+@media screen and (max-width: 768px) {
   .tasks-container {
     padding: $spacing-md;
   }
-
+  
   .tasks-grid {
     grid-template-columns: 1fr;
-    gap: $spacing-md;
   }
-
-  .completion-details {
-    padding: $spacing-md;
+  
+  .task-card {
+    .task-actions {
+      flex-direction: column;
+    }
+  }
+  
+  .pdf-modal {
+    .pdf-modal-content {
+      width: 95%;
+      height: 95vh;
+      
+      .pdf-modal-body {
+        .pdf-preview-container {
+          height: 60vh;
+        }
+      }
+      
+      .pdf-modal-footer {
+        flex-direction: column;
+        
+        button {
+          width: 100%;
+        }
+      }
+    }
   }
 }

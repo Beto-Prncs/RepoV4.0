@@ -1,82 +1,160 @@
-<!-- camera.component.html -->
-<div class="camera-container">
-  <!-- Pestañas para alternar entre cámara y galería -->
-  <div class="camera-tabs">
-    <button class="tab-button" [class.active]="selectedTab === 'camera'" (click)="switchTab('camera')">
-      <i class="fa fa-camera"></i> Cámara
-    </button>
-    <button class="tab-button" [class.active]="selectedTab === 'gallery'" (click)="switchTab('gallery')">
-      <i class="fa fa-images"></i> Galería 
-      <span *ngIf="imageGallery.length > 0" class="badge">{{ imageGallery.length }}</span>
-    </button>
-  </div>
+<div class="camera-page">
+  <!-- Vista principal de imágenes -->
+  <div class="main-view">
+    @if (!showDetailView) {
+      <!-- Vista de cámara y creación de reportes -->
+      <div class="camera-container">
+        <!-- Vista principal de la cámara o imagen seleccionada -->
+        <div class="main-image-container">
+          @if (imgUrl) {
+            <img [src]="imgUrl" alt="Foto capturada" class="captured-image">
+          } @else {
+            <div class="placeholder">
+              <span class="placeholder-icon">📷</span>
+              <span class="placeholder-text">No hay imagen seleccionada</span>
+            </div>
+          }
+        </div>
 
-  <!-- Mensaje de error de cámara si existe -->
-  <div class="camera-error" *ngIf="cameraError">
-    <p>{{ cameraError }}</p>
-  </div>
-
-  <!-- Vista de cámara -->
-  <div class="camera-view" *ngIf="selectedTab === 'camera'">
-    <!-- En navegadores web, mostrar el video en vivo -->
-    <div class="web-camera" *ngIf="!isMobile">
-      <video #videoElement autoplay playsinline [hidden]="!isCameraActive"></video>
-      <canvas #canvasElement style="display: none;"></canvas>
-      <div class="camera-controls">
-        <button class="camera-button" (click)="takePhoto()" *ngIf="isCameraActive">
-          <span class="capture-icon"></span>
-        </button>
-        <button class="gallery-button" (click)="selectFromGallery()">
-          <i class="fa fa-image"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- En dispositivos móviles, mostrar botones para acceder a la cámara -->
-    <div class="mobile-camera" *ngIf="isMobile">
-      <div class="mobile-camera-placeholder">
-        <i class="fa fa-camera fa-3x"></i>
-        <p>Toque para tomar foto</p>
-      </div>
-      <div class="camera-controls">
-        <button class="camera-button" (click)="takePhoto()">
-          <span class="capture-icon"></span>
-        </button>
-        <button class="gallery-button" (click)="selectFromGallery()">
-          <i class="fa fa-image"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Vista de galería -->
-  <div class="gallery-view" *ngIf="selectedTab === 'gallery'">
-    <div class="gallery-empty" *ngIf="isGalleryEmpty()">
-      <i class="fa fa-image fa-3x"></i>
-      <p>No hay imágenes capturadas</p>
-      <button class="camera-button" (click)="switchTab('camera')">
-        Tomar Fotos
-      </button>
-    </div>
-    
-    <div class="gallery-grid" *ngIf="!isGalleryEmpty()">
-      <div class="gallery-item" *ngFor="let image of imageGallery; let i = index">
-        <div class="image-container">
-          <img [src]="image" alt="Imagen capturada {{ i + 1 }}">
-          <button class="remove-button" (click)="removePhoto(i)">
-            <i class="fa fa-trash"></i>
+        <!-- Botones de acción -->
+        <div class="action-buttons">
+          <button (click)="takePicture()" class="button take-picture-button" [disabled]="loading">
+            <span class="button-icon">📷</span> Tomar Foto
           </button>
         </div>
+
+        <!-- Spinner de carga -->
+        @if (loading) {
+          <div class="loading-spinner">⌛ Cargando...</div>
+        }
+
+        <!-- Mensaje de error -->
+        @if (errorMessage) {
+          <div class="error-message">
+            {{ errorMessage }}
+          </div>
+        }
       </div>
-    </div>
+
+      <!-- Formulario de reporte -->
+      <div class="report-form">
+        <h2>Crear Nuevo Reporte</h2>
+        <div class="form-group">
+          <label for="reportId">ID del Equipo</label>
+          <input type="text" id="reportId" [(ngModel)]="currentReport.id" placeholder="ID generado automáticamente" disabled>
+        </div>
+        
+        <div class="form-group">
+          <label for="reportDescription">Descripción del Problema</label>
+          <textarea id="reportDescription" [(ngModel)]="currentReport.description" 
+            placeholder="Describe el estado o problema del equipo..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Estado</label>
+          <select [(ngModel)]="currentReport.status">
+            <option value="Activo">Activo</option>
+            <option value="En Revisión">En Revisión</option>
+            <option value="Resuelto">Resuelto</option>
+            <option value="Pendiente">Pendiente</option>
+          </select>
+        </div>
+        
+        <button (click)="saveReport()" class="button save-button" [disabled]="!imgUrl">
+          Guardar Reporte
+        </button>
+      </div>
+
+      <!-- Lista de reportes -->
+      <div class="reports-list">
+        <h2>Lista de Reportes</h2>
+        
+        @if (reports.length > 0) {
+          <div class="reports-container">
+            @for (report of reports; track report.id; let i = $index) {
+              <div class="report-item">
+                <div class="report-image">
+                  <img [src]="report.imageUrl" alt="Reporte {{ i + 1 }}">
+                </div>
+                <div class="report-details">
+                  <div class="report-header">
+                    <span class="report-date">{{ report.timestamp | date:'dd/MM/yyyy HH:mm' }}</span>
+                    <span class="report-id">{{ report.id }}</span>
+                  </div>
+                  <div class="report-tech">
+                    <span class="icon">👨‍🔧</span> {{ report.technician }}
+                  </div>
+                  <div class="report-status" [ngClass]="{'status-active': report.status === 'Activo', 
+                                                       'status-review': report.status === 'En Revisión',
+                                                       'status-resolved': report.status === 'Resuelto',
+                                                       'status-pending': report.status === 'Pendiente'}">
+                    {{ report.status }}
+                  </div>
+                  <div class="report-description">{{ report.description }}</div>
+                  <div class="report-actions">
+                    <button class="button detail-button" (click)="viewReportDetails(report)">Ver Detalles</button>
+                    <button class="button delete-button" (click)="deleteReport(i)">Eliminar</button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="no-reports">
+            No hay reportes disponibles.
+          </div>
+        }
+      </div>
+    }
     
-    <div class="gallery-actions" *ngIf="!isGalleryEmpty()">
-      <button class="clear-button" (click)="clearAllPhotos()">
-        <i class="fa fa-trash"></i> Borrar Todo
-      </button>
-      <button class="add-button" (click)="switchTab('camera')">
-        <i class="fa fa-plus"></i> Agregar Más
-      </button>
-    </div>
+    <!-- Vista detallada de reporte -->
+    @if (showDetailView && selectedReport) {
+      <div class="report-detail-view">
+        <div class="detail-header">
+          <button class="button back-button" (click)="closeDetailView()">← Volver</button>
+          <h2>Detalles del Reporte</h2>
+        </div>
+        
+        <div class="detail-content">
+          <div class="detail-image-container">
+            <img [src]="selectedReport.imageUrl" alt="Imagen del reporte" class="detail-image">
+          </div>
+          
+          <div class="detail-info">
+            <div class="detail-row">
+              <span class="detail-label">ID:</span>
+              <span class="detail-value">{{ selectedReport.id }}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">Fecha:</span>
+              <span class="detail-value">{{ selectedReport.timestamp | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">Técnico:</span>
+              <span class="detail-value">{{ selectedReport.technician }}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">Estado:</span>
+              <div class="status-selector">
+                <select [(ngModel)]="selectedReport.status" (change)="updateReportStatus(selectedReport, selectedReport.status)">
+                  <option value="Activo">Activo</option>
+                  <option value="En Revisión">En Revisión</option>
+                  <option value="Resuelto">Resuelto</option>
+                  <option value="Pendiente">Pendiente</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="detail-row description-row">
+              <span class="detail-label">Descripción:</span>
+              <div class="detail-description">{{ selectedReport.description }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
   </div>
 </div>

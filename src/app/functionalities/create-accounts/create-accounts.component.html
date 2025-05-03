@@ -1,286 +1,422 @@
-<div class="container">
+
+<!-- Contenedor principal con fondo suave -->
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-6 sm:py-12 px-4">
   <!-- Sistema de notificaciones -->
-  <div class="notifications-container">
+  <div class="fixed top-4 right-4 z-50 w-80 md:w-96">
     <div *ngFor="let notification of notifications"
-      class="notification"
-      [ngClass]="notification.type">
-      <div class="notification-icon">
-        <svg *ngIf="notification.type === 'success'"
-          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+         class="flex items-start mb-3 p-4 rounded-lg shadow-lg border-l-4 animate-slide-in-right"
+         [ngClass]="{
+           'bg-green-50 border-green-500 text-green-800': notification.type === 'success',
+           'bg-red-50 border-red-500 text-red-800': notification.type === 'error'
+         }">
+      <div class="flex-shrink-0 mr-3">
+        <svg *ngIf="notification.type === 'success'" class="w-6 h-6 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
         </svg>
-        <svg *ngIf="notification.type === 'error'" xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24" fill="currentColor">
+        <svg *ngIf="notification.type === 'error'" class="w-6 h-6 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
         </svg>
       </div>
-      <div class="notification-content">
-        <div class="notification-title">{{ notification.title }}</div>
-        <div class="notification-message">{{ notification.message }}</div>
+      <div class="flex-1 min-w-0">
+        <p class="font-medium">{{ notification.title }}</p>
+        <p class="text-sm mt-1">{{ notification.message }}</p>
       </div>
-      <button class="notification-close" (click)="removeNotification(notification.id)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <button class="ml-3 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors" (click)="removeNotification(notification.id)">
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6L6 18M6 6l12 12"></path>
         </svg>
       </button>
     </div>
   </div>
 
-  <!-- Botón de retroceso -->
-  <button class="btn-back" (click)="goBack()">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12"></line>
-      <polyline points="12 19 5 12 12 5"></polyline>
-    </svg>
-    Atrás
-  </button>
+  <div class="max-w-6xl mx-auto">
+    <!-- Botón de retroceso mejorado -->
+    <button (click)="goBack()" class="group mb-6 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg transition-all shadow-md hover:bg-blue-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Atrás
+    </button>
 
-  <div class="dashboard-card">
-    <!-- Encabezado -->
-    <div class="card-header">
-      <div class="header-content">
-        <img src="./icons/persona.png" alt="Admin Dashboard" class="dashboard-logo"/>
-        <div class="header-text">
-          <h1>Panel de Administración</h1>
-          <p class="subtitle">Gestión de Cuentas de Usuario</p>
+    <!-- Tarjeta principal con efecto de profundidad -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 transition-all duration-300 transform hover:shadow-2xl hover:-translate-y-1">
+      <!-- Encabezado con degradado más vibrante -->
+      <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 p-8 relative overflow-hidden">
+        <!-- Patrón decorativo de fondo -->
+        <div class="absolute inset-0 overflow-hidden opacity-10">
+          <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/20"></div>
+          <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-white/20"></div>
         </div>
-      </div>
-    </div>
-
-    <!-- Contenido Principal -->
-    <div class="card-body">
-      <!-- Selector de Tipo de Cuenta -->
-      <div class="account-type-selector">
-        <h2>Seleccione el tipo de cuenta a crear</h2>
-        <div class="type-options">
-          <div class="type-card" [class.selected]="selectedType === 'worker'"
-            (click)="selectAccountType('worker')">
-            <div class="icon-container">
-              <img src="./icons/empleadoC.png" alt="Trabajador" class="type-icon"/>
-            </div>
-            <h3>Cuenta de Trabajador</h3>
-            <p>Crear cuenta para nuevo empleado</p>
+        
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-5 relative z-10">
+          <div class="bg-white p-4 rounded-xl shadow-lg transform transition-all duration-300 hover:rotate-3 hover:scale-105 ring-4 ring-white/30">
+            <img src="./icons/persona.png" alt="Admin Dashboard" class="w-12 h-12"/>
           </div>
-          <div class="type-card" [class.selected]="selectedType === 'admin'"
-            (click)="selectAccountType('admin')">
-            <div class="icon-container">
-              <img src="./icons/agregar.png" alt="Administrador" class="type-icon"/>
-            </div>
-            <h3>Cuenta de Administrador</h3>
-            <p>Crear cuenta con privilegios administrativos</p>
+          <div class="text-center md:text-left">
+            <h1 class="text-white text-3xl font-bold tracking-tight drop-shadow-md">Panel de Administración</h1>
+            <p class="text-blue-100 mt-2 text-lg font-light tracking-wide">Gestión de Cuentas de Usuario</p>
           </div>
         </div>
       </div>
 
-      <!-- Formulario de Creación -->
-      <form #createAccountForm="ngForm"
-        (ngSubmit)="onSubmit(createAccountForm)" *ngIf="selectedType">
-        <h2>{{ selectedType === 'worker' ? 'Crear Cuenta de Trabajador' : 'Crear Cuenta de Administrador' }}</h2>
-
-        <!-- Información Personal -->
-        <div class="form-section">
-          <h3>Información Personal</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="firstName">Nombre(s)</label>
-              <input
-                type="text"
-                id="firstName"
-                name="firstName"
-                [(ngModel)]="accountData.firstName"
-                required
-                #firstNameInput="ngModel"
-                placeholder="Ingrese nombre(s)"
-              />
-              <div class="error-message" *ngIf="firstNameInput.invalid && firstNameInput.touched">
-                El nombre es requerido
+      <!-- Contenido Principal con sombras sutiles -->
+      <div class="p-8">
+        <!-- Selector de Tipo de Cuenta -->
+        <div class="mb-10">
+          <h2 class="text-xl font-semibold text-gray-800 text-center mb-8 relative after:content-[''] after:block after:w-24 after:h-1 after:bg-blue-500 after:mx-auto after:mt-2 after:rounded-full">Seleccione el tipo de cuenta a crear</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Tarjeta Trabajador con animación en hover -->
+            <div 
+              (click)="selectAccountType('worker')" 
+              class="relative flex flex-col items-center p-8 rounded-xl border-2 transition-all duration-300 cursor-pointer group hover:-translate-y-2"
+              [ngClass]="selectedType === 'worker' ? 'border-blue-500 bg-blue-50/70 shadow-lg' : 'border-gray-200 hover:border-blue-400 shadow-md'">
+              
+              <!-- Indicador de selección -->
+              <div class="absolute top-4 right-4" *ngIf="selectedType === 'worker'">
+                <div class="bg-blue-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
               </div>
+              
+              <!-- Icono con efecto de elevación -->
+              <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-5 border-2 transition-all duration-300 group-hover:shadow-lg"
+                   [ngClass]="selectedType === 'worker' ? 'border-blue-500 shadow-md' : 'border-gray-200 group-hover:border-blue-400'">
+                <img src="./icons/empleadoC.png" alt="Trabajador" class="w-10 h-10 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" />
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Cuenta de Trabajador</h3>
+              <p class="text-gray-600 text-center">Crear cuenta para nuevo empleado</p>
             </div>
-
-            <div class="form-group">
-              <label for="lastName">Apellidos</label>
-              <input
-                type="text"
-                id="lastName"
-                name="lastName"
-                [(ngModel)]="accountData.lastName"
-                required
-                #lastNameInput="ngModel"
-                placeholder="Ingrese apellidos"
-              />
-              <div class="error-message" *ngIf="lastNameInput.invalid && lastNameInput.touched">
-                Los apellidos son requeridos
+            
+            <!-- Tarjeta Administrador con animación en hover -->
+            <div 
+              (click)="selectAccountType('admin')" 
+              class="relative flex flex-col items-center p-8 rounded-xl border-2 transition-all duration-300 cursor-pointer group hover:-translate-y-2"
+              [ngClass]="selectedType === 'admin' ? 'border-blue-500 bg-blue-50/70 shadow-lg' : 'border-gray-200 hover:border-blue-400 shadow-md'">
+              
+              <!-- Indicador de selección -->
+              <div class="absolute top-4 right-4" *ngIf="selectedType === 'admin'">
+                <div class="bg-blue-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
               </div>
-            </div>
-
-            <div class="form-group">
-              <label for="email">Correo Electrónico</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                [(ngModel)]="accountData.email"
-                required
-                email
-                #emailInput="ngModel"
-                placeholder="correo@ejemplo.com"
-              />
-              <div class="error-message" *ngIf="emailInput.invalid && emailInput.touched">
-                Ingrese un correo electrónico válido
+              
+              <!-- Icono con efecto de elevación -->
+              <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-5 border-2 transition-all duration-300 group-hover:shadow-lg"
+                   [ngClass]="selectedType === 'admin' ? 'border-blue-500 shadow-md' : 'border-gray-200 group-hover:border-blue-400'">
+                <img src="./icons/agregar.png" alt="Administrador" class="w-10 h-10 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" />
               </div>
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Teléfono</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                [(ngModel)]="accountData.phone"
-                pattern="[0-9]{10}"
-                #phoneInput="ngModel"
-                placeholder="Número a 10 dígitos"
-              />
-              <div class="error-message" *ngIf="phoneInput.invalid && phoneInput.touched">
-                Ingrese un número válido de 10 dígitos
-              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Cuenta de Administrador</h3>
+              <p class="text-gray-600 text-center">Crear cuenta con privilegios administrativos</p>
             </div>
           </div>
         </div>
 
-        <!-- Información de Cuenta -->
-        <div class="form-section">
-          <h3>Información de Acceso</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="username">Nombre de Usuario</label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                [(ngModel)]="accountData.username"
-                required
-                #usernameInput="ngModel"
-                placeholder="Nombre de usuario único"
-              />
-              <div class="error-message" *ngIf="usernameInput.invalid && usernameInput.touched">
-                El nombre de usuario es requerido
-              </div>
-            </div>
+        <!-- Formulario de Creación con animación fade-in -->
+        <form #createAccountForm="ngForm" (ngSubmit)="onSubmit(createAccountForm)" *ngIf="selectedType" class="animate-fade-in">
+          <h2 class="text-xl font-semibold text-gray-800 mb-8 pb-3 border-b border-gray-200 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+            </svg>
+            {{ selectedType === 'worker' ? 'Crear Cuenta de Trabajador' : 'Crear Cuenta de Administrador' }}
+          </h2>
 
-            <div class="form-group">
-              <label for="password">Contraseña</label>
-              <div class="password-input">
-                <input
-                  [type]="showPassword ? 'text' : 'password'"
-                  id="password"
-                  name="password"
-                  [(ngModel)]="accountData.password"
-                  required
-                  pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$"
-                  #passwordInput="ngModel"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  class="toggle-password"
-                  (click)="togglePasswordVisibility()"
-                >
-                  <img [src]="showPassword ? './icons/ShowP1.png' : './icons/ShowP2.png'" alt="Toggle password"/>
-                </button>
-              </div>
-              <div class="error-message" *ngIf="passwordInput.invalid && passwordInput.touched">
-                La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas y números
-              </div>
-            </div>
-
-            <!-- Campos específicos para Trabajador -->
-            <div class="form-group" *ngIf="selectedType === 'worker'">
-              <label for="department">Departamento</label>
-              <select
-                id="department"
-                name="department"
-                [(ngModel)]="accountData.department"
-                (change)="onDepartmentChange($event)"
-                required
-                #departmentInput="ngModel"
-              >
-                <option value="">Seleccione un departamento</option>
-                <option *ngFor="let dept of departments" [value]="dept">
-                  {{dept === 'otro' ? 'Otro departamento' : dept}}
-                </option>
-              </select>
-              <div class="error-message" *ngIf="departmentInput.invalid && departmentInput.touched">
-                Seleccione un departamento
-              </div>
-              
-              <!-- Campo para departamento personalizado -->
-              <div *ngIf="showCustomDepartment" class="custom-field">
+          <!-- Información Personal con efecto de profundidad -->
+          <div class="bg-gray-50 rounded-xl p-8 mb-8 border border-gray-200 shadow-sm">
+            <h3 class="text-lg font-medium text-gray-800 mb-6 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+              Información Personal
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Nombre(s) -->
+              <div>
+                <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">Nombre(s)</label>
                 <input
                   type="text"
-                  id="customDepartment"
-                  name="customDepartment"
-                  [(ngModel)]="accountData.customDepartment"
+                  id="firstName"
+                  name="firstName"
+                  [(ngModel)]="accountData.firstName"
                   required
-                  placeholder="Ingrese el nuevo departamento"
+                  #firstNameInput="ngModel"
+                  placeholder="Ingrese nombre(s)"
+                  class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  [ngClass]="{'border-red-300 bg-red-50': firstNameInput.invalid && firstNameInput.touched, 'border-green-300 bg-green-50': firstNameInput.valid && firstNameInput.touched}"
                 />
+                <div *ngIf="firstNameInput.invalid && firstNameInput.touched" class="mt-1 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start animate-error-shake">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  El nombre es requerido
+                </div>
               </div>
-            </div>
 
-            <!-- Campos específicos para Administrador -->
-            <div class="form-group" *ngIf="selectedType === 'admin'">
-              <label for="adminLevel">Nivel de Administración</label>
-              <select
-                id="adminLevel"
-                name="adminLevel"
-                [(ngModel)]="accountData.adminLevel"
-                (change)="onAdminLevelChange($event)"
-                required
-                #adminLevelInput="ngModel"
-                [disabled]="isAdminLevelRestricted"
-              >
-                <option value="">Seleccione un nivel</option>
-                <option *ngFor="let level of getAvailableAdminLevels()" [value]="level">
-                  {{level === 'otro' ? 'Otro nivel' : 'Nivel ' + level}}
-                </option>
-              </select>
-              <div class="error-message" *ngIf="adminLevelInput.invalid && adminLevelInput.touched">
-                Seleccione un nivel de administración
-              </div>
-              <div *ngIf="isAdminLevelRestricted" class="info-message">
-                Como administrador nivel {{ currentAdminLevel }}, solo puede crear administradores de nivel 2.
-              </div>
-              
-              <!-- Campo para nivel de administración personalizado -->
-              <div *ngIf="showCustomAdminLevel && !isAdminLevelRestricted" class="custom-field">
+              <!-- Apellidos -->
+              <div>
+                <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
                 <input
                   type="text"
-                  id="customAdminLevel"
-                  name="customAdminLevel"
-                  [(ngModel)]="accountData.customAdminLevel"
+                  id="lastName"
+                  name="lastName"
+                  [(ngModel)]="accountData.lastName"
                   required
-                  placeholder="Ingrese el nuevo nivel de administración"
+                  #lastNameInput="ngModel"
+                  placeholder="Ingrese apellidos"
+                  class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  [ngClass]="{'border-red-300 bg-red-50': lastNameInput.invalid && lastNameInput.touched, 'border-green-300 bg-green-50': lastNameInput.valid && lastNameInput.touched}"
                 />
+                <div *ngIf="lastNameInput.invalid && lastNameInput.touched" class="mt-1 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start animate-error-shake">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  Los apellidos son requeridos
+                </div>
+              </div>
+
+              <!-- Correo Electrónico -->
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  [(ngModel)]="accountData.email"
+                  required
+                  email
+                  #emailInput="ngModel"
+                  placeholder="correo@ejemplo.com"
+                  class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  [ngClass]="{'border-red-300 bg-red-50': emailInput.invalid && emailInput.touched, 'border-green-300 bg-green-50': emailInput.valid && emailInput.touched}"
+                />
+                <div *ngIf="emailInput.invalid && emailInput.touched" class="mt-1 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start animate-error-shake">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  Ingrese un correo electrónico válido
+                </div>
+              </div>
+
+              <!-- Teléfono -->
+              <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  [(ngModel)]="accountData.phone"
+                  pattern="[0-9]{10}"
+                  #phoneInput="ngModel"
+                  placeholder="Número a 10 dígitos"
+                  class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  [ngClass]="{'border-red-300 bg-red-50': phoneInput.invalid && phoneInput.touched && phoneInput.value, 'border-green-300 bg-green-50': phoneInput.valid && phoneInput.touched && phoneInput.value}"
+                />
+                <div *ngIf="phoneInput.invalid && phoneInput.touched && phoneInput.value" class="mt-1 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start animate-error-shake">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  Ingrese un número válido de 10 dígitos
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Botones de Acción -->
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" (click)="resetForm()">
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            class="btn-primary"
-            [disabled]="createAccountForm.invalid || isLoading || formSubmitted"
-          >
-            <span *ngIf="!isLoading">Crear Cuenta</span>
-            <span *ngIf="isLoading">Creando cuenta...</span>
-          </button>
-        </div>
-      </form>
+          <!-- Información de Acceso con efecto de profundidad -->
+          <div class="bg-gray-50 rounded-xl p-8 mb-8 border border-gray-200 shadow-sm">
+            <h3 class="text-lg font-medium text-gray-800 mb-6 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+              </svg>
+              Información de Acceso
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Nombre de Usuario -->
+              <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario</label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  [(ngModel)]="accountData.username"
+                  required
+                  #usernameInput="ngModel"
+                  placeholder="Nombre de usuario único"
+                  class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  [ngClass]="{'border-red-300 bg-red-50': usernameInput.invalid && usernameInput.touched, 'border-green-300 bg-green-50': usernameInput.valid && usernameInput.touched}"
+                />
+                <div *ngIf="usernameInput.invalid && usernameInput.touched" class="mt-1 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start animate-error-shake">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  El nombre de usuario es requerido
+                </div>
+              </div>
+
+              <!-- Contraseña -->
+              <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                <div class="relative">
+                  <input
+                    [type]="showPassword ? 'text' : 'password'"
+                    id="password"
+                    name="password"
+                    [(ngModel)]="accountData.password"
+                    required
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$"
+                    #passwordInput="ngModel"
+                    placeholder="••••••••"
+                    class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-12"
+                    [ngClass]="{'border-red-300 bg-red-50': passwordInput.invalid && passwordInput.touched, 'border-green-300 bg-green-50': passwordInput.valid && passwordInput.touched}"
+                  />
+                  <button
+                    type="button"
+                    class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    (click)="togglePasswordVisibility()"
+                  >
+                    <img [src]="showPassword ? './icons/ShowP1.png' : './icons/ShowP2.png'" alt="Toggle password" class="w-5 h-5 transition-transform hover:scale-110"/>
+                  </button>
+                </div>
+                <div *ngIf="passwordInput.invalid && passwordInput.touched" class="mt-1 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start animate-error-shake">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas y números
+                </div>
+              </div>
+
+              <!-- Campos específicos para Trabajador -->
+              <div *ngIf="selectedType === 'worker'" class="md:col-span-2">
+                <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                <div class="flex flex-col md:flex-row gap-4">
+                  <select
+                    id="department"
+                    name="department"
+                    [(ngModel)]="accountData.department"
+                    (change)="onDepartmentChange($event)"
+                    required
+                    #departmentInput="ngModel"
+                    class="w-full md:w-2/3 px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
+                    [ngClass]="{'border-red-300 bg-red-50': departmentInput.invalid && departmentInput.touched}"
+                  >
+                    <option value="">Seleccione un departamento</option>
+                    <option *ngFor="let dept of departments" [value]="dept">
+                      {{dept === 'otro' ? 'Otro departamento' : dept}}
+                    </option>
+                  </select>
+                  
+                  <!-- Campo para departamento personalizado con transición suave -->
+                  <div *ngIf="showCustomDepartment" class="w-full md:w-2/3 animate-fade-in">
+                    <input
+                      type="text"
+                      id="customDepartment"
+                      name="customDepartment"
+                      [(ngModel)]="accountData.customDepartment"
+                      required
+                      placeholder="Ingrese el nuevo departamento"
+                      class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+                <div *ngIf="departmentInput.invalid && departmentInput.touched" class="mt-1 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start animate-error-shake">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  Seleccione un departamento
+                </div>
+              </div>
+              <!-- Campos específicos para Administrador -->
+              <div *ngIf="selectedType === 'admin'" class="md:col-span-2">
+                <label for="adminLevel" class="block text-sm font-medium text-gray-700 mb-1">Nivel de Administración</label>
+                <div class="flex flex-col md:flex-row gap-4">
+                  <select
+                    id="adminLevel"
+                    name="adminLevel"
+                    [(ngModel)]="accountData.adminLevel"
+                    (change)="onAdminLevelChange($event)"
+                    required
+                    #adminLevelInput="ngModel"
+                    [disabled]="isAdminLevelRestricted"
+                    class="w-full md:w-2/3 px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
+                    [ngClass]="{'border-red-300 bg-red-50': adminLevelInput.invalid && adminLevelInput.touched, 'bg-gray-100': isAdminLevelRestricted}"
+                  >
+                    <option value="">Seleccione un nivel</option>
+                    <option *ngFor="let level of getAvailableAdminLevels()" [value]="level">
+                      {{level === 'otro' ? 'Otro nivel' : 'Nivel ' + level}}
+                    </option>
+                  </select>
+                  
+                  <!-- Campo para nivel de administración personalizado con transición suave -->
+                  <div *ngIf="showCustomAdminLevel && !isAdminLevelRestricted" class="w-full md:w-2/3 animate-fade-in">
+                    <input
+                      type="text"
+                      id="customAdminLevel"
+                      name="customAdminLevel"
+                      [(ngModel)]="accountData.customAdminLevel"
+                      required
+                      placeholder="Ingrese el nuevo nivel de administración"
+                      class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+                <div *ngIf="adminLevelInput.invalid && adminLevelInput.touched" class="mt-1 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start animate-error-shake">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  Seleccione un nivel de administración
+                </div>
+                <div *ngIf="isAdminLevelRestricted" class="mt-1 text-sm text-blue-600 bg-blue-50 p-2 rounded-lg flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  Como administrador nivel {{ currentAdminLevel }}, solo puede crear administradores de nivel 2.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de Acción con efectos de elevación -->
+          <div class="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200 mt-8">
+            <!-- Botón Cancelar -->
+            <button 
+              type="button" 
+              class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all shadow-sm hover:shadow-md" 
+              (click)="resetForm()"
+            >
+              <span class="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Cancelar
+              </span>
+            </button>
+            
+            <!-- Botón Crear Cuenta -->
+            <button
+              type="submit"
+              class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none transition-all shadow-md hover:shadow-lg"
+              [disabled]="createAccountForm.invalid || isLoading || formSubmitted"
+            >
+              <span *ngIf="!isLoading" class="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Crear Cuenta
+              </span>
+              <span *ngIf="isLoading" class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creando cuenta...
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>

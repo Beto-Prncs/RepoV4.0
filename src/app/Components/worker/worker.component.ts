@@ -1,270 +1,220 @@
-import { Component, ElementRef, OnInit, ViewChild, inject, HostListener } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Router, NavigationEnd } from '@angular/router';
-import { Auth, signOut } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, updateDoc } from '@angular/fire/firestore';
-import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
 import { Usuario } from '../../models/interfaces';
+import { AuthService } from '../../services/auth.service';
+import { Storage, getDownloadURL, ref, uploadBytesResumable } from '@angular/fire/storage';
+import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
 import { filter } from 'rxjs/operators';
+import { ClickOutsideDirective } from '../../directives/click-outside.directive';
 
 @Component({
   selector: 'app-worker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule, ClickOutsideDirective],
   templateUrl: './worker.component.html',
-  styleUrl: './worker.component.scss'
+  styleUrls: ['./worker.component.scss']
 })
 export class WorkerComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
   
-  private auth: Auth = inject(Auth);
-  private firestore: Firestore = inject(Firestore);
-  private storage: Storage = inject(Storage);
-  private router: Router = inject(Router);
-  
   usuario: Usuario | null = null;
-  currentRoute = '';
-  isMobile = false;
+  isProfileMenuOpen: boolean = false;
+  isLoading: boolean = true;
+  isUploading: boolean = false;
+  currentUrl: string = '';
+  window: any = window;
 
-  // Configuración de menús y funcionalidades
-  menuItems = [
-    {
-      title: 'Inicio',
-      icon: 'home.png',
-      route: '/worker',
-      description: 'Página principal'
-    },
-    {
-      title: 'Reportes Pendientes',
-      icon: 'pending.png',
-      route: '/worker-pendingtask',
-      description: 'Ver reportes pendientes'
-    },
-    {
-      title: 'Trabajos Completados',
-      icon: 'completed.png',
-      route: '/worker-completetask',
-      description: 'Ver trabajos completados'
-    },
-    {
-      title: 'Estadísticas',
-      icon: 'stats.png',
-      route: '/worker-statistics',
-      description: 'Ver estadísticas'
-    },
-    {
-      title: 'Configuración',
-      icon: 'tools.png',
-      route: '/configuration',
-      description: 'Ajustes del sistema'
-    }
-  ];
-
-  constructor() {
-    // Detectar dispositivo móvil
-    this.isMobile = this.detectMobile();
-    
-    // Suscribirse a los cambios de ruta
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private storage: Storage,
+    private firestore: Firestore
+  ) {
+    // Listen for route changes to update active tab
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      this.currentRoute = event.urlAfterRedirects;
+      this.currentUrl = event.urlAfterRedirects;
     });
   }
 
   ngOnInit(): void {
-    console.log('Inicializando componente worker');
+    // Get current route
+    this.currentUrl = this.router.url;
+    
+    // Load user data
     this.loadUserData();
-    this.currentRoute = this.router.url;
-    
-    // Configurar el sidebar según el tamaño de pantalla
-    this.setupSidebar();
   }
 
-  // Detectar si es un dispositivo móvil
-  private detectMobile(): boolean {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
-
-  // Verificar si una ruta está activa
+  // Check if a route is active
   isActiveRoute(route: string): boolean {
-    return this.currentRoute === route;
+    return this.currentUrl === route || this.currentUrl.startsWith(route);
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize() {
-    this.setupSidebar();
+  // Toggle profile menu
+  toggleProfileMenu(event: Event): void {
+    event.stopPropagation();
+    this.isProfileMenuOpen = !this.isProfileMenuOpen;
   }
 
-  // Configurar el sidebar según el tamaño de la pantalla
-  private setupSidebar(): void {
-    if (window.innerWidth < 992) {
-      // En dispositivos móviles, ocultar el sidebar inicialmente
-      this.closeSidebar();
-    } else {
-      // En desktop, mostrar el sidebar
-      this.showSidebar();
-    }
+  // Close profile menu
+  closeProfileMenu(): void {
+    this.isProfileMenuOpen = false;
   }
 
-  // Mostrar el sidebar (usado para desktop)
-  private showSidebar(): void {
-    const sidebar = document.getElementById('mySidebar');
-    
-    if (sidebar) {
-      sidebar.style.display = 'block';
-      sidebar.style.transform = 'none';
-    }
-  }
-
-  // Abrir el sidebar (para móvil)
-  openSidebar(): void {
-    console.log('Abriendo sidebar');
-    const sidebar = document.getElementById('mySidebar');
-    const overlay = document.getElementById('myOverlay');
-    
-    if (sidebar && overlay) {
-      // Estilos para el sidebar
-      sidebar.style.display = 'block';
-      sidebar.style.transform = 'none';
-      sidebar.style.zIndex = '1001';
-      
-      // Mostrar el overlay
-      overlay.style.display = 'block';
-      
-      // Evitar scroll del body
-      document.body.style.overflow = 'hidden';
-    }
-  }
-
-  // Cerrar el sidebar (para móvil)
-  closeSidebar(): void {
-    console.log('Cerrando sidebar');
-    const sidebar = document.getElementById('mySidebar');
-    const overlay = document.getElementById('myOverlay');
-    
-    if (sidebar && overlay) {
-      if (window.innerWidth < 992) {
-        // Solo ocultar en móviles
-        sidebar.style.display = 'none';
-        overlay.style.display = 'none';
-      }
-      
-      // Restaurar scroll del body
-      document.body.style.overflow = '';
-    }
-  }
-
-  // Cargar datos del usuario
-  async loadUserData(): Promise<void> {
-    try {
-      const user = this.auth.currentUser;
-      
-      if (user) {
-        const userDoc = await getDoc(doc(this.firestore, 'Usuario', user.uid));
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          this.usuario = {
-            ...userData as Usuario,
-            IdUsuario: user.uid
-          };
-          console.log('Usuario cargado:', this.usuario);
-        } else {
-          console.log('No se encontró el documento del usuario');
-          this.router.navigate(['/login']);
-        }
-      } else {
-        console.log('No hay usuario autenticado');
-        this.router.navigate(['/login']);
-      }
-    } catch (error) {
-      console.error('Error al cargar datos del usuario:', error);
-    }
-  }
-
-  // Navegar a diferentes rutas
+  // Navigate to a route
   navigateTo(route: string): void {
-    console.log('Navegando a:', route);
-    // En móvil, cerrar el sidebar al navegar
-    if (window.innerWidth < 992) {
-      this.closeSidebar();
-    }
-    
     this.router.navigate([route]);
   }
 
-  // Cerrar sesión
-  async logout(): Promise<void> {
-    try {
-      await signOut(this.auth);
-      this.router.navigate(['/login']);
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-    }
+  // Logout and redirect to login
+  logout(): void {
+    this.authService.logout()
+      .then(() => {
+        this.router.navigate(['/login']);
+      })
+      .catch(error => {
+        console.error('Error al cerrar sesión:', error);
+      });
   }
 
-  // Abrir selector de archivo para foto de perfil
+  // Open file selector for profile photo
   openPhotoSelector(): void {
+    if (this.isUploading) return;
     this.fileInput.nativeElement.click();
   }
 
-  // Manejar selección de foto
-  async onPhotoSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    
-    if (input.files && input.files.length > 0 && this.usuario?.IdUsuario) {
-      const file = input.files[0];
-      const storageRef = ref(this.storage, `profiles/${this.usuario.IdUsuario}/profile.jpg`);
-      
-      try {
-        const uploadTask = uploadBytesResumable(storageRef, file);
-        
-        uploadTask.on('state_changed',
-          (snapshot) => {
-            // Progreso
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log(`Upload progress: ${progress}%`);
-          },
-          (error) => {
-            // Error
-            console.error('Error al subir la imagen:', error);
-          },
-          async () => {
-            // Completado
-            try {
-              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-              
-              // Actualizar URL en Firestore
-              await this.updateUserPhotoURL(downloadURL);
-              
-              // Actualizar UI
-              this.usuario = {
-                ...this.usuario!,
-                Foto_Perfil: downloadURL
-              };
-            } catch (error) {
-              console.error('Error al obtener URL:', error);
-            }
-          }
-        );
-      } catch (error) {
-        console.error('Error al subir la imagen:', error);
-      }
+  // Handle photo selection
+  onPhotoSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.includes('image/')) {
+      alert('Por favor selecciona una imagen válida.');
+      return;
     }
+
+    // Start upload
+    this.uploadProfilePhoto(file);
   }
 
-  // Actualizar URL de foto en Firestore
-  private async updateUserPhotoURL(photoURL: string): Promise<void> {
-    if (this.usuario?.IdUsuario) {
-      try {
-        const userRef = doc(this.firestore, 'Usuario', this.usuario.IdUsuario);
-        await updateDoc(userRef, {
-          Foto_Perfil: photoURL
+  // Upload profile photo to Firebase Storage
+  private uploadProfilePhoto(file: File): void {
+    if (!this.usuario) return;
+
+    this.isUploading = true;
+
+    // Create a reference to the storage location
+    const storageRef = ref(this.storage, `profile_photos/${this.usuario.IdUsuario}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    // Monitor upload progress
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        // Progress monitoring if needed
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+      },
+      (error) => {
+        // Handle errors
+        console.error('Error during upload:', error);
+        this.isUploading = false;
+        alert('Error al subir la imagen. Por favor, intenta nuevamente.');
+      },
+      () => {
+        // Upload completed successfully, get download URL
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          console.log('File available at', downloadURL);
+          
+          // Update user profile in Firestore
+          this.updateUserProfilePhoto(downloadURL);
         });
-      } catch (error) {
-        console.error('Error al actualizar foto de perfil:', error);
       }
-    }
+    );
+  }
+
+  // Update user profile photo in Firestore
+  private updateUserProfilePhoto(imageUrl: string): void {
+    if (!this.usuario) return;
+
+    const userRef = doc(this.firestore, 'Usuario', this.usuario.IdUsuario);
+    
+    updateDoc(userRef, {
+      Foto_Perfil: imageUrl
+    })
+    .then(() => {
+      console.log('Foto de perfil actualizada correctamente');
+      
+      // Update local user object
+      if (this.usuario) {
+        this.usuario.Foto_Perfil = imageUrl;
+      }
+      
+      this.isUploading = false;
+    })
+    .catch(error => {
+      console.error('Error al actualizar foto de perfil:', error);
+      this.isUploading = false;
+      alert('Error al actualizar la foto de perfil. Por favor, intenta nuevamente.');
+    });
+  }
+
+  // Load user data from AuthService
+  private loadUserData(): void {
+    this.isLoading = true;
+    
+    this.authService.getCurrentUser()
+      .then(user => {
+        if (!user) {
+          throw new Error('No hay usuario autenticado');
+        }
+        
+        return this.authService.getUserData(user.uid);
+      })
+      .then(userData => {
+        if (!userData) {
+          throw new Error('No se encontraron datos del usuario');
+        }
+        
+        // Create a new user object with all the properties
+        this.usuario = {
+          IdUsuario: userData.IdUsuario,
+          Nombre: userData.Nombre,
+          Correo: userData.Correo || userData.Email || '',
+          Departamento: userData.Departamento || '',
+          Foto_Perfil: userData.Foto_Perfil || '',
+          NivelAdmin: userData.NivelAdmin,
+          createdBy: userData.createdBy || userData.CreatedBy,
+          Rol: userData.Rol || 'worker' // Default to worker, never use empty string
+        };
+        
+        // Preload profile image to ensure it's valid
+        if (this.usuario.Foto_Perfil) {
+          this.preloadImage(this.usuario.Foto_Perfil).catch(() => {
+            console.warn('No se pudo cargar la imagen de perfil, usando la predeterminada');
+            if (this.usuario) {
+              this.usuario.Foto_Perfil = '';
+            }
+          });
+        }
+        
+        this.isLoading = false;
+      })
+      .catch(error => {
+        console.error('Error al cargar datos del usuario:', error);
+        this.router.navigate(['/login']);
+      });
+  }
+
+  // Preload image to verify it's valid
+  private preloadImage(src: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => reject();
+      img.src = src;
+    });
   }
 }

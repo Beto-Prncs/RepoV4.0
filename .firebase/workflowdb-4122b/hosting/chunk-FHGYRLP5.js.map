@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/functionalities/admin-completed-tasks/admin-completed-tasks.component.ts", "src/app/functionalities/admin-completed-tasks/admin-completed-tasks.component.html"],
+  "sourcesContent": ["import { Component } from '@angular/core';\n\n@Component({\n  selector: 'app-admin-completed-tasks',\n  imports: [],\n  templateUrl: './admin-completed-tasks.component.html',\n  styleUrl: './admin-completed-tasks.component.scss'\n})\nexport class AdminCompletedTasksComponent {\n\n}\n", "<p>admin-completed-tasks works!</p>\n"],
+  "mappings": "6FAQA,IAAaA,GAA4B,IAAA,CAAnC,MAAOA,CAA4B,4CAA5BA,EAA4B,2BAA5BA,EAA4BC,UAAA,CAAA,CAAA,2BAAA,CAAA,EAAAC,MAAA,EAAAC,KAAA,EAAAC,SAAA,SAAAC,EAAAC,EAAA,CAAAD,EAAA,ICRzCE,EAAA,EAAA,GAAA,EAAGC,EAAA,EAAA,8BAAA,EAA4BC,EAAA,6BDQlBT,CAA4B,GAAA",
+  "names": ["AdminCompletedTasksComponent", "selectors", "decls", "vars", "template", "rf", "ctx", "\u0275\u0275elementStart", "\u0275\u0275text", "\u0275\u0275elementEnd"]
+}

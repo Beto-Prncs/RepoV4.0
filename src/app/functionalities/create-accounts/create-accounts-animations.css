@@ -1,0 +1,554 @@
+/* create-accounts-animations.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Variables útiles para consistencia en el diseño */
+:root {
+  --primary-blue: #3b82f6;
+  --primary-blue-dark: #2563eb;
+  --primary-blue-light: #eff6ff;
+  --primary-blue-hover: #1d4ed8;
+  --success-green: #10b981;
+  --success-green-light: #ecfdf5;
+  --danger-red: #ef4444;
+  --danger-red-light: #fef2f2;
+  --neutral-gray: #f9fafb;
+  --neutral-gray-dark: #64748b;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--neutral-gray);
+  color: #1f2937;
+}
+
+/* Animaciones para notificaciones */
+@keyframes slideInRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight 0.3s ease-out forwards;
+}
+
+/* Animación para el formulario cuando aparece */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Animación para shake de error */
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-error-shake {
+  animation: errorShake 0.4s ease-in-out;
+}
+
+/* Animación para forms que aparecen deslizándose hacia arriba */
+@keyframes formSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-form-slide-up {
+  animation: formSlideUp 0.5s ease-out forwards;
+}
+
+/* Animación para elementos que flotan */
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
+}
+
+.float-animation {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* Mejoras para el botón de retroceso */
+.back-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.back-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.back-button:hover::after {
+  transform: translate(50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* Mejoras para inputs y selects */
+input, select {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv09";
+  font-variation-settings: "opsz" 14;
+}
+
+input::placeholder, select::placeholder {
+  color: #94a3b8;
+  opacity: 0.7;
+}
+
+/* Efecto de focus mejorado */
+.focus-ring-effect:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--primary-blue);
+}
+
+/* Estilos para scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Mejora para select dropdown */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* Efectos de hover avanzados para las tarjetas */
+.card-hover-effect {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Efecto de animación de pulse para botones */
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.pulse-effect:focus {
+  animation: pulse-animation 1.5s ease-in-out;
+}
+
+/* Efectos de entrada suave para notificaciones */
+@keyframes notification-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.notification-animation {
+  animation: notification-enter 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+/* Optimización de animaciones para reducir movimiento (accesibilidad) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mejora para los checkboxes y radio buttons */
+input[type="checkbox"], input[type="radio"] {
+  position: relative;
+  width: 1.2em;
+  height: 1.2em;
+  color: #363636;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  appearance: none;
+  outline: 0;
+  cursor: pointer;
+  transition: background 175ms cubic-bezier(0.1, 0.1, 0.25, 1);
+}
+
+input[type="checkbox"]::before, input[type="radio"]::before {
+  position: absolute;
+  content: '';
+  display: block;
+  top: 0;
+  left: 5px;
+  width: 8px;
+  height: 14px;
+  border-style: solid;
+  border-color: white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  opacity: 0;
+}
+
+input[type="checkbox"]:checked, input[type="radio"]:checked {
+  color: white;
+  border-color: var(--primary-blue);
+  background: var(--primary-blue);
+}
+
+input[type="checkbox"]:checked::before, input[type="radio"]:checked::before {
+  opacity: 1;
+}
+
+input[type="radio"] {
+  border-radius: 50%;
+}
+
+/* Tooltip mejorado */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: auto;
+  min-width: 120px;
+  max-width: 300px;
+  background-color: #27272a;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 12px;
+  position: absolute;
+  z-index: 100;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.tooltip .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #27272a transparent transparent transparent;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(-5px);
+}
+
+/* Mejoras de accesibilidad para focus */
+a:focus, button:focus, input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+  border-color: var(--primary-blue);
+}
+
+/* Efecto de ripple para botones */
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.ripple-effect:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* Efecto de carga para botones */
+.loading-button {
+  position: relative;
+}
+
+.loading-button .loading-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-button .button-text {
+  opacity: 0;
+}
+
+.loading-button.is-loading .button-text {
+  opacity: 0;
+}
+
+.loading-button.is-loading .loading-icon {
+  opacity: 1;
+}
+
+/* Mejora para etiquetas de formulario */
+label {
+  transition: color 0.2s ease;
+}
+
+.form-group:focus-within label {
+  color: var(--primary-blue);
+  font-weight: 500;
+}
+
+/* Estilos adicionales para inputs inválidos y válidos */
+input.is-invalid,
+select.is-invalid {
+  border-color: var(--danger-red);
+  background-color: var(--danger-red-light);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23ef4444'%3E%3Cpath fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z' clip-rule='evenodd' /%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.5rem;
+}
+
+input.is-valid,
+select.is-valid {
+  border-color: var(--success-green);
+  background-color: var(--success-green-light);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2310b981'%3E%3Cpath fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd' /%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.5rem;
+}
+
+/* Mejora para dropdown selects */
+.custom-select {
+  position: relative;
+}
+
+.custom-select select {
+  appearance: none;
+}
+
+.custom-select::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #64748b;
+  pointer-events: none;
+}
+
+/* Mejora para el botón de retroceso */
+.back-button-enhanced {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-blue);
+  color: white;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.back-button-enhanced svg {
+  margin-right: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.back-button-enhanced:hover {
+  background-color: var(--primary-blue-hover);
+  box-shadow: var(--shadow-lg);
+}
+
+.back-button-enhanced:hover svg {
+  transform: translateX(-4px);
+}
+
+.back-button-enhanced::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, rgba(255,255,255,0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+  z-index: -1;
+}
+
+.back-button-enhanced:hover::after {
+  transform: translateX(0);
+}
+
+/* Efectos de elevación para tarjetas */
+.elevation-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.elevation-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Efectos para validación de inputs */
+.input-validation {
+  position: relative;
+}
+
+.input-validation::after {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.input-validation.valid::after {
+  content: '✓';
+  color: var(--success-green);
+  opacity: 1;
+}
+
+.input-validation.invalid::after {
+  content: '✗';
+  color: var(--danger-red);
+  opacity: 1;
+}
+
+/* Estilos para impresión */
+@media print {
+  body {
+    background: white;
+    font-size: 12pt;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .form-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

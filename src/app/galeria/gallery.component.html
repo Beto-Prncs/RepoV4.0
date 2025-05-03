@@ -1,0 +1,35 @@
+<div class="gallery-page">
+    <h1>Galería de Fotos</h1>
+    
+    <!-- Vista principal de imagen seleccionada -->
+    <div class="main-image-container">
+      @if (imgUrl) {
+        <img [src]="imgUrl" alt="Imagen principal" class="main-image">
+      } @else {
+        <div class="placeholder">
+          <span class="placeholder-icon">🖼️</span>
+          <span class="placeholder-text">No hay imágenes en la galería</span>
+        </div>
+      }
+    </div>
+    
+    <!-- Galería de imágenes -->
+    @if (photos.length > 0) {
+      <div class="gallery-section">
+        <h2>Todas las Imágenes ({{ photos.length }})</h2>
+        <div class="gallery-container">
+          @for (photo of photos; track $index; let i = $index) {
+            <div class="gallery-item" [class.selected]="imgUrl === photo.url" (click)="setMainPhoto(photo)">
+              <img [src]="photo.url" alt="Imagen {{ i + 1 }}">
+              <div class="photo-date">{{ photo.timestamp | date:'dd/MM/yyyy' }}</div>
+              <button class="delete-photo-button" (click)="deletePhoto(i); $event.stopPropagation()">×</button>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="no-photos">
+        <p>No hay fotos en la galería.</p>
+      </div>
+    }
+  </div>

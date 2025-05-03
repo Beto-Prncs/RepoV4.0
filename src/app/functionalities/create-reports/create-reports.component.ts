@@ -282,18 +282,18 @@ export class CreateReportsComponent implements OnInit {
         });
       }
 
-     const reportData: Omit<Reporte, 'IdReporte'> = {
-       IdEmpresa: companyId,
-       IdUsuario: this.reportForm.get('workerId')?.value,
-       Tipo_Trabajo: this.reportForm.get('jobTitle')?.value,
-       estado: 'Pendiente',
-       fecha: new Date(),
-       jobDescription: this.reportForm.get('jobDescription')?.value,
-       location: this.reportForm.get('location')?.value,
-       priority: this.reportForm.get('priority')?.value,
-       departamento: this.reportForm.get('department')?.value
-     };
-
+      const reportData: Omit<Reporte, 'IdReporte'> = {
+        IdEmpresa: companyId,
+        IdUsuario: this.reportForm.get('workerId')?.value,
+        Tipo_Trabajo: this.reportForm.get('jobTitle')?.value,
+        estado: 'Pendiente',
+        fecha: new Date(),
+        jobDescription: this.reportForm.get('jobDescription')?.value,
+        location: this.reportForm.get('location')?.value,
+        priority: this.reportForm.get('priority')?.value,
+        departamento: this.reportForm.get('department')?.value,
+        evidenceImages: [] // Initialize with an empty array instead of undefined
+      };
      console.log('Enviando datos del reporte:', reportData);
      
      const reporteId = await this.taskService.assignReporte(reportData);

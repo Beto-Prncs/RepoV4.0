@@ -100,15 +100,12 @@ $font-size-3xl: 2.25rem;
   font-size: $font-size-md;
   @include transition;
   font-family: $font-family;
-
   &::placeholder {
     color: $text-light;
   }
-
   &:hover {
     border-color: $primary-color;
   }
-
   &:focus {
     outline: none;
     border-color: $primary-color;
@@ -232,7 +229,6 @@ html {
   @include transition;
   margin: $spacing-md auto;
   max-width: 1100px;
-  
   &:hover {
     transform: translateY(-2px);
     box-shadow: $hover-shadow;
@@ -246,7 +242,6 @@ html {
   color: $white;
   position: relative;
   overflow: hidden;
-  
   &::before {
     content: '';
     position: absolute;
@@ -275,7 +270,6 @@ html {
   border-radius: var(--radius-lg);
   box-shadow: $logo-shadow;
   @include transition;
-  
   &:hover {
     transform: scale(1.05) rotate(5deg);
   }
@@ -338,7 +332,6 @@ html {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  
   &::before {
     content: '';
     position: absolute;
@@ -348,28 +341,23 @@ html {
     @include transition;
     border-radius: inherit;
   }
-  
   &:hover {
     border-color: var(--primary-color);
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
-    
     &::before {
       opacity: 0.1;
     }
-    
     .icon-container {
       border-color: var(--primary-color);
       transform: scale(1.1) rotate(5deg);
     }
   }
-  
   &.selected {
     border-color: var(--primary-color);
     background-color: var(--primary-light);
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
-    
     &::after {
       content: '✓';
       position: absolute;
@@ -385,14 +373,12 @@ html {
       font-weight: bold;
     }
   }
-  
   h3 {
     color: var(--text-primary);
     font-size: $font-size-xl;
     font-weight: 600;
     margin: $spacing-md 0 $spacing-xs;
   }
-  
   p {
     color: var(--text-secondary);
     line-height: 1.5;
@@ -434,11 +420,9 @@ html {
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
   @include transition;
-  
   &:hover {
     box-shadow: var(--shadow-md);
   }
-  
   h3 {
     color: var(--text-primary);
     font-size: $font-size-xl;
@@ -458,7 +442,6 @@ html {
 
 .form-group {
   margin-bottom: $spacing-lg;
-  
   label {
     display: block;
     color: var(--text-primary);
@@ -466,19 +449,16 @@ html {
     font-weight: 500;
     margin-bottom: $spacing-sm;
   }
-  
   input,
   select {
     @include form-input;
   }
-  
   // Validación visual mejorada
   input {
     &.ng-valid.ng-touched {
       border-color: var(--success-color);
       background-color: var(--success-light);
     }
-    
     &.ng-invalid.ng-touched {
       border-color: var(--danger-color);
       background-color: var(--danger-light);
@@ -498,9 +478,8 @@ html {
   align-items: center;
   gap: $spacing-xs;
   animation: errorShake 0.4s ease-in-out;
-  
   &::before {
-    content: '⚠️';
+    content: ' ';
     font-size: $font-size-md;
   }
 }
@@ -524,19 +503,16 @@ html {
   background-color: var(--primary-color);
   color: $white;
   border: none;
-  
   &:not(:disabled) {
     &:hover {
       background-color: var(--primary-hover);
       transform: translateY(-2px);
       box-shadow: $button-shadow;
     }
-    
     &:active {
       transform: translateY(0);
     }
   }
-  
   &:disabled {
     background-color: var(--text-light);
     cursor: not-allowed;
@@ -548,7 +524,6 @@ html {
   background-color: $white;
   color: var(--text-secondary);
   border: 2px solid var(--border-color);
-  
   &:hover {
     background-color: var(--background-color);
     color: var(--text-primary);
@@ -577,12 +552,10 @@ html {
   font-weight: 500;
   box-shadow: $notification-shadow;
   min-width: 300px;
-  
   &.success {
     color: $spotify-success;
     border-left: 4px solid $spotify-success;
   }
-  
   &.error {
     color: $spotify-error;
     border-left: 4px solid $spotify-error;
@@ -607,13 +580,11 @@ html {
   margin-bottom: $spacing-sm;
   box-shadow: $notification-shadow;
   animation: slideIn 0.3s ease-out;
-  
   &.success {
     background-color: $notification-success-bg;
     border-left: 4px solid $notification-success-color;
     color: $notification-success-text;
   }
-  
   &.error {
     background-color: $notification-error-bg;
     border-left: 4px solid $notification-error-color;
@@ -651,9 +622,86 @@ html {
   cursor: pointer;
   opacity: 0.6;
   @include transition(opacity, 0.2s);
-  
   &:hover {
     opacity: 1;
+  }
+}
+
+// Estilos para la contraseña
+.password-input {
+  position: relative;
+  width: 100%;
+  input {
+    width: 100%;
+    padding-right: 40px; // Espacio para el ícono
+  }
+  .toggle-password {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.6;
+      transition: opacity 0.2s ease;
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+// Campo personalizado
+.custom-field {
+  margin-top: $spacing-md;
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Mensaje de información
+.info-message {
+  color: var(--primary-color);
+  font-size: $font-size-xs;
+  margin-top: $spacing-sm;
+  padding: $spacing-sm;
+  background-color: var(--primary-light);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+// Botón de retroceso
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-weight: 500;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-md;
+  cursor: pointer;
+  margin-bottom: $spacing-xl;
+  @include transition;
+  &:hover {
+    color: var(--primary-hover);
+    svg {
+      transform: translateX(-4px);
+    }
+  }
+  svg {
+    width: 20px;
+    height: 20px;
+    margin-right: $spacing-sm;
+    @include transition(transform, 0.2s, ease);
   }
 }
 
@@ -663,49 +711,44 @@ html {
     margin: $spacing-md;
     padding: 0;
   }
-
   .card-header {
     padding: $spacing-xl $spacing-lg;
   }
-
   .header-text h1 {
     font-size: $font-size-2xl;
   }
-
   .card-body {
     padding: $spacing-lg;
   }
-
   .type-options {
     grid-template-columns: 1fr;
   }
-
   .form-section {
     padding: $spacing-lg;
   }
-
   .form-grid {
     grid-template-columns: 1fr;
     gap: $spacing-lg;
   }
-
   .form-actions {
     flex-direction: column-reverse;
     gap: $spacing-md;
   }
-
   .btn-primary,
   .btn-secondary {
     width: 100%;
   }
-
   .icon-container {
     width: 60px;
     height: 60px;
   }
-
   .type-icon {
     width: 30px;
     height: 30px;
+  }
+  .notification {
+    margin-left: $spacing-md;
+    margin-right: $spacing-md;
+    width: calc(100% - 2 * #{$spacing-md});
   }
 }

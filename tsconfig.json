@@ -1,3 +1,5 @@
+//el error no influye, es falla del idx
+
 {
   "compileOnSave": false,
   "compilerOptions": {

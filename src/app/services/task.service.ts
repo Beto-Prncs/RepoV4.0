@@ -15,6 +15,7 @@ import {
 import { Observable, from, map, of } from 'rxjs';
 import { Reporte } from '../models/interfaces';
 import { AuthService } from './auth.service';
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from '@angular/fire/storage';
 
 @Injectable({
   providedIn: 'root'
@@ -223,6 +224,14 @@ export class TaskService {
         throw new Error('El reporte no existe');
       }
 
+      // Intentar eliminar el PDF si existe
+      try {
+        await this.deletePdfForReporte(reporteId);
+      } catch (pdfError) {
+        console.warn('No se pudo eliminar el PDF del reporte:', pdfError);
+        // Continuar con la eliminación del reporte aunque falle la eliminación del PDF
+      }
+
       console.log('Eliminando reporte:', reporteId);
       await deleteDoc(reporteRef);
       console.log('Reporte eliminado exitosamente');
@@ -240,7 +249,9 @@ export class TaskService {
       fechaCompletado: reporte.fechaCompletado?.toDate?.() ||
                       (reporte.fechaCompletado ? new Date(reporte.fechaCompletado) : undefined),
       fechaActualizacion: reporte.fechaActualizacion?.toDate?.() || 
-                         (reporte.fechaActualizacion ? new Date(reporte.fechaActualizacion) : new Date())
+                         (reporte.fechaActualizacion ? new Date(reporte.fechaActualizacion) : new Date()),
+      fechaGeneracionPdf: reporte.fechaGeneracionPdf?.toDate?.() ||
+                         (reporte.fechaGeneracionPdf ? new Date(reporte.fechaGeneracionPdf) : undefined)
     }));
   }
 
@@ -310,38 +321,36 @@ export class TaskService {
     );
   }
 
-
-
-// Método para obtener reportes filtrados por el administrador actual
-async getFilteredReportes(): Promise<Observable<Reporte[]>> {
-  try {
-    const currentUser = await this.authService.getCurrentUser();
-    if (!currentUser) {
-      console.error('No hay usuario autenticado');
+  // Método para obtener reportes filtrados por el administrador actual
+  async getFilteredReportes(): Promise<Observable<Reporte[]>> {
+    try {
+      const currentUser = await this.authService.getCurrentUser();
+      if (!currentUser) {
+        console.error('No hay usuario autenticado');
+        return of([]);
+      }
+      
+      // Obtener datos del usuario actual
+      const userData = await this.authService.getUserData(currentUser.uid);
+      if (!userData) {
+        console.error('Datos de usuario no encontrados');
+        return of([]);
+      }
+      
+      // Si es admin nivel 3, filtrar reportes solo de usuarios creados por él
+      if (userData.Rol === 'admin' && userData.NivelAdmin === '3') {
+        return this.getReportesByCreator(currentUser.uid);
+      }
+      
+      // Para otros casos, devolver todos los reportes
+      return this.getReportes();
+    } catch (error) {
+      console.error('Error al filtrar reportes:', error);
       return of([]);
     }
-    
-    // Obtener datos del usuario actual
-    const userData = await this.authService.getUserData(currentUser.uid);
-    if (!userData) {
-      console.error('Datos de usuario no encontrados');
-      return of([]);
-    }
-    
-    // Si es admin nivel 3, filtrar reportes solo de usuarios creados por él
-    if (userData.Rol === 'admin' && userData.NivelAdmin === '3') {
-      return this.getReportesByCreator(currentUser.uid);
-    }
-    
-    // Para otros casos, devolver todos los reportes
-    return this.getReportes();
-  } catch (error) {
-    console.error('Error al filtrar reportes:', error);
-    return of([]);
   }
-}
 
-// Método para obtener reportes de usuarios creados por un administrador específico
+  // Método para obtener reportes de usuarios creados por un administrador específico
   getReportesByCreator(creatorId: string): Observable<Reporte[]> {
     return new Observable<Reporte[]>(observer => {
       // Primero obtenemos los usuarios creados por este administrador
@@ -401,5 +410,88 @@ async getFilteredReportes(): Promise<Observable<Reporte[]>> {
       chunks.push(array.slice(i, i + chunkSize));
     }
     return chunks;
+  }
+
+  /**
+   * Almacena un PDF en Firebase Storage cuando un trabajador completa un reporte
+   * @param reporteId - El ID del reporte
+   * @param pdfDataUrl - El PDF como una URL de datos
+   * @returns Promise con la URL de descarga
+   */
+  async storePdfForReporte(reporteId: string, pdfDataUrl: string): Promise<string> {
+    try {
+      const storage = getStorage();
+      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
+      const storageRef = ref(storage, pdfPath);
+      
+      // Extraer datos base64 de la URL de datos (eliminar el prefijo)
+      const base64Data = pdfDataUrl.split(',')[1];
+      
+      // Subir el PDF a Firebase Storage
+      await uploadString(storageRef, base64Data, 'base64');
+      
+      // Obtener la URL de descarga del PDF
+      const downloadUrl = await getDownloadURL(storageRef);
+      return downloadUrl;
+    } catch (error) {
+      console.error('Error al almacenar el PDF:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene la URL del PDF para un reporte específico si existe
+   * @param reporteId - El ID del reporte
+   * @returns Promise con la URL de descarga o null si no se encuentra
+   */
+  async getPdfUrlForReporte(reporteId: string): Promise<string | null> {
+    try {
+      const storage = getStorage();
+      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
+      const storageRef = ref(storage, pdfPath);
+      
+      // Intentar obtener la URL de descarga del PDF
+      const downloadUrl = await getDownloadURL(storageRef);
+      return downloadUrl;
+    } catch (error) {
+      console.error('PDF no encontrado o error de acceso:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Actualiza un reporte en Firestore con información del PDF
+   * @param reporteId - El ID del reporte
+   * @param pdfUrl - La URL del PDF almacenado
+   */
+  async updateReporteWithPdfInfo(reporteId: string, pdfUrl: string): Promise<void> {
+    try {
+      const reporteRef = doc(this.firestore, 'Reportes', reporteId);
+      await updateDoc(reporteRef, {
+        pdfUrl: pdfUrl,
+        reportePdfGenerado: true,
+        fechaGeneracionPdf: new Date()
+      });
+    } catch (error) {
+      console.error('Error al actualizar reporte con información de PDF:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Elimina un PDF de Storage
+   * @param reporteId - El ID del reporte
+   */
+  async deletePdfForReporte(reporteId: string): Promise<void> {
+    try {
+      const storage = getStorage();
+      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
+      const storageRef = ref(storage, pdfPath);
+      
+      await deleteObject(storageRef);
+    } catch (error) {
+      console.error('Error al eliminar PDF:', error);
+      throw error;
+    }
   }
 }
