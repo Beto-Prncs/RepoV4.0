@@ -1,237 +1,410 @@
 import { Injectable, inject } from '@angular/core';
-import {
-  Firestore,
-  collection,
+import { 
+  Firestore, 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  collectionData, 
+  doc, 
+  updateDoc, 
+  Timestamp,
+  setDoc,
+  getDoc,
   addDoc,
   deleteDoc,
-  doc,
-  query,
-  where,
-  collectionData,
-  updateDoc,
-  getDocs,
-  getDoc
+  getDocs
 } from '@angular/fire/firestore';
-import { Observable, from, map, of } from 'rxjs';
+import { Storage, ref, uploadString, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import { Observable, from, of } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { Reporte } from '../models/interfaces';
 import { AuthService } from './auth.service';
-import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from '@angular/fire/storage';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TaskService {
   private firestore: Firestore = inject(Firestore);
+  private storage: Storage = inject(Storage);
   private authService: AuthService = inject(AuthService);
 
-  async assignReporte(reporte: Omit<Reporte, 'IdReporte'>): Promise<string> {
-    try {
-      // 1. Obtener el usuario actual y verificar que sea admin
-      const currentUser = await this.authService.getCurrentUser();
-      if (!currentUser) {
-        throw new Error('No hay usuario autenticado');
-      }
+  constructor() { }
 
-      // 2. Obtener los datos del usuario actual desde Firestore
-      const adminDoc = await getDoc(doc(this.firestore, 'Usuario', currentUser.uid));
-      if (!adminDoc.exists()) {
-        throw new Error('Usuario administrador no encontrado');
-      }
-
-      const adminData = adminDoc.data();
-      if (adminData['Rol'] !== 'admin') {
-        throw new Error('No tiene permisos para crear reportes');
-      }
-
-      // 3. Buscar el usuario trabajador por su Username
-      const workersRef = collection(this.firestore, 'Usuario');
-      const workerQuery = query(workersRef, 
-        where('Username', '==', reporte.IdUsuario),
-        where('Rol', '==', 'worker')
-      );
-      
-      const workerSnapshot = await getDocs(workerQuery);
-      
-      if (workerSnapshot.empty) {
-        throw new Error('Usuario trabajador no encontrado');
-      }
-
-      const workerDoc = workerSnapshot.docs[0];
-      const workerId = workerDoc.id;
-
-      // 4. Crear el reporte con los datos validados y el ID correcto del trabajador
-      const reportesRef = collection(this.firestore, 'Reportes');
-      const reporteData = {
-        fecha: new Date(),
-        estado: 'Pendiente',
-        IdEmpresa: reporte.IdEmpresa,
-        IdUsuario: workerId, // Usar el ID real del trabajador
-        Tipo_Trabajo: reporte.Tipo_Trabajo,
-        jobDescription: reporte.jobDescription,
-        location: reporte.location,
-        priority: reporte.priority,
-        departamento: reporte.departamento,
-        fechaActualizacion: new Date()
-      };
-
-      // 5. Guardar el reporte
-      const docRef = await addDoc(reportesRef, reporteData);
-
-      // 6. Actualizar el ID del reporte
-      await updateDoc(doc(this.firestore, 'Reportes', docRef.id), {
-        IdReporte: docRef.id
-      });
-
-      console.log('Reporte creado exitosamente:', docRef.id);
-      return docRef.id;
-
-    } catch (error) {
-      console.error('Error al asignar reporte:', error);
-      throw error;
-    }
-  }
-
-  getReportes(): Observable<Reporte[]> {
-    console.log('Obteniendo todos los reportes');
-    const reportesRef = collection(this.firestore, 'Reportes');
-    return collectionData(reportesRef, { idField: 'IdReporte' }).pipe(
-      map((reportes: any[]) => {
-        console.log('Reportes recuperados:', reportes);
-        return this.processReportes(reportes);
-      })
-    );
-  }
-
-  getPendingReportesByWorker(userId: string): Observable<Reporte[]> {
-    if (!userId) {
+  /**
+   * Get all pending reports assigned to a specific worker
+   * @param workerId Worker ID
+   * @returns Observable with array of pending reports
+   */
+  getPendingReportesByWorker(workerId: string): Observable<Reporte[]> {
+    if (!workerId) {
       console.error('UserId es requerido para obtener reportes pendientes');
       return of([]);
     }
-
-    console.log('Buscando reportes pendientes para userId:', userId);
+    
+    console.log('Getting pending reports for worker:', workerId);
     const reportesRef = collection(this.firestore, 'Reportes');
+    
+    // Create query without orderBy to avoid index issues
     const reportesQuery = query(
       reportesRef,
-      where('IdUsuario', '==', userId),
+      where('IdUsuario', '==', workerId),
       where('estado', '==', 'Pendiente')
     );
-
+    
+    console.log('Query params:', { workerId, estado: 'Pendiente' });
+    
     return collectionData(reportesQuery, { idField: 'IdReporte' }).pipe(
+      tap(reportes => {
+        console.log('Raw reports from Firestore:', JSON.stringify(reportes));
+      }),
       map((reportes: any[]) => {
-        console.log('Reportes pendientes encontrados:', reportes);
-        return this.processReportes(reportes);
+        console.log('Processing reports:', reportes.length);
+        return this.processReportDates(reportes);
+      }),
+      tap(processedReports => {
+        console.log('Processed reports:', processedReports.length);
+      }),
+      catchError(error => {
+        console.error('Error getting pending reports:', error);
+        return of([]);
       })
     );
   }
 
-  getCompletedReportesByWorker(userId: string): Observable<Reporte[]> {
-    if (!userId) {
+  /**
+   * Get all completed reports for a specific worker
+   * @param workerId Worker ID
+   * @returns Observable with array of completed reports
+   */
+  getCompletedReportesByWorker(workerId: string): Observable<Reporte[]> {
+    if (!workerId) {
       console.error('UserId es requerido para obtener reportes completados');
       return of([]);
     }
-
-    console.log('Buscando reportes completados para userId:', userId);
+    
+    console.log('Buscando reportes completados para userId:', workerId);
     const reportesRef = collection(this.firestore, 'Reportes');
+    
+    // Query without orderBy to avoid index issues
     const reportesQuery = query(
       reportesRef,
-      where('IdUsuario', '==', userId),
+      where('IdUsuario', '==', workerId),
       where('estado', '==', 'Completado')
     );
-
+    
+    console.log('Query params for completed reports:', { workerId, estado: 'Completado' });
+    
     return collectionData(reportesQuery, { idField: 'IdReporte' }).pipe(
+      tap(reportes => {
+        console.log('Raw completed reports from Firestore:', JSON.stringify(reportes));
+      }),
       map((reportes: any[]) => {
-        console.log('Reportes completados encontrados:', reportes);
-        return this.processReportes(reportes);
+        console.log('Processing completed reports:', reportes.length);
+        return this.processReportDates(reportes);
+      }),
+      tap(processedReports => {
+        console.log('Processed completed reports:', processedReports.length);
+      }),
+      catchError(error => {
+        console.error('Error getting completed reports:', error);
+        return of([]);
       })
     );
   }
 
+  /**
+   * Process dates in reports to convert Firestore Timestamps to JavaScript Date objects
+   * @param reportes Array of reports
+   * @returns Processed array with correct date formats
+   */
+  private processReportDates(reportes: any[]): Reporte[] {
+    console.log('Processing dates for reports:', reportes);
+    return reportes.map(reporte => {
+      // Check if each reporte has the expected properties
+      if (!reporte) {
+        console.error('Found undefined report in array');
+        return null;
+      }
+      
+      console.log('Processing report:', reporte.IdReporte);
+      
+      // Create a new object with proper date conversions
+      const processed = {
+        ...reporte,
+        fecha: reporte.fecha ? this.convertToDate(reporte.fecha) : new Date(),
+        fechaCompletado: reporte.fechaCompletado ? this.convertToDate(reporte.fechaCompletado) : undefined,
+        fechaActualizacion: reporte.fechaActualizacion ? this.convertToDate(reporte.fechaActualizacion) : undefined,
+        fechaGeneracionPdf: reporte.fechaGeneracionPdf ? this.convertToDate(reporte.fechaGeneracionPdf) : undefined
+      };
+      
+      console.log('Processed report dates:', {
+        id: processed.IdReporte,
+        fecha: processed.fecha,
+        estado: processed.estado
+      });
+      
+      return processed;
+    }).filter(report => report !== null) as Reporte[];
+  }
+
+  /**
+   * Convert Firestore Timestamp to JavaScript Date
+   * @param date Timestamp or Date object
+   * @returns JavaScript Date object
+   */
+  private convertToDate(date: Timestamp | Date | any): Date {
+    if (!date) {
+      console.warn('Attempted to convert null/undefined date');
+      return new Date(); // Return current date as fallback
+    }
+    
+    try {
+      // If it's a Firestore Timestamp
+      if (date instanceof Timestamp || (date && typeof date.toDate === 'function')) {
+        return date.toDate();
+      }
+      
+      // If it's already a Date object
+      if (date instanceof Date) {
+        return date;
+      }
+      
+      // If it's a timestamp number (seconds or milliseconds)
+      if (typeof date === 'number') {
+        // Check if it's seconds (Firestore) or milliseconds
+        return date < 100000000000 ? new Date(date * 1000) : new Date(date);
+      }
+      
+      // If it's an object with seconds and nanoseconds (Firestore timestamp format)
+      if (date && date.seconds && typeof date.seconds === 'number') {
+        return new Date(date.seconds * 1000 + (date.nanoseconds || 0) / 1000000);
+      }
+      
+      // If it's a string, try to parse it
+      if (typeof date === 'string') {
+        return new Date(date);
+      }
+      
+      // Default fallback
+      console.warn('Unknown date format:', date);
+      return new Date();
+    } catch (error) {
+      console.error('Error converting date:', error, date);
+      return new Date(); // Return current date as fallback
+    }
+  }
+
+  /**
+   * Update report status
+   * @param reporteId Report ID
+   * @param estado New status ('Pendiente' or 'Completado')
+   * @param descripcionCompletado Optional completion description
+   * @returns Promise that resolves when the update is complete
+   */
   async updateReporteStatus(
-    reporteId: string,
-    status: string,
-    descripcion?: string
+    reporteId: string, 
+    estado: string, 
+    descripcionCompletado?: string
   ): Promise<void> {
     try {
       const currentUser = await this.authService.getCurrentUser();
       if (!currentUser) {
         throw new Error('No hay usuario autenticado');
       }
-
+      
       const reporteRef = doc(this.firestore, 'Reportes', reporteId);
       const reporteDoc = await getDoc(reporteRef);
-
+      
       if (!reporteDoc.exists()) {
         throw new Error('El reporte no existe');
       }
-
+      
       const reporteData = reporteDoc.data();
-
       const userDoc = await getDoc(doc(this.firestore, 'Usuario', currentUser.uid));
+      
       if (!userDoc.exists()) {
         throw new Error('Usuario no encontrado');
       }
-
+      
       const userData = userDoc.data();
       const isAdmin = userData['Rol'] === 'admin';
       const isAssignedWorker = reporteData['IdUsuario'] === currentUser.uid;
-
+      
       if (!isAdmin && !isAssignedWorker) {
         throw new Error('No tiene permisos para actualizar este reporte');
       }
-
+      
       const updateData: any = {
-        estado: status,
+        estado: estado,
         fechaActualizacion: new Date()
       };
-
-      if (status === 'Completado') {
+      
+      if (estado === 'Completado') {
         updateData.fechaCompletado = new Date();
-        if (descripcion) {
-          updateData.descripcionCompletado = descripcion;
+        if (descripcionCompletado) {
+          updateData.descripcionCompletado = descripcionCompletado;
         }
       }
-
+      
       await updateDoc(reporteRef, updateData);
-      console.log('Estado del reporte actualizado exitosamente');
+      console.log('Report status updated successfully');
     } catch (error) {
-      console.error('Error al actualizar estado del reporte:', error);
+      console.error('Error updating report status:', error);
       throw error;
     }
   }
 
+  /**
+   * Store PDF for a report in Firebase Storage
+   * @param reporteId Report ID
+   * @param pdfDataUrl PDF data as data URL
+   * @returns Promise with the download URL of the stored PDF
+   */
+  async storePdfForReporte(reporteId: string, pdfDataUrl: string): Promise<string> {
+    try {
+      console.log('Storing PDF for report:', reporteId);
+      
+      // Generate the path to the PDF
+      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
+      const storageRef = ref(this.storage, pdfPath);
+
+      // Extract base64 data from data URL (remove prefix)
+      const base64Data = pdfDataUrl.split(',')[1];
+      
+      // Upload PDF to Firebase Storage
+      await uploadString(storageRef, base64Data, 'base64');
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log('PDF stored successfully, URL:', downloadURL);
+      
+      // Update the report with PDF info
+      await this.updateReporteWithPdfInfo(reporteId, downloadURL);
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('Error storing PDF for report:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get PDF URL for a report
+   * @param reporteId Report ID
+   * @returns Promise with the PDF URL or null if not found
+   */
+  async getPdfUrlForReporte(reporteId: string): Promise<string | null> {
+    try {
+      console.log('Getting PDF URL for report:', reporteId);
+      
+      // First, check if the URL is already stored in the report document
+      const reporteRef = doc(this.firestore, 'Reportes', reporteId);
+      const reporteDoc = await getDoc(reporteRef);
+      
+      if (reporteDoc.exists()) {
+        const reportData = reporteDoc.data();
+        
+        if (reportData['pdfUrl']) {
+          console.log('Found PDF URL in report document:', reportData['pdfUrl']);
+          return reportData['pdfUrl'];
+        }
+      }
+      
+      // If not, try to get the URL from Storage
+      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
+      const storageRef = ref(this.storage, pdfPath);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update the report with the URL for future use
+      await this.updateReporteWithPdfInfo(reporteId, downloadURL);
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('PDF not found or access error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update report with PDF information
+   * @param reporteId Report ID
+   * @param pdfUrl URL of the PDF in Firebase Storage
+   * @returns Promise that resolves when the update is complete
+   */
+  async updateReporteWithPdfInfo(reporteId: string, pdfUrl: string): Promise<void> {
+    try {
+      const reporteRef = doc(this.firestore, 'Reportes', reporteId);
+      
+      await updateDoc(reporteRef, {
+        pdfUrl: pdfUrl,
+        reportePdfGenerado: true,
+        fechaGeneracionPdf: new Date()
+      });
+      
+      console.log('Report PDF info updated successfully with URL:', pdfUrl);
+    } catch (error) {
+      console.error('Error updating report PDF info:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete PDF from Storage
+   * @param reporteId Report ID
+   * @returns Promise that resolves when the deletion is complete
+   */
+  async deletePdfForReporte(reporteId: string): Promise<void> {
+    try {
+      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
+      const storageRef = ref(this.storage, pdfPath);
+      
+      await deleteObject(storageRef);
+      console.log('PDF deleted successfully');
+    } catch (error) {
+      console.error('Error deleting PDF:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a report
+   * @param reporteId Report ID
+   * @returns Promise that resolves when the deletion is complete
+   */
   async deleteReporte(reporteId: string): Promise<void> {
     try {
       const currentUser = await this.authService.getCurrentUser();
       if (!currentUser) {
         throw new Error('No hay usuario autenticado');
       }
-
-      // Verificar si el usuario es admin
+      
+      // Verify the user is an admin
       const userDoc = await getDoc(doc(this.firestore, 'Usuario', currentUser.uid));
       if (!userDoc.exists()) {
         throw new Error('Usuario no encontrado');
       }
-
+      
       const userData = userDoc.data();
       if (userData['Rol'] !== 'admin') {
         throw new Error('Solo los administradores pueden eliminar reportes');
       }
-
-      // Verificar que el reporte existe
+      
+      // Verify the report exists
       const reporteRef = doc(this.firestore, 'Reportes', reporteId);
       const reporteDoc = await getDoc(reporteRef);
       if (!reporteDoc.exists()) {
         throw new Error('El reporte no existe');
       }
-
-      // Intentar eliminar el PDF si existe
+      
+      // Try to delete the PDF if it exists
       try {
         await this.deletePdfForReporte(reporteId);
       } catch (pdfError) {
         console.warn('No se pudo eliminar el PDF del reporte:', pdfError);
-        // Continuar con la eliminación del reporte aunque falle la eliminación del PDF
+        // Continue with deleting the report even if PDF deletion fails
       }
-
+      
       console.log('Eliminando reporte:', reporteId);
       await deleteDoc(reporteRef);
       console.log('Reporte eliminado exitosamente');
@@ -241,87 +414,199 @@ export class TaskService {
     }
   }
 
-  // Método auxiliar para procesar las fechas de los reportes
-  private processReportes(reportes: any[]): Reporte[] {
-    return reportes.map(reporte => ({
-      ...reporte,
-      fecha: reporte.fecha?.toDate?.() || new Date(reporte.fecha),
-      fechaCompletado: reporte.fechaCompletado?.toDate?.() ||
-                      (reporte.fechaCompletado ? new Date(reporte.fechaCompletado) : undefined),
-      fechaActualizacion: reporte.fechaActualizacion?.toDate?.() || 
-                         (reporte.fechaActualizacion ? new Date(reporte.fechaActualizacion) : new Date()),
-      fechaGeneracionPdf: reporte.fechaGeneracionPdf?.toDate?.() ||
-                         (reporte.fechaGeneracionPdf ? new Date(reporte.fechaGeneracionPdf) : undefined)
-    }));
+  /**
+   * Assign a new report task
+   * @param reportData Report data to create
+   * @returns Promise with the new report ID
+   */
+  async assignReporte(reportData: Omit<Reporte, 'IdReporte'>): Promise<string> {
+    try {
+      console.log('Attempting to assign report with data:', JSON.stringify(reportData));
+      
+      // 1. Obtain current user and verify they're an admin
+      const currentUser = await this.authService.getCurrentUser();
+      if (!currentUser) {
+        throw new Error('No hay usuario autenticado');
+      }
+      
+      // 2. Get current user data from Firestore
+      const adminDoc = await getDoc(doc(this.firestore, 'Usuario', currentUser.uid));
+      if (!adminDoc.exists()) {
+        throw new Error('Usuario administrador no encontrado');
+      }
+      
+      const adminData = adminDoc.data();
+      if (adminData['Rol'] !== 'admin') {
+        throw new Error('No tiene permisos para crear reportes');
+      }
+      
+      // 3. Find worker user by Username
+      const workersRef = collection(this.firestore, 'Usuario');
+      
+      console.log('Searching for worker with Username:', reportData.IdUsuario);
+      
+      const workerQuery = query(workersRef, 
+        where('Username', '==', reportData.IdUsuario),
+        where('Rol', '==', 'worker')
+      );
+      
+      const workerSnapshot = await getDocs(workerQuery);
+      if (workerSnapshot.empty) {
+        console.error('Worker not found. Trying alternative search...');
+        
+        // Try alternative search without role restriction
+        const altWorkerQuery = query(workersRef, 
+          where('Username', '==', reportData.IdUsuario)
+        );
+        
+        const altWorkerSnapshot = await getDocs(altWorkerQuery);
+        if (altWorkerSnapshot.empty) {
+          throw new Error('Usuario trabajador no encontrado');
+        }
+        
+        const workerDoc = altWorkerSnapshot.docs[0];
+        const workerId = workerDoc.id;
+        console.log('Found worker with different role:', workerId);
+        
+        // 4. Create report with validated data and correct worker ID
+        const reportesRef = collection(this.firestore, 'Reportes');
+        const reporteData = {
+          fecha: new Date(),
+          estado: 'Pendiente',
+          IdEmpresa: reportData.IdEmpresa,
+          IdUsuario: workerId, // Use real worker ID
+          Tipo_Trabajo: reportData.Tipo_Trabajo,
+          jobDescription: reportData.jobDescription,
+          location: reportData.location,
+          priority: reportData.priority,
+          departamento: reportData.departamento,
+          fechaActualizacion: new Date()
+        };
+        
+        // 5. Save the report
+        const docRef = await addDoc(reportesRef, reporteData);
+        
+        // 6. Update report ID
+        await updateDoc(doc(this.firestore, 'Reportes', docRef.id), {
+          IdReporte: docRef.id
+        });
+        
+        console.log('Reporte creado exitosamente:', docRef.id);
+        return docRef.id;
+      }
+      
+      const workerDoc = workerSnapshot.docs[0];
+      const workerId = workerDoc.id;
+      console.log('Found worker:', workerId);
+      
+      // 4. Create report with validated data and correct worker ID
+      const reportesRef = collection(this.firestore, 'Reportes');
+      const reporteData = {
+        fecha: new Date(),
+        estado: 'Pendiente',
+        IdEmpresa: reportData.IdEmpresa,
+        IdUsuario: workerId, // Use real worker ID
+        Tipo_Trabajo: reportData.Tipo_Trabajo,
+        jobDescription: reportData.jobDescription,
+        location: reportData.location,
+        priority: reportData.priority,
+        departamento: reportData.departamento,
+        fechaActualizacion: new Date()
+      };
+      
+      console.log('Creating report with data:', JSON.stringify(reporteData));
+      
+      // 5. Save the report
+      const docRef = await addDoc(reportesRef, reporteData);
+      
+      // 6. Update report ID
+      await updateDoc(doc(this.firestore, 'Reportes', docRef.id), {
+        IdReporte: docRef.id
+      });
+      
+      console.log('Reporte creado exitosamente:', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error al asignar reporte:', error);
+      throw error;
+    }
   }
-
-  // Método para obtener reportes por departamento
+  
+  // Additional methods for getting reports by department, company, priority, etc.
+  getReportes(): Observable<Reporte[]> {
+    console.log('Obteniendo todos los reportes');
+    const reportesRef = collection(this.firestore, 'Reportes');
+    return collectionData(reportesRef, { idField: 'IdReporte' }).pipe(
+      map((reportes: any[]) => {
+        console.log('Reportes recuperados:', reportes);
+        return this.processReportDates(reportes);
+      })
+    );
+  }
+  
   getReportesByDepartamento(departamento: string): Observable<Reporte[]> {
     if (!departamento) {
       console.error('Departamento es requerido para obtener reportes');
       return of([]);
     }
-
+    
     console.log('Buscando reportes para departamento:', departamento);
     const reportesRef = collection(this.firestore, 'Reportes');
     const reportesQuery = query(
       reportesRef,
       where('departamento', '==', departamento)
     );
-
+    
     return collectionData(reportesQuery, { idField: 'IdReporte' }).pipe(
       map((reportes: any[]) => {
         console.log('Reportes encontrados para departamento:', reportes);
-        return this.processReportes(reportes);
+        return this.processReportDates(reportes);
       })
     );
   }
-
-  // Método para obtener reportes por empresa
+  
   getReportesByEmpresa(empresaId: string): Observable<Reporte[]> {
     if (!empresaId) {
       console.error('ID de empresa es requerido para obtener reportes');
       return of([]);
     }
-
+    
     console.log('Buscando reportes para empresa:', empresaId);
     const reportesRef = collection(this.firestore, 'Reportes');
     const reportesQuery = query(
       reportesRef,
       where('IdEmpresa', '==', empresaId)
     );
-
+    
     return collectionData(reportesQuery, { idField: 'IdReporte' }).pipe(
       map((reportes: any[]) => {
         console.log('Reportes encontrados para empresa:', reportes);
-        return this.processReportes(reportes);
+        return this.processReportDates(reportes);
       })
     );
   }
-
-  // Método para obtener reportes por prioridad
+  
   getReportesByPriority(priority: string): Observable<Reporte[]> {
     if (!priority) {
       console.error('Prioridad es requerida para obtener reportes');
       return of([]);
     }
-
+    
     console.log('Buscando reportes por prioridad:', priority);
     const reportesRef = collection(this.firestore, 'Reportes');
     const reportesQuery = query(
       reportesRef,
       where('priority', '==', priority)
     );
-
+    
     return collectionData(reportesQuery, { idField: 'IdReporte' }).pipe(
       map((reportes: any[]) => {
         console.log('Reportes encontrados por prioridad:', reportes);
-        return this.processReportes(reportes);
+        return this.processReportDates(reportes);
       })
     );
   }
-
-  // Método para obtener reportes filtrados por el administrador actual
+  
   async getFilteredReportes(): Promise<Observable<Reporte[]>> {
     try {
       const currentUser = await this.authService.getCurrentUser();
@@ -330,32 +615,31 @@ export class TaskService {
         return of([]);
       }
       
-      // Obtener datos del usuario actual
+      // Get current user data
       const userData = await this.authService.getUserData(currentUser.uid);
       if (!userData) {
         console.error('Datos de usuario no encontrados');
         return of([]);
       }
       
-      // Si es admin nivel 3, filtrar reportes solo de usuarios creados por él
+      // If admin level 3, filter reports only by users created by them
       if (userData.Rol === 'admin' && userData.NivelAdmin === '3') {
         return this.getReportesByCreator(currentUser.uid);
       }
       
-      // Para otros casos, devolver todos los reportes
+      // For other cases, return all reports
       return this.getReportes();
     } catch (error) {
       console.error('Error al filtrar reportes:', error);
       return of([]);
     }
   }
-
-  // Método para obtener reportes de usuarios creados por un administrador específico
+  
   getReportesByCreator(creatorId: string): Observable<Reporte[]> {
     return new Observable<Reporte[]>(observer => {
-      // Primero obtenemos los usuarios creados por este administrador
+      // First get users created by this admin
       this.authService.getUsersByCreator(creatorId).then(users => {
-        // Extraer solo los IDs de los usuarios
+        // Extract only user IDs
         const userIds = users.map(user => user.IdUsuario);
         
         if (userIds.length === 0) {
@@ -364,11 +648,11 @@ export class TaskService {
           return;
         }
         
-        // Obtener reportes para estos usuarios
+        // Get reports for these users
         const reportesRef = collection(this.firestore, 'Reportes');
         
-        // Firebase no permite consultas 'IN' con más de 10 elementos
-        // Dividimos en grupos de 10 si es necesario
+        // Firebase doesn't allow 'in' queries with more than 10 elements
+        // Split into groups of 10 if needed
         const userIdChunks = this.chunkArray(userIds, 10);
         const reportePromises: Promise<Reporte[]>[] = [];
         
@@ -382,13 +666,13 @@ export class TaskService {
                 ...doc.data()
               });
             });
-            return this.processReportes(reportes);
+            return this.processReportDates(reportes);
           });
           reportePromises.push(promise);
         });
         
         Promise.all(reportePromises).then(reportesArrays => {
-          // Combinar todos los arrays de reportes
+          // Combine all report arrays
           const allReportes = reportesArrays.flat();
           observer.next(allReportes);
           observer.complete();
@@ -402,96 +686,13 @@ export class TaskService {
       });
     });
   }
-
-  // Método auxiliar para dividir arrays en grupos de un tamaño específico
+  
+  // Helper method to split arrays into groups of specific size
   private chunkArray<T>(array: T[], chunkSize: number): T[][] {
     const chunks: T[][] = [];
     for (let i = 0; i < array.length; i += chunkSize) {
       chunks.push(array.slice(i, i + chunkSize));
     }
     return chunks;
-  }
-
-  /**
-   * Almacena un PDF en Firebase Storage cuando un trabajador completa un reporte
-   * @param reporteId - El ID del reporte
-   * @param pdfDataUrl - El PDF como una URL de datos
-   * @returns Promise con la URL de descarga
-   */
-  async storePdfForReporte(reporteId: string, pdfDataUrl: string): Promise<string> {
-    try {
-      const storage = getStorage();
-      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
-      const storageRef = ref(storage, pdfPath);
-      
-      // Extraer datos base64 de la URL de datos (eliminar el prefijo)
-      const base64Data = pdfDataUrl.split(',')[1];
-      
-      // Subir el PDF a Firebase Storage
-      await uploadString(storageRef, base64Data, 'base64');
-      
-      // Obtener la URL de descarga del PDF
-      const downloadUrl = await getDownloadURL(storageRef);
-      return downloadUrl;
-    } catch (error) {
-      console.error('Error al almacenar el PDF:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Obtiene la URL del PDF para un reporte específico si existe
-   * @param reporteId - El ID del reporte
-   * @returns Promise con la URL de descarga o null si no se encuentra
-   */
-  async getPdfUrlForReporte(reporteId: string): Promise<string | null> {
-    try {
-      const storage = getStorage();
-      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
-      const storageRef = ref(storage, pdfPath);
-      
-      // Intentar obtener la URL de descarga del PDF
-      const downloadUrl = await getDownloadURL(storageRef);
-      return downloadUrl;
-    } catch (error) {
-      console.error('PDF no encontrado o error de acceso:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Actualiza un reporte en Firestore con información del PDF
-   * @param reporteId - El ID del reporte
-   * @param pdfUrl - La URL del PDF almacenado
-   */
-  async updateReporteWithPdfInfo(reporteId: string, pdfUrl: string): Promise<void> {
-    try {
-      const reporteRef = doc(this.firestore, 'Reportes', reporteId);
-      await updateDoc(reporteRef, {
-        pdfUrl: pdfUrl,
-        reportePdfGenerado: true,
-        fechaGeneracionPdf: new Date()
-      });
-    } catch (error) {
-      console.error('Error al actualizar reporte con información de PDF:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Elimina un PDF de Storage
-   * @param reporteId - El ID del reporte
-   */
-  async deletePdfForReporte(reporteId: string): Promise<void> {
-    try {
-      const storage = getStorage();
-      const pdfPath = `reportes_pdf/${reporteId}.pdf`;
-      const storageRef = ref(storage, pdfPath);
-      
-      await deleteObject(storageRef);
-    } catch (error) {
-      console.error('Error al eliminar PDF:', error);
-      throw error;
-    }
   }
 }

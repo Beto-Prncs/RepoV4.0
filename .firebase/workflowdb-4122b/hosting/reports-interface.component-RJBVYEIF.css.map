@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/functionalities/reports-interface/reports-interface.component.scss"],
+  "sourcesContent": ["// Variables para fuentes y colores personalizados (si deseas mantenerlos para otros componentes)\n$font-family: 'Inter', sans-serif;\n\n// Estilos que no pueden lograrse fácilmente con Tailwind o personalizaciones específicas\n.reports-interface-container {\n  font-family: $font-family;\n}\n\n// Cualquier animación o transición personalizada que desees mantener\n.animate-float {\n  animation: float 5s ease-in-out infinite;\n}\n\n@keyframes float {\n  0%, 100% {\n    transform: translateY(0);\n  }\n  50% {\n    transform: translateY(-10px);\n  }\n}\n\n// Media queries específicas (si necesitas algo que no se puede hacer con las clases responsivas de Tailwind)"],
+  "mappings": "AAIA,CAAA,4BACE,YAJY,KAAA,CAAA,WAQd,CAAA,cACE,UAAA,MAAA,GAAA,YAAA,SAGF,WAHE,MAIA,MACE,UAAA,WAAA,GAEF,IACE,UAAA,WAAA",
+  "names": []
+}

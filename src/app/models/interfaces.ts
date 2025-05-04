@@ -3,9 +3,9 @@
 export interface Usuario {
   IdUsuario: string;
   Nombre: string;
+  Rol: 'admin' | 'worker' | 'user'; // No empty string allowed
   Email?: string;
   Password?: string;
-  Rol: 'admin' | 'worker' | 'user';
   Username?: string;
   Telefono?: string;
   Direccion?: string;
@@ -13,11 +13,10 @@ export interface Usuario {
   NivelAdmin?: string;
   CreatedBy?: string;
   CreatedAt?: Date;
-  // Added missing properties
   Foto_Perfil?: string;
   Correo?: string;
   Departamento?: string;
-  createdBy?: string; // lowercase version also used in code
+  createdBy?: string;
 }
 
 export interface Empresa {
@@ -26,11 +25,13 @@ export interface Empresa {
   Direccion?: string;
   Telefono?: string;
   Email?: string;
+  Correo?: string;
   Descripcion?: string;
   Logo?: string;
   IdUsuario?: string;
   Status?: 'activo' | 'inactivo';
   CreatedAt?: Date;
+  Sector?: string;
 }
 
 export interface Reporte {
@@ -73,12 +74,14 @@ export interface Task {
 }
 
 export interface Departamento {
-  IdDepartamento?: string;
+  IdDepartamento: string;
   Nombre: string;
   Descripcion?: string;
   IdEmpresa?: string;
   Status?: 'activo' | 'inactivo';
   CreatedAt?: Date;
+  id?: string; // Added for compatibility with template
+  name?: string; // Added for compatibility with template
 }
 
 export interface TipoTrabajo {
@@ -107,19 +110,33 @@ export interface ReportItem {
   status: 'draft' | 'submitted';
 }
 
-// Additional interfaces required by other components
-export interface AppConfig {
-  idioma: string;
-  tema: string;
-  notificaciones: boolean;
-}
-
+// Added FormStep interface that was missing
 export interface FormStep {
-  isValid: boolean;
   id: number;
   label: string;
+  title: string; // Added this to fix template errors
   completed: boolean;
   current: boolean;
+  isValid: boolean; // Added this to fix template errors
 }
 
-export type Department = string;
+// Additional interfaces required by other components
+export interface AppConfig {
+  name: string;
+  idioma?: string;
+  language: string;
+  timezone: string;
+  tema?: string;
+  theme: string;
+  textSize: number;
+  autoSave: boolean;
+  currency: string;
+  dateFormat: string;
+  autoLogout: boolean;
+  autoLogoutTime: string;
+  debugMode: boolean;
+  notificaciones?: boolean;
+}
+
+// For backward compatibility
+export type Department = Departamento;

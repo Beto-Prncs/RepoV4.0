@@ -1,5 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef, 
-  AfterViewInit, HostListener, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef, AfterViewInit, HostListener, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
   import { CommonModule } from '@angular/common';
   import { Router } from '@angular/router';
   import { Auth } from '@angular/fire/auth';
@@ -1176,56 +1175,100 @@ import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef,
         setTimeout(() => this.errorMessage = '', 3000);
         return;
       }
+      
       if (!this.selectedTask) {
         this.errorMessage = 'Debes seleccionar una tarea para completar';
         setTimeout(() => this.errorMessage = '', 3000);
         return;
       }
+      
       try {
         this.isLoading = true;
+        this.errorMessage = '';
+        this.successMessage = '';
+        console.log('Iniciando envío de reporte para tarea:', this.selectedTask.id);
+        
         this.closePreviewModal(); // Cerrar el modal de vista previa si está abierto
+        
         // Subir imágenes a Firebase Storage
         const uploadedImageUrls: string[] = [];
         if (this.evidenceImages.length > 0) {
+          console.log(`Procesando ${this.evidenceImages.length} imágenes`);
           const storage = getStorage();
-          for (const imageDataUrl of this.evidenceImages) {
-            // Convertir Data URL a Blob
-            const response = await fetch(imageDataUrl);
-            const blob = await response.blob();
-            // Crear referencia única para la imagen
-            const imagePath = `task_evidence/${this.selectedTask.id}/${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-            const storageRef = ref(storage, imagePath);
-            // Subir la imagen
-            await uploadBytes(storageRef, blob);
-            // Obtener URL de descarga
-            const downloadURL = await getDownloadURL(storageRef);
-            uploadedImageUrls.push(downloadURL);
+          
+          for (let i = 0; i < this.evidenceImages.length; i++) {
+            const imageDataUrl = this.evidenceImages[i];
+            try {
+              console.log(`Procesando imagen ${i+1}/${this.evidenceImages.length}`);
+              
+              // Convertir Data URL a Blob
+              const response = await fetch(imageDataUrl);
+              const blob = await response.blob();
+              
+              // Crear referencia única para la imagen
+              const imagePath = `task_evidence/${this.selectedTask.id}/${Date.now()}_${i}`;
+              const storageRef = ref(storage, imagePath);
+              
+              // Subir la imagen
+              console.log('Subiendo imagen a Firebase Storage...');
+              await uploadBytes(storageRef, blob);
+              
+              // Obtener URL de descarga
+              console.log('Obteniendo URL de descarga...');
+              const downloadURL = await getDownloadURL(storageRef);
+              console.log('URL obtenida:', downloadURL);
+              
+              uploadedImageUrls.push(downloadURL);
+            } catch (imgError) {
+              console.error(`Error al procesar imagen ${i+1}:`, imgError);
+              // Continuar con las demás imágenes
+            }
           }
         }
-        // Actualizar la tarea en Firestore
-        const taskDocRef = doc(this.firestore, 'Tasks', this.selectedTask.id);
-        await updateDoc(taskDocRef, {
+        
+        // Verificar que hay un ID válido para la tarea
+        if (!this.selectedTask.id) {
+          throw new Error('ID de tarea no válido o no disponible');
+        }
+        
+        console.log('Actualizando tarea en Firestore:', this.selectedTask.id);
+        
+        // Preparar datos para actualizar
+        const updateData = {
           status: this.reportForm.value.status,
           completionNotes: this.reportForm.value.notes,
           evidenceImages: uploadedImageUrls,
           completedAt: new Date(),
           completedBy: this.currentUser?.IdUsuario || 'unknown'
-        });
+        };
+        
+        // Actualizar la tarea en Firestore
+        const taskDocRef = doc(this.firestore, 'Tasks', this.selectedTask.id);
+        await updateDoc(taskDocRef, updateData);
+        
+        console.log('Tarea actualizada correctamente');
+        
         // Mostrar mensaje de éxito
         this.successMessage = 'Tarea completada exitosamente';
-        // Resetear el formulario y la selección
+        
+        // Resetear el formulario y la selección después de un breve tiempo
         setTimeout(() => {
-          this.selectedTask = null;
-          this.evidenceImages = [];
-          this.reportForm.reset();
+          this.resetForm(); // Usar el método resetForm existente
           this.loadPendingTasks(); // Recargar tareas pendientes
-          this.successMessage = '';
         }, 2000);
-      } catch (error) {
-        console.error('Error al enviar reporte:', error);
-        this.errorMessage = 'Error al enviar el reporte. Por favor intenta nuevamente.';
-        setTimeout(() => this.errorMessage = '', 5000);
+        
+      } catch (error: unknown) {
+        console.error('Error detallado al enviar reporte:', error);
+        
+        // Casting explícito a Error si sabemos que es un Error
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : 'Error desconocido';
+          
+        this.errorMessage = `Error al enviar el reporte: ${errorMessage}`;
+      
       } finally {
+        // Asegurar que isLoading se desactive siempre, incluso en caso de error
         this.isLoading = false;
       }
     }

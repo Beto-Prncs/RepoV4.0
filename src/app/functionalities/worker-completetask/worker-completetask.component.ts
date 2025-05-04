@@ -1,49 +1,95 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule} from '@angular/router';
-import { TaskService } from '../../services/task.service';
+import { Router } from '@angular/router';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { 
+  Firestore, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  collectionData,
+  doc,
+  getDoc
+} from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Subscription } from 'rxjs';
-import { Timestamp } from '@angular/fire/firestore';
-import { Reporte } from '../../models/interfaces';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
+import { Subscription, BehaviorSubject, from } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
+import { Reporte, Usuario } from '../../models/interfaces';
+import { TaskService } from '../../services/task.service';
+import { getStorage, ref, getDownloadURL } from '@angular/fire/storage';
 
 @Component({
   selector: 'app-worker-completetask',
   standalone: true,
-  imports: [CommonModule, RouterModule, PdfViewerModule],
+  imports: [CommonModule, FormsModule, PdfViewerModule],
   templateUrl: './worker-completetask.component.html',
   styleUrl: './worker-completetask.component.scss'
 })
 export class WorkerCompleteTaskComponent implements OnInit, OnDestroy {
-  private taskService: TaskService = inject(TaskService);
-  private router: Router = inject(Router);
+  // Inyección de servicios
+  private firestore: Firestore = inject(Firestore);
   private auth: Auth = inject(Auth);
+  private router: Router = inject(Router);
+  private taskService: TaskService = inject(TaskService);
   private sanitizer: DomSanitizer = inject(DomSanitizer);
-  private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
-  
+
+  // Estados del componente
   completedTasks: Reporte[] = [];
-  private subscription = new Subscription();
-  isLoading = true;
-  errorMessage = '';
-  successMessage = '';
+  currentUser: Usuario | null = null;
+  isLoading: boolean = true;
+  errorMessage: string = '';
+  successMessage: string = '';
   
-  // PDF viewer properties
+  // Para el visor de PDF
+  showPdfViewer: boolean = false;
+  pdfUrl: SafeUrl | null = null;
   selectedReport: Reporte | null = null;
-  showPdfViewer = false;
-  pdfUrl: SafeResourceUrl | null = null;
   
-  ngOnInit() {
-    console.log('Inicializando componente worker-completetask');
+  // Para almacenar suscripciones y liberarlas en el destroy
+  private subscriptions: Subscription[] = [];
+  
+  ngOnInit(): void {
     this.setupAuthListener();
   }
   
+  ngOnDestroy(): void {
+    // Desuscribir para evitar memory leaks
+    this.subscriptions.forEach(sub => {
+      if (sub) sub.unsubscribe();
+    });
+    
+    // Liberar recursos URL
+    if (this.pdfUrl) {
+      this.revokeObjectURL(this.pdfUrl);
+    }
+  }
+  
+  // Revocar URL para liberar memoria
+  private revokeObjectURL(safeUrl: SafeUrl): void {
+    try {
+      const urlStr = safeUrl.toString();
+      const match = urlStr.match(/blob:http[^"']+/);
+      if (match && match[0]) {
+        URL.revokeObjectURL(match[0]);
+      }
+    } catch (error) {
+      console.error('Error al revocar URL:', error);
+    }
+  }
+  
   private setupAuthListener(): void {
-    const authSub = this.auth.onAuthStateChanged(user => {
+    const authSub = this.auth.onAuthStateChanged(async (user) => {
       if (user) {
-        console.log('Usuario autenticado:', user.uid);
-        this.loadCompletedTasks(user.uid);
+        console.log('Usuario autenticado:', user.email);
+        try {
+          await this.loadUserData(user.uid);
+        } catch (error) {
+          console.error('Error en la inicialización:', error);
+          this.errorMessage = 'Error al cargar los datos del usuario';
+        }
       } else {
         console.log('No hay usuario autenticado');
         this.router.navigate(['/login']);
@@ -51,218 +97,224 @@ export class WorkerCompleteTaskComponent implements OnInit, OnDestroy {
     });
     
     if (authSub) {
-      this.subscription.add(new Subscription(() => authSub()));
+      this.subscriptions.push(new Subscription(() => authSub()));
     }
   }
   
-  private loadCompletedTasks(userId: string): void {
-    const tasksSub = this.taskService.getCompletedReportesByWorker(userId)
-      .subscribe({
-        next: (reportes) => {
-          console.log('Reportes completados recibidos:', reportes.length);
-          this.completedTasks = reportes;
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Error al cargar reportes completados:', error);
-          this.showError('Error al cargar los reportes completados');
-          this.isLoading = false;
-        }
-      });
+  private async loadUserData(userId: string): Promise<void> {
+    try {
+      console.log('Cargando datos del usuario:', userId);
+      const userDoc = await getDoc(doc(this.firestore, 'Usuario', userId));
       
-    this.subscription.add(tasksSub);
-  }
-  
-  convertToDate(fecha: Date | Timestamp): Date {
-    if (fecha instanceof Timestamp) {
-      return fecha.toDate();
-    }
-    return fecha as Date;
-  }
-  
-  formatDate(date: Date | Timestamp): string {
-    const dateObj = this.convertToDate(date);
-    return new Intl.DateTimeFormat('es', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(dateObj);
-  }
-  
-  getStatusClass(estado: string): string {
-    switch (estado?.toLowerCase() || '') {
-      case 'completado':
-        return 'status-completed';
-      case 'pendiente': 
-        return 'status-pending';
-      default:
-        return 'status-default';
-    }
-  }
-  
-  getPriorityClass(priority: string): string {
-    switch (priority?.toLowerCase() || '') {
-      case 'alta':
-        return 'priority-high';
-      case 'media':
-        return 'priority-medium';
-      case 'baja':
-        return 'priority-low';
-      default:
-        return 'priority-default';
-    }
-  }
-  
-  // Método para abrir el visor de PDF
-  openPdfViewer(report: Reporte, event: MouseEvent): void {
-    // Prevenir la propagación del evento para evitar recarga de página
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    
-    if (!report) {
-      this.showError('Reporte no válido');
-      return;
-    }
-    
-    console.log('Abriendo visor de PDF para reporte:', report.IdReporte);
-    this.isLoading = true;
-    this.selectedReport = report;
-
-    // Usar una función asíncrona interna para manejar la carga del PDF
-    (async () => {
-      try {
-        let pdfUrlValue = report.pdfUrl;
+      if (userDoc.exists()) {
+        this.currentUser = {
+          ...userDoc.data() as Usuario,
+          IdUsuario: userId
+        };
         
-        // Si no hay URL almacenada pero sí tenemos ID de reporte, buscar en Storage
-        if (!pdfUrlValue && report.IdReporte) {
-          try {
-            pdfUrlValue = await this.taskService.getPdfUrlForReporte(report.IdReporte);
-            
-            if (pdfUrlValue) {
-              // Actualizar el reporte con la URL obtenida
-              await this.taskService.updateReporteWithPdfInfo(report.IdReporte, pdfUrlValue);
-              console.log('Reporte actualizado con URL de PDF:', pdfUrlValue);
-            }
-          } catch (error) {
-            console.error('Error al obtener URL del PDF:', error);
-          }
-        }
+        console.log('Datos de usuario cargados:', this.currentUser);
         
-        if (pdfUrlValue) {
-          this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(pdfUrlValue);
-          this.showPdfViewer = true;
-          console.log('Mostrando visor de PDF');
+        if (this.currentUser.IdUsuario) {
+          this.loadCompletedReportes(this.currentUser.IdUsuario);
         } else {
-          this.showError('No se encontró el PDF para este reporte');
+          throw new Error('Usuario sin ID válido');
         }
-      } catch (error) {
-        console.error('Error al procesar el PDF:', error);
-        this.showError('Error al cargar el PDF');
-      } finally {
-        this.isLoading = false;
-        this.cdr.detectChanges();
+      } else {
+        throw new Error('No se encontró el documento del usuario');
       }
-    })();
+    } catch (error) {
+      console.error('Error al cargar datos del usuario:', error);
+      this.errorMessage = 'Error al cargar los datos del usuario';
+      this.isLoading = false;
+    }
   }
   
-  // Método para descargar el PDF
-  startDownload(report: Reporte | null, event: MouseEvent): void {
-    // Prevenir la propagación del evento para evitar recarga de página
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    
-    if (!report) {
-      this.showError('No hay reporte seleccionado');
-      return;
-    }
-    
-    console.log('Iniciando descarga para reporte:', report.IdReporte);
+  // Cargar reportes completados
+  private loadCompletedReportes(userId: string): void {
     this.isLoading = true;
-
-    // Usar una función asíncrona interna para manejar la descarga
-    (async () => {
-      try {
-        let pdfUrlValue = report.pdfUrl;
-        
-        // Si no hay URL almacenada pero sí tenemos ID de reporte, buscar en Storage
-        if (!pdfUrlValue && report.IdReporte) {
-          try {
-            pdfUrlValue = await this.taskService.getPdfUrlForReporte(report.IdReporte);
-            
-            if (pdfUrlValue) {
-              // Actualizar el reporte con la URL obtenida
-              await this.taskService.updateReporteWithPdfInfo(report.IdReporte, pdfUrlValue);
-            }
-          } catch (error) {
-            console.error('Error al obtener URL del PDF:', error);
-          }
-        }
-        
-        if (pdfUrlValue) {
-          // Crear un enlace temporal para descargar
-          const link = document.createElement('a');
-          link.href = pdfUrlValue;
-          link.target = '_blank';
-          link.download = `Reporte_${report.Tipo_Trabajo.replace(/\s+/g, '_')}.pdf`;
-          
-          // Añadir el enlace al documento, hacer clic y luego eliminarlo
-          document.body.appendChild(link);
-          link.click();
-          setTimeout(() => {
-            document.body.removeChild(link);
-            this.showSuccess('Descarga iniciada');
-          }, 100);
-        } else {
-          this.showError('No se encontró el PDF para este reporte');
-        }
-      } catch (error) {
-        console.error('Error al descargar el PDF:', error);
-        this.showError('Error al descargar el PDF');
-      } finally {
+    this.errorMessage = '';
+    
+    // Usar el servicio de tareas para obtener reportes completados
+    const subscription = this.taskService.getCompletedReportesByWorker(userId).pipe(
+      tap(reportes => {
+        console.log('Reportes completados recibidos:', reportes);
+        this.completedTasks = reportes;
         this.isLoading = false;
-        this.cdr.detectChanges();
-      }
-    })();
+      }),
+      catchError(error => {
+        console.error('Error al cargar reportes completados:', error);
+        this.errorMessage = 'Error al cargar los reportes completados';
+        this.isLoading = false;
+        return from([]);
+      })
+    ).subscribe();
+    
+    this.subscriptions.push(subscription);
   }
   
-  // Cerrar el visor de PDF
-  closePdfViewer(): void {
-    this.showPdfViewer = false;
-    this.pdfUrl = null;
-    this.selectedReport = null;
-    this.cdr.detectChanges();
-  }
-  
-  private showError(message: string): void {
-    this.errorMessage = message;
-    this.cdr.detectChanges();
-    setTimeout(() => {
-      this.errorMessage = '';
-      this.cdr.detectChanges();
-    }, 5000);
-  }
-  
-  private showSuccess(message: string): void {
-    this.successMessage = message;
-    this.cdr.detectChanges();
-    setTimeout(() => {
-      this.successMessage = '';
-      this.cdr.detectChanges();
-    }, 3000);
-  }
-  
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
-  }
-  
+  // Método para volver atrás
   goBack(): void {
     this.router.navigate(['/worker']);
+  }
+  
+  // Formatear fecha para mostrar
+  formatDate(date: any): string {
+    if (!date) return 'Fecha no disponible';
+    
+    try {
+      // Si es un timestamp de Firestore
+      if (date && typeof date === 'object' && 'seconds' in date) {
+        date = new Date(date.seconds * 1000);
+      }
+      // Si es una string o un objeto Date
+      const dateObj = date instanceof Date ? date : new Date(date);
+      
+      return dateObj.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return 'Fecha inválida';
+    }
+  }
+  
+  // Determinar clase CSS según el estado
+  getStatusClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'completado':
+        return 'completed';
+      case 'pendiente':
+        return 'pending';
+      default:
+        return 'default';
+    }
+  }
+  
+  // Determinar clase CSS según la prioridad
+  getPriorityClass(priority: string): string {
+    switch (priority?.toLowerCase()) {
+      case 'alta':
+        return 'high';
+      case 'media':
+        return 'medium';
+      case 'baja':
+        return 'low';
+      default:
+        return 'default';
+    }
+  }
+  
+  // Abrir visor de PDF
+  openPdfViewer(report: Reporte, event: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    this.isLoading = true;
+    this.selectedReport = report;
+    this.showPdfViewer = true;
+    
+    // Primero intentar obtener el PDF desde la URL almacenada
+    if (report.pdfUrl) {
+      try {
+        this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(report.pdfUrl);
+        this.isLoading = false;
+      } catch (error) {
+        console.error('Error al cargar URL del PDF:', error);
+        this.loadPdfFromStorage(report);
+      }
+    } else {
+      // Si no hay URL directa, intentar cargar desde Storage
+      this.loadPdfFromStorage(report);
+    }
+  }
+  
+  // Cargar PDF desde Firebase Storage
+  private async loadPdfFromStorage(report: Reporte): Promise<void> {
+    if (!report.IdReporte) {
+      this.errorMessage = 'ID de reporte no disponible';
+      this.closePdfViewer();
+      return;
+    }
+    
+    try {
+      const storage = getStorage();
+      // Construir path al PDF basado en la estructura de carpetas
+      const pdfPath = `reportes_pdf/${report.IdReporte}.pdf`;
+      const pdfRef = ref(storage, pdfPath);
+      
+      // Obtener URL de descarga
+      const downloadURL = await getDownloadURL(pdfRef);
+      this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(downloadURL);
+      
+      // Si no tenemos la URL almacenada, actualizar el documento
+      if (!report.pdfUrl) {
+        try {
+          await this.taskService.updateReporteWithPdfInfo(report.IdReporte, downloadURL);
+          console.log('URL de PDF actualizada en el reporte');
+        } catch (updateError) {
+          console.error('Error al actualizar URL de PDF en el reporte:', updateError);
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar PDF desde Storage:', error);
+      this.errorMessage = 'No se pudo cargar el PDF. El archivo podría no existir.';
+      setTimeout(() => this.errorMessage = '', 5000);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+  
+  // Cerrar visor de PDF
+  closePdfViewer(): void {
+    if (this.pdfUrl) {
+      this.revokeObjectURL(this.pdfUrl);
+      this.pdfUrl = null;
+    }
+    this.showPdfViewer = false;
+    this.selectedReport = null;
+  }
+  
+  // Iniciar descarga de PDF
+  async startDownload(report: Reporte, event: Event): Promise<void> {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    if (!report.IdReporte) {
+      this.errorMessage = 'ID de reporte no disponible';
+      return;
+    }
+    
+    try {
+      this.isLoading = true;
+      const storage = getStorage();
+      const pdfPath = `reportes_pdf/${report.IdReporte}.pdf`;
+      const pdfRef = ref(storage, pdfPath);
+      
+      // Obtener URL de descarga
+      const downloadURL = await getDownloadURL(pdfRef);
+      
+      // Crear elemento a para descarga
+      const downloadLink = document.createElement('a');
+      downloadLink.href = downloadURL;
+      downloadLink.download = `Reporte_${report.Tipo_Trabajo.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      this.successMessage = 'Descarga iniciada correctamente';
+      setTimeout(() => this.successMessage = '', 3000);
+    } catch (error) {
+      console.error('Error al descargar PDF:', error);
+      this.errorMessage = 'Error al descargar el PDF';
+      setTimeout(() => this.errorMessage = '', 5000);
+    } finally {
+      this.isLoading = false;
+    }
   }
 }

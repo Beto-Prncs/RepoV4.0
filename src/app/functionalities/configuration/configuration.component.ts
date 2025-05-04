@@ -54,7 +54,11 @@ export class ConfigurationComponent implements OnInit {
     dateFormat: 'DD/MM/YYYY',
     autoLogout: false,
     autoLogoutTime: '15',
-    debugMode: false
+    debugMode: false,
+    // Adding compatibility with other interface properties
+    idioma: 'es',
+    tema: 'light',
+    notificaciones: false
   };
 
   languages: Language[] = [
@@ -113,13 +117,15 @@ export class ConfigurationComponent implements OnInit {
       // Crear usuario demo para la UI
       this.currentUser = {
         IdUsuario: '1',
-        Username: userEmail.split('@')[0],
         Nombre: 'Usuario de Demostración',
         Correo: userEmail,
+        Rol: userRole as 'admin' | 'worker' | 'user', // Cast to valid enum value
+        // Adding the missing required properties
         Departamento: 'Sistemas',
-        Rol: userRole,
         Telefono: '555-1234',
-        Foto_Perfil: undefined
+        Foto_Perfil: undefined,
+        // Adding all other required properties from Usuario interface
+        Email: userEmail
       };
     } catch (error) {
       console.error('Error loading user info:', error);
@@ -134,6 +140,10 @@ export class ConfigurationComponent implements OnInit {
       if (savedConfigStr) {
         const savedConfig = JSON.parse(savedConfigStr);
         this.config = { ...this.config, ...savedConfig };
+        
+        // Ensure compatibility between language/idioma and theme/tema
+        this.config.idioma = this.config.language;
+        this.config.tema = this.config.theme;
       }
 
       // Aplicar configuración cargada
@@ -150,6 +160,10 @@ export class ConfigurationComponent implements OnInit {
 
   async saveConfiguration() {
     try {
+      // Ensure compatibility between properties
+      this.config.idioma = this.config.language;
+      this.config.tema = this.config.theme;
+      
       // Guardar en Preferences
       await this.setPreference('appConfig', JSON.stringify(this.config));
       this.showToast('Configuración guardada exitosamente', 'success');
@@ -177,7 +191,11 @@ export class ConfigurationComponent implements OnInit {
           dateFormat: 'DD/MM/YYYY',
           autoLogout: false,
           autoLogoutTime: '15',
-          debugMode: false
+          debugMode: false,
+          // Adding compatibility with other interface properties
+          idioma: 'es',
+          tema: 'light',
+          notificaciones: false
         };
         // Eliminar de Preferences
         await Preferences.remove({ key: 'appConfig' });
@@ -201,12 +219,16 @@ export class ConfigurationComponent implements OnInit {
 
   // Funcionalidad de cambio de idioma
   changeLanguage() {
+    // Update both language and idioma
+    this.config.idioma = this.config.language;
     this.translate.use(this.config.language);
   }
 
   // Funcionalidad de tema oscuro/claro
   toggleDarkMode() {
     this.config.theme = this.isDarkMode ? 'dark' : 'light';
+    // Update tema as well
+    this.config.tema = this.config.theme;
     this.applyTheme();
   }
 
@@ -306,7 +328,7 @@ export class ConfigurationComponent implements OnInit {
 
   goBack(): void {
     if (this.userRole === 'admin') {
-      this.router.navigate(['/admin']);
+      this.router.navigate(['/admin1']); // Updated to match your routes
     } else if (this.userRole === 'worker') {
       this.router.navigate(['/worker']);
     } else {

@@ -1,57 +1,23 @@
-// reports-interface.component.scss
-// Este archivo contiene estilos específicos para la interfaz de reportes
+// Variables para fuentes y colores personalizados (si deseas mantenerlos para otros componentes)
+$font-family: 'Inter', sans-serif;
 
-// Transiciones suaves para mejorar la experiencia de usuario
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
+// Estilos que no pueden lograrse fácilmente con Tailwind o personalizaciones específicas
+.reports-interface-container {
+  font-family: $font-family;
 }
 
-// Asegurarnos de que las tarjetas tengan alturas iguales
-.card-equal-height {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+// Cualquier animación o transición personalizada que desees mantener
+.animate-float {
+  animation: float 5s ease-in-out infinite;
 }
 
-// Mejora de accesibilidad para focus
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid rgba(59, 130, 246, 0.5);
-  outline-offset: 2px;
-}
-
-// Optimización para pantallas de alta densidad
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .border-hairline {
-    border-width: 0.5px;
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
 
-// Ajustes para preferencias de reducción de movimiento
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-// Estilos específicos para la versión impresa
-@media print {
-  .no-print {
-    display: none;
-  }
-  
-  body {
-    background: white !important;
-    color: black !important;
-  }
-  
-  .container {
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-}
+// Media queries específicas (si necesitas algo que no se puede hacer con las clases responsivas de Tailwind)

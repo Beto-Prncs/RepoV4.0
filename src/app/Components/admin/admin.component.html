@@ -24,12 +24,11 @@
             <p class="text-sm text-gray-600 font-medium m-0 bg-gradient-to-r from-gray-500 to-gray-600 bg-clip-text text-transparent">Cargando...</p>
           </div>
         </div>
-        
         <!-- Profile Dropdown -->
-        <div class="relative z-40" clickOutside (clickOutside)="closeProfileMenu()">
+        <div class="relative z-40" appClickOutside (clickOutside)="closeProfileMenu()">
           <!-- Profile Toggle Button -->
           <button
-            class="flex items-center p-1.5 rounded-full bg-indigo-50 transition-all duration-200 hover:bg-indigo-100 hover:-translate-y-1 hover:shadow-md active:translate-y-0"
+            class="flex items-center p-1.5 rounded-full bg-indigo-50 transition-all duration-200 hover:bg-indigo-100 hover:-translate-y-1 hover:shadow-md active:translate-y-0 toggle-button"
             (click)="toggleProfileMenu($event)"
           >
             <img
@@ -40,11 +39,10 @@
             >
             <span class="text-xs text-indigo-900 ml-2 transition-transform duration-300" [class.rotate-180]="isProfileMenuOpen">▼</span>
           </button>
-          
           <!-- Dropdown Menu -->
           <div
             *ngIf="isProfileMenuOpen"
-            class="absolute top-14 right-0 w-72 sm:w-80 bg-white rounded-xl shadow-lg z-50 origin-top-right animate-fadeIn flex flex-col max-h-[450px]"
+            class="absolute top-14 right-0 w-72 sm:w-80 bg-white rounded-xl shadow-lg z-50 origin-top-right animate-fadeIn flex flex-col max-h-[450px] dropdown-menu"
             [ngStyle]="{'right': (window.innerWidth < 640) ? '50%' : '0', 'transform': (window.innerWidth < 640) ? 'translateX(50%)' : 'none'}"
           >
             <!-- Profile Header -->
@@ -76,7 +74,6 @@
                   (change)="onPhotoSelected($event)"
                 >
               </div>
-              
               <!-- Profile Info -->
               <div class="text-center w-full">
                 <p class="text-lg font-semibold text-indigo-900 m-0">{{ usuario?.Nombre }}</p>
@@ -86,7 +83,6 @@
                 <p class="text-sm text-gray-500 mt-1.5 break-all">{{ usuario?.Correo }}</p>
               </div>
             </div>
-            
             <!-- Menu Items -->
             <div class="py-2 overflow-y-auto flex-grow">
               <a class="flex items-center px-5 py-3 text-gray-700 transition-all cursor-pointer hover:bg-indigo-50 hover:pl-6 group"
@@ -110,18 +106,15 @@
         </div>
       </div>
     </header>
-
     <!-- Analytics Preview -->
     <div *ngIf="!isLoading" class="bg-white rounded-3xl p-6 md:p-8 mb-10 shadow-md transition-all duration-300 overflow-hidden hover:-translate-y-2 hover:shadow-lg group">
       <img src="icons/reportA.jpg" alt="Analytics Preview" class="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl transition-transform duration-300 group-hover:scale-[1.01] filter hover:saturate-[1.1] hover:contrast-[1.05]">
     </div>
-
     <!-- Loading State -->
     <div *ngIf="isLoading" class="flex flex-col items-center justify-center h-64 z-10">
       <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-900 rounded-full mb-5 animate-spin"></div>
       <p class="text-gray-700 font-medium bg-gradient-to-r from-gray-600 to-gray-500 bg-clip-text text-transparent animate-pulse">Cargando dashboard...</p>
     </div>
-
     <!-- Dashboard Grid -->
     <div *ngIf="!isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-8 z-10">
       <div
@@ -130,11 +123,9 @@
         (click)="navigateTo(item.route)"
       >
         <div class="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        
         <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full flex items-center justify-center bg-indigo-50 transition-all duration-300 group-hover:bg-indigo-100 relative z-10">
           <img [src]="'icons/' + item.icon" [alt]="item.title" class="w-10 h-10 sm:w-12 sm:h-12 object-contain transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
         </div>
-        
         <h3 class="text-lg sm:text-xl font-semibold text-gray-800 transition-all duration-300 group-hover:text-indigo-900 relative z-10">{{ item.title }}</h3>
         <p class="text-gray-500 text-xs sm:text-sm mt-2 transition-all duration-300 relative z-10">{{ item.description }}</p>
       </div>
@@ -143,4 +134,4 @@
 </div>
 
 <!-- Toast Notifications -->
-<div id="notification-toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 py-3 px-5 rounded-xl text-white text-sm font-medium z-50 shadow-lg flex items-center gap-2.5 transform transition-all duration-300 hidden w-11/12 max-w-md justify-center"></div>
+<div id="notification-toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 py-3 px-5 rounded-xl text-white text-sm font-medium z-50 shadow-lg items-center gap-2.5 transform transition-all duration-300 hidden w-11/12 max-w-md justify-center"></div>

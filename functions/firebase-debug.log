@@ -1,0 +1,80 @@
+[debug] [2025-05-04T04:29:06.375Z] ----------------------------------------------------------------------
+[debug] [2025-05-04T04:29:06.393Z] Command:       /nix/store/ixbb20farqh1f4fqbmsn6b1ixn8mc8ij-nodejs-20.18.1/bin/node /home/user/.global_modules/bin/firebase init
+[debug] [2025-05-04T04:29:06.393Z] CLI Version:   14.2.2
+[debug] [2025-05-04T04:29:06.394Z] Platform:      linux
+[debug] [2025-05-04T04:29:06.394Z] Node Version:  v20.18.1
+[debug] [2025-05-04T04:29:06.394Z] Time:          Sun May 04 2025 04:29:06 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-05-04T04:29:06.394Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-05-04T04:29:06.982Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-05-04T04:29:06.982Z] > authorizing via signed-in user (sebascastrodelgado@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /home/user/r-epo
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2025-05-04T04:30:04.118Z] Using project from CLI flag: workflowdb-4122b
+[debug] [2025-05-04T04:30:04.120Z] Checked if tokens are valid: false, expires at: 1746332975621
+[debug] [2025-05-04T04:30:04.120Z] Checked if tokens are valid: false, expires at: 1746332975621
+[debug] [2025-05-04T04:30:04.121Z] > refreshing access token with scopes: []
+[debug] [2025-05-04T04:30:04.125Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-05-04T04:30:04.125Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-05-04T04:30:04.466Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-05-04T04:30:04.466Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-05-04T04:30:04.493Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/workflowdb-4122b [none]
+[debug] [2025-05-04T04:30:04.761Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/workflowdb-4122b 200
+[debug] [2025-05-04T04:30:04.761Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/workflowdb-4122b {"projectId":"workflowdb-4122b","projectNumber":"1053802838055","displayName":"Repo","name":"projects/workflowdb-4122b","resources":{"hostingSite":"workflowdb-4122b"},"state":"ACTIVE","etag":"1_ffdc622b-3fda-48bd-9655-558539a3f1ab"}
+[info] i  Using project workflowdb-4122b (Repo) 
+[info] 
+=== Functions Setup
+[debug] [2025-05-04T04:30:04.768Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-05-04T04:30:04.768Z] > authorizing via signed-in user (sebascastrodelgado@gmail.com)
+[debug] [2025-05-04T04:30:04.768Z] [iam] checking project workflowdb-4122b for permissions ["firebase.projects.get"]
+[debug] [2025-05-04T04:30:04.769Z] Checked if tokens are valid: true, expires at: 1746336603468
+[debug] [2025-05-04T04:30:04.769Z] Checked if tokens are valid: true, expires at: 1746336603468
+[debug] [2025-05-04T04:30:04.769Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/workflowdb-4122b:testIamPermissions [none]
+[debug] [2025-05-04T04:30:04.769Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/workflowdb-4122b:testIamPermissions x-goog-quota-user=projects/workflowdb-4122b
+[debug] [2025-05-04T04:30:04.769Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/workflowdb-4122b:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-05-04T04:30:04.957Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/workflowdb-4122b:testIamPermissions 200
+[debug] [2025-05-04T04:30:04.957Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/workflowdb-4122b:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-05-04T04:30:04.958Z] Checked if tokens are valid: true, expires at: 1746336603468
+[debug] [2025-05-04T04:30:04.958Z] Checked if tokens are valid: true, expires at: 1746336603468
+[debug] [2025-05-04T04:30:04.959Z] Checked if tokens are valid: true, expires at: 1746336603468
+[debug] [2025-05-04T04:30:04.959Z] Checked if tokens are valid: true, expires at: 1746336603468
+[debug] [2025-05-04T04:30:04.959Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/workflowdb-4122b/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-05-04T04:30:04.959Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/workflowdb-4122b/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/workflowdb-4122b
+[debug] [2025-05-04T04:30:04.961Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/workflowdb-4122b/services/runtimeconfig.googleapis.com [none]
+[debug] [2025-05-04T04:30:04.962Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/workflowdb-4122b/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/workflowdb-4122b
+[debug] [2025-05-04T04:30:05.864Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/workflowdb-4122b/services/runtimeconfig.googleapis.com 200
+[debug] [2025-05-04T04:30:05.865Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/workflowdb-4122b/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2025-05-04T04:30:06.003Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/workflowdb-4122b/services/cloudfunctions.googleapis.com 200
+[debug] [2025-05-04T04:30:06.003Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/workflowdb-4122b/services/cloudfunctions.googleapis.com [omitted]
+[info] 
+Detected existing codebase(s): default
+
+[info] Let's create a new codebase for your functions.
+[info] A directory corresponding to the codebase will be created in your project
+[info] with sample code pre-configured.
+
+[info] See https://firebase.google.com/docs/functions/organize-functions for
+[info] more information on organizing your functions using codebases.
+
+[info] Functions can be deployed with firebase deploy.
+

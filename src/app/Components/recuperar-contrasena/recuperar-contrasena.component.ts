@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { getFunctions, httpsCallable } from '@angular/fire/functions';
 
 @Component({
   selector: 'app-recuperar-contrasena',
@@ -11,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './recuperar-contrasena.component.html',
   styleUrl: './recuperar-contrasena.component.scss'
 })
-export class RecuperarContrasenaComponent {
+export class RecuperarContrasenaComponent implements OnInit {
   // Estados generales
   step = 1; // 1: Solicitud de correo, 2: Confirmación envío, 3: Establecer nueva contraseña, 4: Éxito
   isLoading = false;
@@ -58,11 +59,10 @@ export class RecuperarContrasenaComponent {
     
     try {
       // Verificar el código (esto también devuelve el email asociado)
-      await this.authService.verifyPasswordResetCode(code);
-      
-      // Si llega aquí, el código es válido
+      const email = await this.authService.verifyPasswordResetCode(code);
+      this.email = email; // Guardar el email para usarlo después
       this.isLoading = false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error verificando código:', error);
       this.message = 'El enlace ha expirado o no es válido. Por favor, solicita un nuevo correo de recuperación.';
       this.messageType = 'error';
@@ -76,7 +76,7 @@ export class RecuperarContrasenaComponent {
   }
   
   /**
-   * Envía el correo de recuperación
+   * Envía el correo de recuperación usando Firebase Functions
    */
   async sendRecoveryEmail() {
     if (!this.email) {
@@ -89,12 +89,42 @@ export class RecuperarContrasenaComponent {
     this.message = '';
     
     try {
-      await this.authService.sendPasswordResetEmail(this.email);
+      // Usar la función de Cloud Functions para enviar el correo personalizado
+      const functions = getFunctions();
+      const sendPasswordResetEmail = httpsCallable(functions, 'sendPasswordResetEmail');
       
-      // Mostrar mensaje de éxito
-      this.step = 2;
+      const result = await sendPasswordResetEmail({ email: this.email });
+      
+      // Verificar el resultado
+      const responseData = result.data as any;
+      
+      if (responseData && responseData.success) {
+        // Mostrar mensaje de éxito
+        this.step = 2;
+      } else {
+        throw new Error('Error al enviar el correo de recuperación');
+      }
     } catch (error: any) {
-      this.message = error.message || 'Error al enviar el correo. Verifica que el correo electrónico sea correcto.';
+      console.error('Error al enviar correo:', error);
+      
+      // Extraer mensaje de error
+      let errorMessage = 'Error al enviar el correo. Verifica que el correo electrónico sea correcto.';
+      
+      if (error.data && error.data.message) {
+        errorMessage = error.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (error.details && error.details.message) {
+        errorMessage = error.details.message;
+      }
+      
+      // Si el correo no existe, manejar ese error específico
+      if (error.code === 'functions/not-found' || 
+          (error.details && error.details.code === 'not-found')) {
+        errorMessage = 'No existe una cuenta con este correo electrónico.';
+      }
+      
+      this.message = errorMessage;
       this.messageType = 'error';
     } finally {
       this.isLoading = false;
@@ -102,7 +132,7 @@ export class RecuperarContrasenaComponent {
   }
   
   /**
-   * Establece la nueva contraseña
+   * Establece la nueva contraseña y la actualiza en Firestore
    */
   async resetPassword() {
     if (!this.newPassword || !this.confirmPassword) {
@@ -127,13 +157,42 @@ export class RecuperarContrasenaComponent {
     this.message = '';
     
     try {
-      // Confirmar el cambio de contraseña
+      // Confirmar el cambio de contraseña en Firebase Authentication
       await this.authService.confirmPasswordReset(this.actionCode, this.newPassword);
       
-      // Mostrar mensaje de éxito
-      this.step = 4;
+      // También actualizar la contraseña en Firestore usando Cloud Functions
+      const functions = getFunctions();
+      const afterPasswordReset = httpsCallable(functions, 'afterPasswordReset');
+      
+      const result = await afterPasswordReset({
+        email: this.email,
+        newPassword: this.newPassword
+      });
+      
+      // Verificar resultado
+      const responseData = result.data as any;
+      
+      if (responseData && responseData.success) {
+        // Mostrar mensaje de éxito
+        this.step = 4;
+      } else {
+        throw new Error('Error al actualizar la contraseña en la base de datos');
+      }
     } catch (error: any) {
-      this.message = error.message || 'Error al cambiar la contraseña. Por favor, intenta nuevamente.';
+      console.error('Error al cambiar la contraseña:', error);
+      
+      // Extraer mensaje de error
+      let errorMessage = 'Error al cambiar la contraseña. Por favor, intenta nuevamente.';
+      
+      if (error.data && error.data.message) {
+        errorMessage = error.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (error.details && error.details.message) {
+        errorMessage = error.details.message;
+      }
+      
+      this.message = errorMessage;
       this.messageType = 'error';
     } finally {
       this.isLoading = false;

@@ -5,7 +5,11 @@ $font-family: 'Inter', sans-serif;
 $white: #ffffff;
 $primary-color: #3498db;
 $primary-hover: #2980b9;
+$primary-light: #e1f0fa;
 $success-color: #2ecc71;
+$success-light: #d4f6e6;
+$error-color: #e74c3c;
+$error-light: #fae5e3;
 $text-primary: #2c3e50;
 $text-secondary: #6c757d;
 $text-tertiary: #495057;
@@ -13,14 +17,19 @@ $border-color: #ced4da;
 $border-light: #e9ecef;
 $bg-light: #f8f9fa;
 $disabled-color: #bdc3c7;
+$card-bg: #ffffff;
+$step-bg: #f2f2f2;
 
 // Sombras
-$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-$focus-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1);
+$focus-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
 
 // Bordes
 $border-radius-sm: 4px;
 $border-radius-md: 8px;
+$border-radius-lg: 12px;
 $border-radius-full: 50%;
 
 // Espaciado
@@ -29,12 +38,21 @@ $spacing-sm: 0.75rem;
 $spacing-md: 1rem;
 $spacing-lg: 1.5rem;
 $spacing-xl: 2rem;
+$spacing-2xl: 3rem;
 
 // Tipografía
 $font-size-xs: 0.875rem;
 $font-size-sm: 1rem;
 $font-size-md: 1.25rem;
-$font-size-lg: 1.75rem;
+$font-size-lg: 1.5rem;
+$font-size-xl: 1.75rem;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Transiciones
+$transition-speed: 0.3s;
 
 // Mixins
 @mixin flex-center {
@@ -45,7 +63,13 @@ $font-size-lg: 1.75rem;
 
 @mixin flex-between {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
 }
 
 @mixin flex-gap($gap) {
@@ -53,40 +77,57 @@ $font-size-lg: 1.75rem;
   gap: $gap;
 }
 
-@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
+@mixin transition($property: all, $duration: $transition-speed, $timing: ease) {
   transition: $property $duration $timing;
 }
 
 @mixin form-element {
   width: 100%;
-  padding: $spacing-sm;
+  padding: $spacing-md;
   border: 1px solid $border-color;
-  border-radius: $border-radius-sm;
+  border-radius: $border-radius-md;
   font-size: $font-size-sm;
   color: $text-tertiary;
+  background-color: $white;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
   @include transition(border-color, 0.15s, ease-in-out);
-  
+
   &:focus {
     border-color: $primary-color;
     outline: none;
     box-shadow: $focus-shadow;
   }
+
+  &:disabled {
+    background-color: $bg-light;
+    cursor: not-allowed;
+  }
+
+  &::placeholder {
+    color: lighten($text-tertiary, 20%);
+  }
 }
 
 @mixin button-base {
-  padding: $spacing-sm $spacing-lg;
-  border-radius: $border-radius-sm;
-  font-weight: 500;
+  padding: $spacing-md $spacing-xl;
+  border-radius: $border-radius-md;
+  font-weight: $font-weight-medium;
+  font-size: $font-size-sm;
   @include transition;
   cursor: pointer;
   border: none;
+  box-shadow: $shadow-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
 }
 
 // Animaciones
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY($spacing-md);
   }
   to {
     opacity: 1;
@@ -94,36 +135,115 @@ $font-size-lg: 1.75rem;
   }
 }
 
-/* Container and card styles */
-.container {
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+/* Container y estilos generales */
+.create-reports-container {
   max-width: 1200px;
   margin: $spacing-xl auto;
   padding: 0 $spacing-md;
+  font-family: $font-family;
+  color: $text-primary;
+  
+  @media (max-width: 768px) {
+    margin: $spacing-md;
+    padding: 0;
+  }
 }
 
-.dashboard-card {
-  background: $white;
+.main-card {
+  background: $card-bg;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+  margin-top: $spacing-2xl;
+}
+
+/* Estilos del botón de regreso */
+.back-button {
+  @include flex-gap($spacing-xs);
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  background-color: $white;
+  border: 1px solid $border-color;
   border-radius: $border-radius-md;
+  color: $text-tertiary;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  @include transition;
   box-shadow: $shadow-sm;
+  
+  &:hover {
+    background-color: $bg-light;
+    transform: translateX(-2px);
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
-/* Header styles */
+/* Estilos del encabezado */
 .card-header {
-  background: $bg-light;
+  background: linear-gradient(to right, lighten($primary-color, 35%), lighten($primary-color, 40%));
   padding: $spacing-lg;
   border-bottom: 1px solid $border-light;
-  border-radius: $border-radius-md $border-radius-md 0 0;
+  border-radius: $border-radius-lg $border-radius-lg 0 0;
 }
 
 .header-content {
-  @include flex-gap($spacing-md);
+  @include flex-gap($spacing-lg);
   align-items: center;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 
-.dashboard-logo {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
+.icon-wrapper {
+  background: $white;
+  width: 60px;
+  height: 60px;
+  border-radius: $border-radius-full;
+  @include flex-center;
+  box-shadow: $shadow-sm;
+  
+  svg {
+    color: $primary-color;
+  }
 }
 
 .header-text {
@@ -131,36 +251,50 @@ $font-size-lg: 1.75rem;
     color: $text-primary;
     margin: 0;
     font-size: $font-size-lg;
-    font-weight: 600;
+    font-weight: $font-weight-bold;
+  }
+  
+  .subtitle {
+    color: $text-secondary;
+    margin: $spacing-xs 0 0;
+    font-size: $font-size-sm;
   }
 }
 
-.subtitle {
-  color: $text-secondary;
-  margin: $spacing-xs 0 0;
-  font-size: $font-size-sm;
-}
-
-/* Card body styles */
+/* Estilos del cuerpo de la tarjeta */
 .card-body {
-  padding: $spacing-xl;
+  padding: $spacing-2xl;
+  
+  @media (max-width: 768px) {
+    padding: $spacing-lg;
+  }
 }
 
-/* Steps indicator styles */
+/* Estilos de los indicadores de paso */
 .steps {
-  @include flex-between;
-  margin-bottom: $spacing-xl;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-2xl;
   position: relative;
   
   &::before {
     content: '';
     position: absolute;
-    top: 24px;
+    top: 24px; // Mitad de la altura del círculo de paso
     left: 0;
     right: 0;
     height: 2px;
     background: $border-light;
     z-index: 1;
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: $spacing-md;
+    
+    &::before {
+      display: none;
+    }
   }
 }
 
@@ -172,23 +306,33 @@ $font-size-lg: 1.75rem;
   z-index: 2;
   cursor: pointer;
   
+  @media (max-width: 768px) {
+    flex-direction: row;
+    gap: $spacing-md;
+  }
+  
   &-number {
     width: 48px;
     height: 48px;
     background: $white;
-    border: 2px solid $border-light;
+    border: 2px solid $border-color;
     border-radius: $border-radius-full;
     @include flex-center;
-    font-weight: 600;
+    font-weight: $font-weight-semibold;
     color: $text-secondary;
     margin-bottom: $spacing-xs;
     @include transition;
+    
+    @media (max-width: 768px) {
+      margin-bottom: 0;
+    }
   }
   
   &-title {
     color: $text-secondary;
     font-size: $font-size-xs;
-    font-weight: 500;
+    font-weight: $font-weight-medium;
+    white-space: nowrap;
   }
   
   &.active {
@@ -196,10 +340,12 @@ $font-size-lg: 1.75rem;
       background: $primary-color;
       border-color: $primary-color;
       color: $white;
+      box-shadow: 0 0 0 4px rgba($primary-color, 0.2);
     }
     
     .step-title {
       color: $primary-color;
+      font-weight: $font-weight-semibold;
     }
   }
   
@@ -209,10 +355,35 @@ $font-size-lg: 1.75rem;
       border-color: $success-color;
       color: $white;
     }
+    
+    .step-title {
+      color: $success-color;
+    }
   }
 }
 
-/* Form group styles */
+/* Estilos del contenido de los pasos */
+.step-content {
+  animation: fadeIn 0.4s ease-in-out;
+  
+  h2 {
+    color: $text-primary;
+    font-size: $font-size-md;
+    margin: 0 0 $spacing-lg;
+    font-weight: $font-weight-semibold;
+    border-bottom: 1px solid $border-light;
+    padding-bottom: $spacing-sm;
+  }
+  
+  h3 {
+    color: $primary-color;
+    font-size: $font-size-sm;
+    margin: $spacing-md 0;
+    font-weight: $font-weight-medium;
+  }
+}
+
+/* Estilos de los grupos de formulario */
 .form-group {
   margin-bottom: $spacing-lg;
   
@@ -220,7 +391,7 @@ $font-size-lg: 1.75rem;
     display: block;
     margin-bottom: $spacing-xs;
     color: $text-primary;
-    font-weight: 500;
+    font-weight: $font-weight-medium;
   }
   
   input,
@@ -228,116 +399,142 @@ $font-size-lg: 1.75rem;
   textarea {
     @include form-element;
   }
-}
-
-/* Step content styles */
-.step-content {
-  animation: fadeIn 0.3s ease-in-out;
   
-  h2 {
-    color: $text-primary;
-    font-size: $font-size-md;
-    margin: $spacing-xl 0 $spacing-md;
-    font-weight: 600;
+  textarea {
+    min-height: 120px;
+    resize: vertical;
   }
 }
 
-/* Button styles */
-.step-actions {
+/* Estilos para la nueva empresa */
+.new-company-form {
+  background-color: $primary-light;
+  border-radius: $border-radius-md;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  border-left: 4px solid $primary-color;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Mensajes de error */
+.error-message {
+  color: $error-color;
+  font-size: $font-size-xs;
+  margin-top: $spacing-xs;
+  font-weight: $font-weight-medium;
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Estilos de las alertas */
+.alert {
+  margin: $spacing-md $spacing-2xl;
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: $spacing-md;
+  animation: fadeIn 0.4s ease-in-out;
+  
+  &.alert-error {
+    background-color: $error-light;
+    border-left: 4px solid $error-color;
+    color: darken($error-color, 10%);
+  }
+  
+  &.alert-success {
+    background-color: $success-light;
+    border-left: 4px solid $success-color;
+    color: darken($success-color, 10%);
+  }
+  
+  .alert-icon {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+  }
+}
+
+/* Indicador de carga */
+.loading-indicator {
+  @include flex-center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  color: $text-tertiary;
+  font-size: $font-size-sm;
+  
+  .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid $primary-color;
+    border-top-color: transparent;
+    border-radius: $border-radius-full;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+/* Botones de navegación */
+.step-actions {
+  @include flex-between;
   margin-top: $spacing-xl;
   padding-top: $spacing-md;
   border-top: 1px solid $border-light;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+  
+  .spacer {
+    flex: 1;
+    
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
 }
 
 .btn-primary,
 .btn-secondary {
   @include button-base;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 }
 
 .btn-primary {
   background: $primary-color;
   color: $white;
   
-  &:hover {
+  &:hover:not(:disabled) {
     background: $primary-hover;
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
   }
   
   &:disabled {
     background: $disabled-color;
     cursor: not-allowed;
+    opacity: 0.8;
   }
 }
 
 .btn-secondary {
-  background: $bg-light;
+  background: $white;
   color: $text-primary;
   border: 1px solid $border-color;
   
   &:hover {
-    background: $border-light;
-  }
-}
-
-/* File input styling */
-input[type="file"] {
-  padding: $spacing-xs;
-  border: 1px dashed $border-color;
-  border-radius: $border-radius-sm;
-  background: $bg-light;
-  
-  &:hover {
-    background: $border-light;
-  }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .container {
-    margin: $spacing-md;
-    padding: 0;
+    background: $bg-light;
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
   }
   
-  .card-header {
-    padding: $spacing-md;
-  }
-  
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .steps {
-    flex-direction: column;
-    gap: $spacing-md;
-    align-items: flex-start;
-    
-    &::before {
-      display: none;
-    }
-  }
-  
-  .step {
-    flex-direction: row;
-    gap: $spacing-md;
-    
-    &-number {
-      margin-bottom: 0;
-    }
-  }
-  
-  .form-group {
-    margin-bottom: $spacing-md;
-  }
-  
-  .step-actions {
-    flex-direction: column;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
+  &:active {
+    transform: translateY(0);
   }
 }

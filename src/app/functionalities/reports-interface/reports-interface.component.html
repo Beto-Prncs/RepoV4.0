@@ -1,145 +1,86 @@
-<!-- reports-interface.component.html -->
-<div class="min-h-screen bg-gradient-to-br from-white to-gray-100 p-5 md:p-8">
-  <!-- Cabecera con navegación -->
-  <header class="max-w-screen-xl mx-auto mb-12">
-    <nav class="flex items-center justify-between">
-      <button (click)="goBack()" class="flex items-center gap-2 text-gray-700 hover:text-primary-dark transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5"></path>
-          <path d="M12 19l-7-7 7-7"></path>
-        </svg>
-        <span class="font-medium">Volver al Panel</span>
-      </button>
-      
-      <!-- Badge opcional que muestra la sección actual -->
-      <div class="px-3 py-1.5 bg-primary-light text-primary-dark rounded-full text-sm font-medium">
-        Gestión de Reportes
-      </div>
-    </nav>
-  </header>
+<div class="min-h-screen bg-gray-50 p-4 md:p-8">
+  <!-- Botón de Regreso -->
+  <button 
+    class="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200 text-gray-600 font-medium shadow-sm hover:bg-gray-50 hover:-translate-x-1 transition-all duration-200 absolute top-4 md:top-8 left-4 md:left-8" 
+    (click)="goBack()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    <span>Atrás</span>
+  </button>
 
-  <!-- Contenedor principal -->
-  <main class="max-w-screen-xl mx-auto">
-    <!-- Encabezado con título principal -->
-    <div class="mb-12 md:mb-16">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Gestión de Reportes</h1>
-      <p class="text-lg text-gray-600 max-w-2xl">Crea, visualiza y administra los reportes de trabajo de tu equipo en un solo lugar.</p>
-    </div>
-    
-    <!-- Tarjetas de funcionalidades -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-      
-      <!-- Tarjeta Crear Reporte - Diseño profesional -->
-      <div class="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-xl transition-shadow duration-300">
-        <div class="flex md:flex-row flex-col h-full">
-          <!-- Columna izquierda con icono -->
-          <div class="bg-primary-light p-6 md:p-8 flex items-center justify-center md:w-1/3">
-            <div class="rounded-full bg-white/80 p-5 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="text-primary h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="12" y1="18" x2="12" y2="12"></line>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
-              </svg>
-            </div>
+  <!-- Contenido Principal -->
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mt-16 mb-10 md:mb-12 tracking-tight">
+      Gestión de Reportes
+    </h1>
+
+    <!-- Contenedor de Tarjetas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 p-2 md:p-4">
+
+      <!-- Tarjeta Crear Reporte -->
+      <div class="bg-white rounded-2xl shadow-md hover:shadow-xl relative overflow-hidden transition-all duration-300 hover:translate-y-[-5px] hover:scale-[1.02] group cursor-pointer" (click)="navigateToCreateReport()">
+        <!-- Barra de color superior -->
+        <div class="h-1 w-full bg-gradient-to-r from-blue-500 to-blue-600 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+        
+        <div class="p-8 md:p-10 flex flex-col items-center gap-5">
+          <!-- Icono -->
+          <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 group-hover:scale-110 transition-transform duration-300">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
           </div>
           
-          <!-- Columna derecha con texto y botón -->
-          <div class="p-6 md:p-8 flex flex-col justify-between md:w-2/3">
-            <div>
-              <h2 class="text-2xl font-bold text-gray-900 mb-3">Crear Reporte</h2>
-              <p class="text-gray-600 mb-6">Genera un nuevo reporte de actividades o incidencias para tu equipo de trabajo.</p>
-            </div>
-            
-            <button (click)="navigateToCreateReport()" class="mt-auto inline-flex items-center justify-center bg-primary text-white font-medium px-6 py-3 rounded-lg hover:bg-primary-dark transition-colors duration-300 shadow-sm">
-              <span>Crear nuevo reporte</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
+          <!-- Título y descripción -->
+          <h2 class="text-xl md:text-2xl font-semibold text-gray-800 text-center">Crear Reporte</h2>
+          <p class="text-gray-500 text-center text-sm md:text-base">Generar un nuevo reporte de actividades o incidencias</p>
+          
+          <!-- Pie de tarjeta -->
+          <div class="flex items-center justify-center gap-2 pt-4 mt-2 border-t border-gray-100 w-full">
+            <span class="text-blue-600 font-medium text-sm">Crear nuevo</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 group-hover:translate-x-1 transition-transform duration-200">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+            </svg>
           </div>
         </div>
       </div>
-      
-      <!-- Tarjeta Historial de Reportes - Diseño profesional -->
-      <div class="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-xl transition-shadow duration-300">
-        <div class="flex md:flex-row flex-col h-full">
-          <!-- Columna izquierda con icono -->
-          <div class="bg-blue-50 p-6 md:p-8 flex items-center justify-center md:w-1/3">
-            <div class="rounded-full bg-white/80 p-5 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="text-blue-600 h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-            </div>
+
+      <!-- Tarjeta Historial de Reportes -->
+      <div class="bg-white rounded-2xl shadow-md hover:shadow-xl relative overflow-hidden transition-all duration-300 hover:translate-y-[-5px] hover:scale-[1.02] group cursor-pointer" (click)="navigateToReportHistory()">
+        <!-- Barra de color superior -->
+        <div class="h-1 w-full bg-gradient-to-r from-blue-500 to-blue-600 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+        
+        <div class="p-8 md:p-10 flex flex-col items-center gap-5">
+          <!-- Icono -->
+          <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 group-hover:scale-110 transition-transform duration-300">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
           </div>
           
-          <!-- Columna derecha con texto y botón -->
-          <div class="p-6 md:p-8 flex flex-col justify-between md:w-2/3">
-            <div>
-              <h2 class="text-2xl font-bold text-gray-900 mb-3">Historial de Reportes</h2>
-              <p class="text-gray-600 mb-6">Accede y gestiona todos los reportes existentes en la plataforma.</p>
-            </div>
-            
-            <button (click)="navigateToReportHistory()" class="mt-auto inline-flex items-center justify-center bg-blue-600 text-white font-medium px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-sm">
-              <span>Ver historial completo</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-                <path d="M5 12h14"></path>
-                <path d="m12 5 7 7-7 7"></path>
-              </svg>
-            </button>
+          <!-- Título y descripción -->
+          <h2 class="text-xl md:text-2xl font-semibold text-gray-800 text-center">Historial de Reportes</h2>
+          <p class="text-gray-500 text-center text-sm md:text-base">Ver y gestionar reportes existentes</p>
+          
+          <!-- Pie de tarjeta -->
+          <div class="flex items-center justify-center gap-2 pt-4 mt-2 border-t border-gray-100 w-full">
+            <span class="text-blue-600 font-medium text-sm">Ver historial</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 group-hover:translate-x-1 transition-transform duration-200">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
           </div>
         </div>
       </div>
     </div>
-    
-    <!-- Sección de características o estadísticas (opcional) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-      <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-        <div class="flex items-center gap-4">
-          <div class="bg-green-100 p-3 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 class="font-medium text-gray-900">Reportes Completados</h3>
-            <p class="text-gray-500">25 este mes</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-        <div class="flex items-center gap-4">
-          <div class="bg-yellow-100 p-3 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 class="font-medium text-gray-900">Tiempo Promedio</h3>
-            <p class="text-gray-500">3.5 horas</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-        <div class="flex items-center gap-4">
-          <div class="bg-purple-100 p-3 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 class="font-medium text-gray-900">Usuarios Activos</h3>
-            <p class="text-gray-500">12 colaboradores</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+  </div>
 </div>

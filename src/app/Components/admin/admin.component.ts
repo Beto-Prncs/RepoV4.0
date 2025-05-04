@@ -26,6 +26,8 @@ interface MenuItem {
   icon: string;
   route: string;
   description: string;
+  requiresAdmin2?: boolean;  // Nueva propiedad para admin nivel 2
+  requiresAdmin3?: boolean;  // Nueva propiedad para admin nivel 3
 }
 
 @Component({
@@ -42,7 +44,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   isUploading: boolean = false;
   uploadProgress: number = 0;
   window: any = window; // Para acceder a window en la plantilla
-
+  
   // Inyección de dependencias
   private router = inject(Router);
   private auth = inject(Auth);
@@ -50,11 +52,12 @@ export class AdminComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private cloudinaryImageService = inject(CloudinaryImageService);
   private modalService = inject(SimpleModalService);
-
+  
   @ViewChild('fileInput') fileInput!: ElementRef;
   private userSubscription: Subscription | null = null;
-
-  menuItems: MenuItem[] = [
+  
+  // Lista completa de elementos del menú con propiedades de requerimiento de nivel
+  allMenuItems: MenuItem[] = [
     {
       title: 'Crear cuenta',
       icon: 'persona.png',
@@ -78,13 +81,30 @@ export class AdminComponent implements OnInit, OnDestroy {
       icon: 'estadistica.png',
       route: '/statistics',
       description: 'Análisis y métricas'
+    },
+    {
+      title: 'Gestionar Configuración',
+      icon: 'tools.png', // Puedes usar el mismo icono de configuración o uno similar
+      route: '/manage-config',
+      description: 'Administrar departamentos y empresas',
+      requiresAdmin2: true  // Requiere admin nivel 2 o superior
+    },
+    {
+      title: 'Gestionar Usuarios',
+      icon: 'persona.png', // Puedes usar el mismo icono de usuarios o uno similar
+      route: '/manage-users',
+      description: 'Administrar usuarios del sistema',
+      requiresAdmin3: true  // Requiere admin nivel 3
     }
   ];
-
+  
+  // Menú filtrado según nivel de permisos
+  menuItems: MenuItem[] = [];
+  
   ngOnInit() {
     this.initializeUserData();
   }
-
+  
   // Método para manejar cambios de tamaño de ventana
   @HostListener('window:resize', ['$event'])
   onResize(event: Event) {
@@ -93,12 +113,12 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.updateDropdownPosition();
     }
   }
-
+  
   // Método para cerrar el menú (usado por la directiva clickOutside)
   closeProfileMenu() {
     this.isProfileMenuOpen = false;
   }
-
+  
   // Método para abrir/cerrar el menú de perfil
   toggleProfileMenu(event?: MouseEvent) {
     if (event) {
@@ -106,26 +126,22 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
-    
     // Si el menú se abre, necesitamos posicionarlo correctamente
     if (this.isProfileMenuOpen) {
       setTimeout(() => this.updateDropdownPosition(), 0);
     }
   }
-
+  
   // Método para actualizar la posición del menú desplegable
   private updateDropdownPosition() {
     const dropdownMenu = document.querySelector('.dropdown-menu') as HTMLElement;
     const toggleButton = document.querySelector('.toggle-button') as HTMLElement;
-    
     if (dropdownMenu && toggleButton) {
       const buttonRect = toggleButton.getBoundingClientRect();
       const menuWidth = dropdownMenu.offsetWidth;
       const windowWidth = window.innerWidth;
-      
       // Calcular posición considerando el espacio disponible
       let leftPosition = 0;
-      
       if (windowWidth < 640) {
         // Para móviles, centrar el menú
         leftPosition = (windowWidth - menuWidth) / 2;
@@ -137,7 +153,6 @@ export class AdminComponent implements OnInit, OnDestroy {
         );
         leftPosition = Math.max(10, leftPosition); // No permitir que se salga por la izquierda
       }
-      
       // Establecer posición
       dropdownMenu.style.position = 'fixed';
       dropdownMenu.style.top = (buttonRect.bottom + 10) + 'px';
@@ -146,33 +161,121 @@ export class AdminComponent implements OnInit, OnDestroy {
       dropdownMenu.style.overflowY = 'auto';
     }
   }
+  
+  private async initializeUserData() {
+    try {
+      // Reiniciar estado de carga
+      this.isLoading = true;
+      this.usuario = null;
+      // Obtener el usuario autenticado
+      const currentUser = this.auth.currentUser;
+      if (!currentUser) {
+        throw new Error('No hay usuario autenticado');
+      }
+      // Verificar que el correo exista
+      const userEmail = currentUser.email;
+      if (!userEmail) {
+        throw new Error('Correo de usuario no disponible');
+      }
+      // Consultar la colección de Usuarios
+      const usuariosRef = collection(this.firestore, 'Usuario');
+      const q = query(usuariosRef, where('Correo', '==', userEmail));
+      // Ejecutar consulta
+      const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(q);
+      if (!querySnapshot.empty) {
+        // Obtener el primer documento (debería ser único por correo)
+        const usuarioDoc = querySnapshot.docs[0];
+        const usuarioData = usuarioDoc.data() as Usuario;
+        // Asignar datos de usuario
+        this.usuario = {
+          ...usuarioData,
+          // Asegurar que todos los campos estén definidos
+          Correo: usuarioData.Correo || '',
+          Departamento: usuarioData.Departamento || '',
+          Foto_Perfil: usuarioData.Foto_Perfil || '',
+          IdUsuario: usuarioDoc.id, // Asegurar que se use el ID del documento
+          NivelAdmin: usuarioData.NivelAdmin || '1', // Valor por defecto
+          Nombre: usuarioData.Nombre || '',
+          Rol: usuarioData.Rol || 'admin',
+          Telefono: usuarioData.Telefono || '',
+          Username: usuarioData.Username || ''
+        };
 
+        // Filtrar los elementos del menú según el nivel de administrador
+        this.filterMenuItems();
+        
+        // Verificar si la imagen de perfil está accesible
+        if (this.usuario.Foto_Perfil) {
+          this.preloadImage(this.usuario.Foto_Perfil).catch(() => {
+            console.warn('No se pudo cargar la imagen de perfil, usando imagen por defecto');
+            if (this.usuario) {
+              this.usuario.Foto_Perfil = ''; // Usar la imagen por defecto
+            }
+          });
+        }
+      } else {
+        console.warn('No se encontró usuario en la base de datos');
+        this.showToast('No se encontró su información de usuario', 'warning');
+      }
+    } catch (error: any) {
+      console.error('Error al obtener datos de usuario:', error);
+      this.handleAuthError(error);
+    } finally {
+      // Finalizar estado de carga después de un breve retraso para mostrar el spinner
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 800);
+    }
+  }
+  
+  // Método para filtrar los elementos del menú según el nivel del administrador
+  private filterMenuItems(): void {
+    if (!this.usuario) {
+      this.menuItems = [];
+      return;
+    }
+    
+    const level = parseInt(this.usuario.NivelAdmin || '1');
+    
+    this.menuItems = this.allMenuItems.filter(item => {
+      // Admin nivel 3 puede ver todos los elementos
+      if (level >= 3) {
+        return true;
+      }
+      // Admin nivel 2 puede ver elementos básicos y los marcados para nivel 2
+      else if (level === 2) {
+        return !item.requiresAdmin3;
+      }
+      // Admin nivel 1 solo puede ver elementos básicos (sin requisitos especiales)
+      else {
+        return !item.requiresAdmin2 && !item.requiresAdmin3;
+      }
+    });
+  }
+  
   // Método para abrir el selector de archivos
   openPhotoSelector() {
     this.fileInput.nativeElement.click();
   }
-
+  
   // Método para manejar la selección de una nueva foto
   async onPhotoSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) {
       return;
     }
-
+    
     try {
       this.isUploading = true;
       const file = input.files[0];
-      
       // Validar que sea una imagen
       if (!file.type.includes('image')) {
         this.showToast('Por favor seleccione un archivo de imagen válido.', 'error');
         return;
       }
-      
       if (!this.usuario?.IdUsuario) {
         throw new Error('ID de usuario no disponible');
       }
-      
       // Comprobar tamaño de archivo
       if (file.size > 3 * 1024 * 1024) { // 3MB
         this.modalService.confirm(
@@ -199,16 +302,14 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.isUploading = false;
     }
   }
-
+  
   // Método para procesar y subir imagen
   private async processAndUploadImage(file: File, input: HTMLInputElement, optimize: boolean) {
     this.showToast('Subiendo imagen...', 'info');
-    
     try {
       if (optimize) {
         // Con optimización - Esperamos a que la promesa se resuelva y obtener el Observable
         const uploadObservable = await this.cloudinaryImageService.updateProfileImage(file, this.usuario!.IdUsuario);
-        
         // Ahora podemos usar pipe() porque estamos trabajando con el Observable
         uploadObservable.pipe(
           finalize(() => {
@@ -239,7 +340,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.isUploading = false;
     }
   }
-
+  
   // Métodos auxiliares para mantener el código limpio
   private handleUploadSuccess(imageUrl: string) {
     if (this.usuario) {
@@ -250,78 +351,10 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     this.showToast('Foto de perfil actualizada correctamente', 'success');
   }
-
+  
   private handleUploadError(error: any) {
     console.error('Error al actualizar foto de perfil:', error);
     this.showToast('Error al actualizar la foto: ' + (error.message || 'Intente nuevamente'), 'error');
-  }
-
-  private async initializeUserData() {
-    try {
-      // Reiniciar estado de carga
-      this.isLoading = true;
-      this.usuario = null;
-      
-      // Obtener el usuario autenticado
-      const currentUser = this.auth.currentUser;
-      if (!currentUser) {
-        throw new Error('No hay usuario autenticado');
-      }
-      
-      // Verificar que el correo exista
-      const userEmail = currentUser.email;
-      if (!userEmail) {
-        throw new Error('Correo de usuario no disponible');
-      }
-      
-      // Consultar la colección de Usuarios
-      const usuariosRef = collection(this.firestore, 'Usuario');
-      const q = query(usuariosRef, where('Correo', '==', userEmail));
-      
-      // Ejecutar consulta
-      const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(q);
-      if (!querySnapshot.empty) {
-        // Obtener el primer documento (debería ser único por correo)
-        const usuarioDoc = querySnapshot.docs[0];
-        const usuarioData = usuarioDoc.data() as Usuario;
-        
-        // Asignar datos de usuario
-        this.usuario = {
-          ...usuarioData,
-          // Asegurar que todos los campos estén definidos
-          Correo: usuarioData.Correo || '',
-          Departamento: usuarioData.Departamento || '',
-          Foto_Perfil: usuarioData.Foto_Perfil || '',
-          IdUsuario: usuarioDoc.id, // Asegurar que se use el ID del documento
-          NivelAdmin: usuarioData.NivelAdmin || '',
-          Nombre: usuarioData.Nombre || '',
-          Rol: usuarioData.Rol || '',
-          Telefono: usuarioData.Telefono || '',
-          Username: usuarioData.Username || ''
-        };
-        
-        // Verificar si la imagen de perfil está accesible
-        if (this.usuario.Foto_Perfil) {
-          this.preloadImage(this.usuario.Foto_Perfil).catch(() => {
-            console.warn('No se pudo cargar la imagen de perfil, usando imagen por defecto');
-            if (this.usuario) {
-              this.usuario.Foto_Perfil = ''; // Usar la imagen por defecto
-            }
-          });
-        }
-      } else {
-        console.warn('No se encontró usuario en la base de datos');
-        this.showToast('No se encontró su información de usuario', 'warning');
-      }
-    } catch (error: any) {
-      console.error('Error al obtener datos de usuario:', error);
-      this.handleAuthError(error);
-    } finally {
-      // Finalizar estado de carga después de un breve retraso para mostrar el spinner
-      setTimeout(() => {
-        this.isLoading = false;
-      }, 800);
-    }
   }
   
   // Método para precargar imagen y verificar que esté accesible
@@ -333,7 +366,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       img.src = url;
     });
   }
-
+  
   // Método para manejar errores de autenticación
   private handleAuthError(error: any) {
     // Limpiar datos de usuario
@@ -341,7 +374,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     // Redirigir al login o mostrar mensaje de error
     this.router.navigate(['/login']);
   }
-
+  
   // Método de navegación
   navigateTo(route: string) {
     // Validar que la ruta exista
@@ -351,7 +384,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     // Cerrar el menú desplegable si está abierto
     this.isProfileMenuOpen = false;
   }
-
+  
   async logout(): Promise<void> {
     try {
       this.isLoading = true;
@@ -365,19 +398,19 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.isLoading = false;
     }
   }
-
+  
   // Sistema de notificaciones mejorado usando Tailwind
   private showToast(message: string, type: 'success' | 'error' | 'info' | 'warning'): void {
     // Obtener el elemento toast
     const toast = document.getElementById('notification-toast');
     if (!toast) return;
-    
-    // Limpiar cualquier clase o contenido anterior
+
+    // Limpiar cualquier clase o contenido anterior y establecer las clases base
+    // Nota: Empezamos con 'flex' y no 'hidden' para mostrarlo inmediatamente
     toast.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 py-3 px-5 rounded-xl text-white text-sm font-medium z-50 shadow-lg flex items-center gap-2.5 transform transition-all duration-300 w-11/12 max-w-md justify-center';
     
     // Aplicar estilos según el tipo
     let icon = '';
-    
     if (type === 'success') {
       toast.classList.add('bg-gradient-to-r', 'from-green-600', 'to-green-500');
       icon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
@@ -392,21 +425,26 @@ export class AdminComponent implements OnInit, OnDestroy {
       icon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
     }
     
+    // Establecer el contenido
     toast.innerHTML = icon + message;
     
-    // Mostrar el toast con animación
+    // Asegurar que sea visible (eliminar 'hidden' si existiera)
     toast.classList.remove('hidden');
     
     // Ocultar después de 4 segundos
     setTimeout(() => {
+      // Primero agregar clases para la animación de salida
       toast.classList.add('opacity-0', 'translate-y-6');
+      
+      // Después de que termine la animación, ocultar el elemento
       setTimeout(() => {
+        // Reemplazar 'flex' con 'hidden'
+        toast.classList.remove('flex', 'opacity-0', 'translate-y-6');
         toast.classList.add('hidden');
-        toast.classList.remove('opacity-0', 'translate-y-6');
       }, 300);
     }, 4000);
   }
-
+  
   ngOnDestroy() {
     // Limpiar cualquier suscripción pendiente
     if (this.userSubscription) {

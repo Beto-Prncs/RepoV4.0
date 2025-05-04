@@ -1,21 +1,23 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Auth, createUserWithEmailAndPassword, sendEmailVerification } from '@angular/fire/auth';
+import { Auth } from '@angular/fire/auth';
 import {
   Firestore,
   doc,
-  setDoc,
   collection,
   getDocs,
   query,
   where,
   getDoc
 } from '@angular/fire/firestore';
-// Importar funciones para envío de correo
+// Importar funciones para envío de correo y cloud functions
 import { getFunctions, httpsCallable } from '@angular/fire/functions';
-import { Usuario } from '../../models/interfaces';
+import { Usuario, Departamento } from '../../models/interfaces';
+import { DepartmentService } from '../../services/department.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BehaviorSubject } from 'rxjs';
 
 interface AccountData {
   firstName: string;
@@ -52,6 +54,8 @@ export class CreateAccountsComponent implements OnInit {
   private firestore: Firestore = inject(Firestore);
   private router: Router = inject(Router);
   private functions = getFunctions();
+  private departmentService: DepartmentService = inject(DepartmentService);
+  private destroyRef: DestroyRef = inject(DestroyRef);
 
   selectedType: 'worker' | 'admin' | null = null;
   showPassword: boolean = false;
@@ -63,17 +67,8 @@ export class CreateAccountsComponent implements OnInit {
   notifications: Notification[] = [];
   isAdminLevelRestricted = false;
   currentAdminLevel = '';
-
   private notificationId = 0;
-
-  departments: string[] = [
-    'sistemas',
-    'diseño',
-    'marketing',
-    'ventas',
-    'otro'
-  ];
-
+  departments$ = new BehaviorSubject<Departamento[]>([]);
   adminLevels: string[] = ['1', '2', '3', 'otro'];
 
   accountData: AccountData = {
@@ -92,6 +87,7 @@ export class CreateAccountsComponent implements OnInit {
   async ngOnInit() {
     await this.loadInitialData();
     await this.checkAdminRestrictions();
+    this.loadDepartments();
   }
 
   private async loadInitialData() {
@@ -100,6 +96,30 @@ export class CreateAccountsComponent implements OnInit {
     } catch (error) {
       console.error('Error loading initial data:', error);
     }
+  }
+
+  private loadDepartments() {
+    this.departmentService.getDepartments().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (departments) => {
+        // Añadir la opción "otro" al final de los departamentos
+        const departmentsWithOther = [
+          ...departments,
+          {
+            IdDepartamento: 'otro',
+            Nombre: 'Otro departamento',
+            id: 'otro',
+            name: 'Otro departamento'
+          }
+        ];
+        this.departments$.next(departmentsWithOther);
+      },
+      error: (error) => {
+        console.error('Error cargando departamentos:', error);
+        this.showNotification('error', 'Error', 'No se pudieron cargar los departamentos');
+      }
+    });
   }
 
   private async loadExistingUsernames() {
@@ -123,11 +143,9 @@ export class CreateAccountsComponent implements OnInit {
           const userData = userDoc.data();
           if (userData && userData['Rol'] === 'admin') {
             this.currentAdminLevel = userData['NivelAdmin'];
-            
             // Si es nivel 2 o 3, restringir las opciones
             if (userData['NivelAdmin'] === '2' || userData['NivelAdmin'] === '3') {
               this.isAdminLevelRestricted = true;
-              
               // Si el usuario selecciona tipo admin, establecer nivel 2 por defecto
               if (this.selectedType === 'admin') {
                 this.accountData.adminLevel = '2';
@@ -164,8 +182,10 @@ export class CreateAccountsComponent implements OnInit {
 
   async onSubmit(form: NgForm): Promise<void> {
     if (form.invalid || !this.selectedType) return;
+    
     this.formSubmitted = true;
     this.isLoading = true;
+    
     try {
       // Verificar disponibilidad del nombre de usuario
       if (!(await this.isUsernameAvailable(this.accountData.username))) {
@@ -178,7 +198,7 @@ export class CreateAccountsComponent implements OnInit {
         this.formSubmitted = false;
         return;
       }
-      
+
       // Obtener el usuario actual (creador)
       const currentUser = this.auth.currentUser;
       if (!currentUser) {
@@ -191,60 +211,53 @@ export class CreateAccountsComponent implements OnInit {
         this.formSubmitted = false;
         return;
       }
-      
+
       // Determinar el nivel de admin según el usuario que lo crea
       let nivelAdmin = this.accountData.adminLevel;
       if (this.selectedType === 'admin' && this.isAdminLevelRestricted) {
         // Si está restringido, forzar nivel 2
         nivelAdmin = '2';
       }
+
+      // Determinar el departamento
+      let departamento = '';
+      if (this.selectedType === 'worker') {
+        departamento = this.accountData.department === 'otro'
+          ? this.accountData.customDepartment || ""
+          : this.accountData.department;
+      }
+
+      // IMPORTANTE: Usar Cloud Function para crear usuario sin cerrar sesión actual
+      const createNewUser = httpsCallable(this.functions, 'createNewUser');
       
-      // IMPORTANTE: Guardar la contraseña antes de crear el usuario en Authentication
-      const plainPassword = this.accountData.password;
-      
-      // Crear usuario en Authentication
-      const userCredential = await createUserWithEmailAndPassword(
-        this.auth,
-        this.accountData.email,
-        plainPassword // Usar la contraseña sin modificar
-      );
-      
-      // Enviar correo de verificación
-      await sendEmailVerification(userCredential.user);
-      
-      // Crear documento de usuario en Firestore con el createdBy y la contraseña en texto plano
-      const userData: Usuario = {
-        IdUsuario: userCredential.user.uid,
-        Nombre: `${this.accountData.firstName} ${this.accountData.lastName}`,
-        Correo: this.accountData.email,
-        Username: this.accountData.username,
-        // IMPORTANTE: Almacenar la contraseña en texto plano para permitir login con username
-        Password: plainPassword, // Guardar la misma contraseña que se usó en Firebase Auth
-        Foto_Perfil: "",
-        Rol: this.selectedType,
-        Telefono: this.accountData.phone || "",
-        Departamento: this.selectedType === 'worker' ?
-          (this.accountData.department === 'otro' ?
-            this.accountData.customDepartment || "" :
-            this.accountData.department) :
-          "",
-        NivelAdmin: this.selectedType === 'admin' ? nivelAdmin : "",
-        createdBy: currentUser.uid // Añadir el ID del creador
+      // Preparar los datos para la Cloud Function
+      const userData = {
+        email: this.accountData.email,
+        password: this.accountData.password,
+        username: this.accountData.username,
+        firstName: this.accountData.firstName,
+        lastName: this.accountData.lastName,
+        phone: this.accountData.phone || "",
+        departamento: departamento,
+        selectedType: this.selectedType,
+        nivelAdmin: this.selectedType === 'admin' ? nivelAdmin : ""
       };
       
-      await setDoc(doc(this.firestore, 'Usuario', userCredential.user.uid), userData);
+      // Llamar a la Cloud Function
+      const result = await createNewUser(userData);
+      const functionResult = result.data as any;
       
-      // Enviar correo de bienvenida con credenciales
-      await this.sendWelcomeEmail(userData);
-      
-      this.showNotification(
-        'success',
-        'Cuenta creada',
-        `La cuenta de ${this.selectedType} ha sido creada exitosamente. Se ha enviado un correo con las credenciales.`
-      );
-      
-      form.resetForm();
-      this.resetForm();
+      if (functionResult && functionResult.success) {
+        this.showNotification(
+          'success',
+          'Cuenta creada',
+          `La cuenta de ${this.selectedType} ha sido creada exitosamente. Se ha enviado un correo con las credenciales.`
+        );
+        form.resetForm();
+        this.resetForm();
+      } else {
+        throw new Error('Error al crear usuario: ' + (functionResult?.message || 'Error desconocido'));
+      }
     } catch (error: any) {
       console.error('Error detallado:', error);
       this.handleError(error);
@@ -254,42 +267,37 @@ export class CreateAccountsComponent implements OnInit {
     }
   }
 
-  // Método para enviar correo de bienvenida
-  private async sendWelcomeEmail(user: Usuario): Promise<void> {
-    try {
-      // Opción 1: Usando Cloud Functions (recomendado)
-      const sendWelcomeEmail = httpsCallable(this.functions, 'sendWelcomeEmail');
-      await sendWelcomeEmail({
-        email: user.Correo,
-        name: user.Nombre,
-        username: user.Username,
-        password: user.Password, // La contraseña se enviará en texto claro solo en el correo
-        role: user.Rol
-      });
-
-      console.log('Correo de bienvenida enviado exitosamente');
-    } catch (error) {
-      console.error('Error enviando correo de bienvenida:', error);
-      // No interrumpir el flujo si el correo falla
-    }
-  }
-
   private handleError(error: any): void {
     let message = 'Error al crear la cuenta';
     let title = 'Error';
-    if (error.code === 'auth/email-already-in-use') {
-      message = 'Este correo electrónico ya está registrado';
-      title = 'Error de correo';
-    } else if (error.code === 'auth/invalid-email') {
-      message = 'Correo electrónico inválido';
-      title = 'Error de formato';
-    } else if (error.code === 'auth/operation-not-allowed') {
-      message = 'Operación no permitida';
-      title = 'Error de permisos';
-    } else if (error.code === 'auth/weak-password') {
-      message = 'La contraseña es demasiado débil';
-      title = 'Error de contraseña';
+
+    // Manejar errores de la Cloud Function
+    if (error.code) {
+      if (error.code === 'functions/invalid-argument') {
+        message = 'Datos de entrada inválidos';
+      } else if (error.code === 'functions/already-exists') {
+        message = 'El correo o nombre de usuario ya existe';
+      } else if (error.code === 'functions/permission-denied') {
+        message = 'No tienes permisos para realizar esta acción';
+      } else if (error.code === 'functions/unauthenticated') {
+        message = 'Sesión de usuario no válida';
+      } else if (error.code === 'auth/email-already-in-use') {
+        message = 'Este correo electrónico ya está registrado';
+        title = 'Error de correo';
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'Correo electrónico inválido';
+        title = 'Error de formato';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        message = 'Operación no permitida';
+        title = 'Error de permisos';
+      } else if (error.code === 'auth/weak-password') {
+        message = 'La contraseña es demasiado débil';
+        title = 'Error de contraseña';
+      }
+    } else if (error.message) {
+      message = error.message;
     }
+    
     this.showNotification('error', title, message);
   }
 
@@ -315,14 +323,12 @@ export class CreateAccountsComponent implements OnInit {
     this.selectedType = type;
     this.formSubmitted = false;
     this.resetForm();
-    
     if (type === 'worker') {
       this.accountData.adminLevel = '';
       this.accountData.customAdminLevel = '';
     } else {
       this.accountData.department = '';
       this.accountData.customDepartment = '';
-      
       // Si hay restricciones de nivel de admin, aplicarlas
       if (this.isAdminLevelRestricted) {
         this.accountData.adminLevel = '2';
@@ -353,7 +359,8 @@ export class CreateAccountsComponent implements OnInit {
   }
 
   onAdminLevelChange(event: any): void {
-    this.showCustomAdminLevel = event.target.value === 'otro' && !this.isAdminLevelRestricted;
+    this.showCustomAdminLevel = event.target.value === 'otro' &&
+      !this.isAdminLevelRestricted;
   }
 
   goBack(): void {

@@ -11,7 +11,7 @@ import { ClickOutsideDirective } from '../../directives/click-outside.directive'
 @Component({
   selector: 'app-worker',
   standalone: true,
-  imports: [CommonModule, RouterModule, ClickOutsideDirective],
+  imports: [CommonModule, RouterModule],
   templateUrl: './worker.component.html',
   styleUrls: ['./worker.component.scss']
 })
@@ -70,7 +70,7 @@ export class WorkerComponent implements OnInit {
 
   // Logout and redirect to login
   logout(): void {
-    this.authService.logout()
+    this.authService.signOut()
       .then(() => {
         this.router.navigate(['/login']);
       })

@@ -3,6 +3,7 @@ import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { workerGuard } from './guards/worker.guard';
 import { logoutGuard } from './guards/logout.guard';
+import { adminLevel2Guard, adminLevel3Guard } from './guards/admin-level.guard';
 export const routes: Routes = [
   {
     path: '',
@@ -83,6 +84,16 @@ export const routes: Routes = [
   {
     path: 'recuperar-contrasena',
     loadComponent: () => import('./Components/recuperar-contrasena/recuperar-contrasena.component').then(m => m.RecuperarContrasenaComponent),
+  },
+  {
+    path: 'manage-config',
+    loadComponent: () => import('./functionalities/manage-config/manage-config.component').then(m => m.ManageConfigComponent),
+    canActivate: [authGuard, adminGuard, adminLevel2Guard],
+  },
+  {
+    path: 'manage-users',
+    loadComponent: () => import('./functionalities/manage-users/manage-users.component').then(m => m.ManageUsersComponent),
+    canActivate: [authGuard, adminGuard, adminLevel3Guard],
   },
   {
     path: '**',
