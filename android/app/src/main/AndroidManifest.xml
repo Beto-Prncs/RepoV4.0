@@ -37,5 +37,22 @@
 
     <!-- Permissions -->
 
+
     <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Permisos para la cámara -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    
+    <!-- Permisos para el almacenamiento -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- Permisos para acceder a la galería de imágenes -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+    
+    <!-- Permisos para mantener la pantalla encendida durante el uso de la app -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 </manifest>

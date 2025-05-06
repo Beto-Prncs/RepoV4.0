@@ -131,6 +131,14 @@
           <div class="current-image-container">
             @if (imgUrl) {
               <img [src]="imgUrl" alt="Imagen actual" class="current-image">
+              <!-- Indicador de nube si la imagen está en Cloudinary -->
+              @if (hasCloudinaryUrl(imgUrl)) {
+                <div class="cloud-indicator" title="Imagen almacenada en la nube">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                  </svg>
+                </div>
+              }
             } @else {
               <div class="no-image-placeholder">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -142,33 +150,48 @@
               </div>
             }
           </div>
-          <!-- Controles de captura/carga de imágenes -->
+          <!-- Controles de captura/carga de imágenes con indicadores de carga -->
           <div class="evidence-controls">
             <!-- Botón para tomar foto con la cámara -->
-            <button type="button" class="btn-evidence btn-camera" (click)="takePicture()">
+            <button type="button" class="btn-evidence btn-camera" (click)="takePicture()" [disabled]="isLoading">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                 <circle cx="12" cy="13" r="4"></circle>
               </svg>
-              <span>Tomar foto</span>
+              @if (isLoading) {
+                <span>
+                  <div class="spinner-small"></div>
+                  Subiendo...
+                </span>
+              } @else {
+                <span>Tomar foto</span>
+              }
             </button>
             <!-- Botón para subir foto desde el dispositivo -->
-            <label class="btn-evidence btn-upload">
+            <label class="btn-evidence btn-upload" [class.disabled]="isLoading">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              <span>Subir imagen</span>
+              @if (isLoading) {
+                <span>
+                  <div class="spinner-small"></div>
+                  Subiendo...
+                </span>
+              } @else {
+                <span>Subir imagen</span>
+              }
               <input
                 type="file"
                 accept="image/*"
                 (change)="handleFileUpload($event)"
+                [disabled]="isLoading"
                 style="display:none">
             </label>
             <!-- Botón para añadir la imagen actual a evidencias -->
-            @if (imgUrl) {
-              <button type="button" class="btn-evidence btn-add" (click)="addToEvidence()" [disabled]="!imgUrl">
+            @if (imgUrl && !isLoading) {
+              <button type="button" class="btn-evidence btn-add" (click)="addToEvidence()" [disabled]="!imgUrl || isLoading">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="12" y1="8" x2="12" y2="16"></line>
@@ -178,14 +201,25 @@
               </button>
             }
           </div>
-          <!-- Miniaturas de fotos en galería -->
+          <!-- Miniaturas de fotos en galería con indicadores de nube -->
           @if (photos.length > 0) {
             <div class="photos-gallery">
-              <h4>Galería de fotos</h4>
+              <h4>Galería de fotos <span class="photos-count">({{ photos.length }})</span></h4>
               <div class="gallery-thumbnails">
                 @for (photo of photos; track $index; let i = $index) {
-                  <div class="thumbnail" [class.selected]="imgUrl === photo.url" (click)="setMainPhoto(photo)">
+                  <div class="thumbnail" 
+                       [class.selected]="imgUrl === photo.url"
+                       [class.cloud-uploaded]="photoHasCloudUrl(photo)"
+                       (click)="setMainPhoto(photo)">
                     <img [src]="photo.url" alt="Foto {{ i + 1 }}">
+                    <!-- Indicador de nube para fotos subidas -->
+                    @if (photoHasCloudUrl(photo)) {
+                      <div class="cloud-badge" title="Imagen guardada en la nube">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                        </svg>
+                      </div>
+                    }
                     <button class="delete-thumbnail" (click)="deletePhoto(i); $event.stopPropagation()">×</button>
                   </div>
                 }
@@ -193,14 +227,30 @@
             </div>
           }
         </div>
-       <!-- Visualización de evidencias añadidas -->
+       <!-- Visualización de evidencias añadidas con indicadores de nube -->
        @if (evidenceImages.length > 0) {
         <div class="added-evidence">
-          <h4>Evidencias añadidas</h4>
+          <h4>Evidencias añadidas <span class="photos-count">({{ evidenceImages.length }})</span></h4>
           <div class="evidence-previews">
             @for (image of evidenceImages; track $index; let i = $index) {
               <div class="evidence-preview-container">
                 <img [src]="image" alt="Evidencia {{ i + 1 }}" class="evidence-preview">
+                <!-- Indicador para imágenes en la nube vs locales -->
+                @if (image.startsWith('http')) {
+                  <div class="cloud-badge" title="Imagen almacenada en la nube">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                    </svg>
+                  </div>
+                } @else {
+                  <div class="local-badge" title="Imagen local - se subirá a la nube al completar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="16 12 12 8 8 12"></polyline>
+                      <line x1="12" y1="16" x2="12" y2="8"></line>
+                    </svg>
+                  </div>
+                }
                 <button type="button" class="remove-evidence" (click)="removeEvidenceImage(i)">×</button>
               </div>
             }

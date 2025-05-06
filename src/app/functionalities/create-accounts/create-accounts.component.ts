@@ -13,7 +13,7 @@ import {
   getDoc
 } from '@angular/fire/firestore';
 // Importar funciones para envío de correo y cloud functions
-import { getFunctions, httpsCallable } from '@angular/fire/functions';
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from '@angular/fire/functions';
 import { Usuario, Departamento } from '../../models/interfaces';
 import { DepartmentService } from '../../services/department.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -53,6 +53,7 @@ export class CreateAccountsComponent implements OnInit {
   private auth: Auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
   private router: Router = inject(Router);
+  // MODIFICADO: Obtener funciones sin especificar región
   private functions = getFunctions();
   private departmentService: DepartmentService = inject(DepartmentService);
   private destroyRef: DestroyRef = inject(DestroyRef);
@@ -68,6 +69,7 @@ export class CreateAccountsComponent implements OnInit {
   isAdminLevelRestricted = false;
   currentAdminLevel = '';
   private notificationId = 0;
+
   departments$ = new BehaviorSubject<Departamento[]>([]);
   adminLevels: string[] = ['1', '2', '3', 'otro'];
 
@@ -85,6 +87,10 @@ export class CreateAccountsComponent implements OnInit {
   };
 
   async ngOnInit() {
+    // AÑADIDO: Para depuración en entorno local, conectar al emulador si es necesario
+    // Descomenta esta línea solo si estás usando el emulador local de Firebase
+    // connectFunctionsEmulator(this.functions, 'localhost', 5001);
+    
     await this.loadInitialData();
     await this.checkAdminRestrictions();
     this.loadDepartments();
@@ -179,7 +185,7 @@ export class CreateAccountsComponent implements OnInit {
   removeNotification(id: number) {
     this.notifications = this.notifications.filter(n => n.id !== id);
   }
-
+  // MODIFICADO: Versión mejorada de onSubmit para manejar mejor la autenticación
   async onSubmit(form: NgForm): Promise<void> {
     if (form.invalid || !this.selectedType) return;
     
@@ -198,37 +204,64 @@ export class CreateAccountsComponent implements OnInit {
         this.formSubmitted = false;
         return;
       }
-
+      
       // Obtener el usuario actual (creador)
       const currentUser = this.auth.currentUser;
       if (!currentUser) {
         this.showNotification(
           'error',
           'Error de autenticación',
-          'No hay una sesión activa'
+          'No hay una sesión activa. Por favor, vuelve a iniciar sesión.'
         );
         this.isLoading = false;
         this.formSubmitted = false;
+        this.router.navigate(['/login']);
         return;
       }
-
+      
+      console.log("Usuario actual:", currentUser.uid);
+      
+      // MODIFICADO: Mejorar la gestión de tokens de autenticación
+      let idToken;
+      try {
+        // Forzar renovación del token con force refresh
+        idToken = await currentUser.getIdToken(true);
+        console.log("Token actualizado correctamente, longitud:", idToken.length);
+      } catch (tokenError) {
+        console.error("Error obteniendo token:", tokenError);
+        this.showNotification(
+          'error',
+          'Error de autenticación',
+          'No se pudo actualizar la sesión. Por favor, vuelve a iniciar sesión.'
+        );
+        this.isLoading = false;
+        this.formSubmitted = false;
+        this.router.navigate(['/login']);
+        return;
+      }
+      
+      // Verificar que Firebase Auth está completamente inicializado
+      if (!this.auth.app) {
+        throw new Error('Firebase Auth no está completamente inicializado');
+      }
+      
+      // Definir la función con opciones explícitas
+      const createNewUser = httpsCallable<any, any>(this.functions, 'createNewUser');
+      
+      // Determinar el departamento
+      let departamentoValue = '';
+      if (this.selectedType === 'worker') {
+        departamentoValue = this.accountData.department === 'otro'
+          ? this.accountData.customDepartment || ""
+          : this.accountData.department;
+      }
+      
       // Determinar el nivel de admin según el usuario que lo crea
       let nivelAdmin = this.accountData.adminLevel;
       if (this.selectedType === 'admin' && this.isAdminLevelRestricted) {
         // Si está restringido, forzar nivel 2
         nivelAdmin = '2';
       }
-
-      // Determinar el departamento
-      let departamento = '';
-      if (this.selectedType === 'worker') {
-        departamento = this.accountData.department === 'otro'
-          ? this.accountData.customDepartment || ""
-          : this.accountData.department;
-      }
-
-      // IMPORTANTE: Usar Cloud Function para crear usuario sin cerrar sesión actual
-      const createNewUser = httpsCallable(this.functions, 'createNewUser');
       
       // Preparar los datos para la Cloud Function
       const userData = {
@@ -238,25 +271,51 @@ export class CreateAccountsComponent implements OnInit {
         firstName: this.accountData.firstName,
         lastName: this.accountData.lastName,
         phone: this.accountData.phone || "",
-        departamento: departamento,
+        departamento: departamentoValue,
         selectedType: this.selectedType,
-        nivelAdmin: this.selectedType === 'admin' ? nivelAdmin : ""
+        nivelAdmin: this.selectedType === 'admin' ? nivelAdmin : "",
+        // Agregar información del administrador para respaldo
+        adminId: currentUser.uid,
+        // Para desactivar temporalmente para depuración si es necesario
+        // bypassAuth: 'temporary_debug_mode' // Descomenta esta línea solo para pruebas
       };
       
-      // Llamar a la Cloud Function
-      const result = await createNewUser(userData);
-      const functionResult = result.data as any;
+      console.log("Llamando a createNewUser con datos:", JSON.stringify({
+        email: userData.email,
+        username: userData.username,
+        selectedType: userData.selectedType,
+        adminId: userData.adminId
+      }));
       
-      if (functionResult && functionResult.success) {
-        this.showNotification(
-          'success',
-          'Cuenta creada',
-          `La cuenta de ${this.selectedType} ha sido creada exitosamente. Se ha enviado un correo con las credenciales.`
-        );
-        form.resetForm();
-        this.resetForm();
-      } else {
-        throw new Error('Error al crear usuario: ' + (functionResult?.message || 'Error desconocido'));
+      // Llamar a la Cloud Function con manejo de errores mejorado
+      try {
+        const result = await createNewUser(userData);
+        console.log("Resultado de createNewUser:", result);
+        
+        const functionResult = result.data as any;
+        if (functionResult && functionResult.success) {
+          this.showNotification(
+            'success',
+            'Cuenta creada',
+            `La cuenta de ${this.selectedType} ha sido creada exitosamente. Se ha enviado un correo con las credenciales.`
+          );
+          form.resetForm();
+          this.resetForm();
+        } else {
+          throw new Error('Error al crear usuario: ' + (functionResult?.message || 'Error desconocido'));
+        }
+      } catch (functionError: any) {
+        console.error("Error llamando a la función:", functionError);
+        // Si hay un error 404, es posible que la función no exista o no esté disponible
+        if (functionError.message && functionError.message.includes('404')) {
+          this.showNotification(
+            'error',
+            'Error de configuración',
+            'No se pudo encontrar la función de creación de usuarios. Asegúrate de que las funciones estén desplegadas correctamente.'
+          );
+        } else {
+          this.handleError(functionError);
+        }
       }
     } catch (error: any) {
       console.error('Error detallado:', error);
@@ -293,11 +352,14 @@ export class CreateAccountsComponent implements OnInit {
       } else if (error.code === 'auth/weak-password') {
         message = 'La contraseña es demasiado débil';
         title = 'Error de contraseña';
+      } else if (error.code === 'functions/not-found' || error.message?.includes('404')) {
+        message = 'No se pudo encontrar la función en el servidor. Verifica que las funciones estén desplegadas correctamente.';
+        title = 'Error de configuración';
       }
     } else if (error.message) {
       message = error.message;
     }
-    
+
     this.showNotification('error', title, message);
   }
 
@@ -323,6 +385,7 @@ export class CreateAccountsComponent implements OnInit {
     this.selectedType = type;
     this.formSubmitted = false;
     this.resetForm();
+
     if (type === 'worker') {
       this.accountData.adminLevel = '';
       this.accountData.customAdminLevel = '';
@@ -359,7 +422,7 @@ export class CreateAccountsComponent implements OnInit {
   }
 
   onAdminLevelChange(event: any): void {
-    this.showCustomAdminLevel = event.target.value === 'otro' &&
+    this.showCustomAdminLevel = event.target.value === 'otro' && 
       !this.isAdminLevelRestricted;
   }
 

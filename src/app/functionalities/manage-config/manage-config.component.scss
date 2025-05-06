@@ -1,0 +1,482 @@
+/* manage-config.component.scss */
+
+// Variables
+$primary: #3b82f6;
+$primary-dark: #2563eb; 
+$primary-light: #dbeafe;
+$secondary: #64748b;
+$accent: #0ea5e9;
+$success: #10b981;
+$warning: #f59e0b;
+$danger: #ef4444;
+$white: #ffffff;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+
+// Mixins para reutilización
+@mixin card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@mixin focus-ring {
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba($primary, 0.35);
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin gradient-bg {
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+}
+
+// Animaciones personalizadas
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+// Estilos generales
+:host {
+  display: block;
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  color: $gray-700;
+}
+
+.bg-gradient-custom {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+}
+
+// Contenedor principal
+.min-h-screen {
+  min-height: 100vh;
+  background-attachment: fixed;
+
+  // Patrón sutil de fondo
+  background-image: 
+    radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.2) 2%, transparent 0%),
+    radial-gradient(circle at 75px 75px, rgba(255, 255, 255, 0.2) 2%, transparent 0%);
+  background-size: 100px 100px;
+}
+
+// Tarjeta principal
+.max-w-6xl {
+  max-width: 72rem;
+
+  .bg-white {
+    @include card-shadow;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+  }
+}
+
+// Encabezado 
+.bg-gradient-to-r {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    opacity: 0.3;
+    z-index: 0;
+  }
+}
+
+// Mensajes de estado
+.status-message {
+  &--error {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    border-radius: 0.5rem;
+  }
+
+  &--success {
+    animation: slideDown 0.3s ease-out forwards;
+    border-radius: 0.5rem;
+  }
+}
+
+// Animaciones para elementos
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+// Estilos para tabs
+.border-b {
+  position: relative;
+  
+  button {
+    position: relative;
+    overflow: hidden;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: $primary;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover::after {
+      transform: scaleX(1);
+    }
+    
+    &.border-blue-500 {
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: $primary;
+        box-shadow: 0 0 8px rgba($primary, 0.5);
+      }
+    }
+  }
+}
+
+// Botones con efectos visuales
+button {
+  position: relative;
+  transition: all 0.3s ease;
+  
+  // Efecto de ripple al hacer clic
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+  }
+  
+  &:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+  }
+  
+  // Clase para el botón principal
+  &.bg-blue-600 {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+      z-index: -1;
+    }
+    
+    &:hover::before {
+      transform: translateX(100%);
+    }
+  }
+  
+  // Clase para botones de eliminar
+  &.bg-red-500, &.text-red-700 {
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Animación de ripple
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+// Formularios
+form {
+  position: relative;
+  
+  // Efecto de profundidad para inputs
+  input {
+    transition: all 0.3s ease;
+    
+    &:focus {
+      transform: translateY(-2px);
+    }
+  }
+  
+  // Efecto de hover para los iconos en inputs
+  .absolute {
+    svg {
+      transition: all 0.3s ease;
+    }
+  }
+  
+  input:focus + .absolute svg {
+    color: $primary !important;
+  }
+}
+
+// Tablas con efectos
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background-color: rgba($gray-100, 0.8);
+    }
+  }
+  
+  // Efecto zebra para filas
+  tbody {
+    tr:nth-child(even) {
+      background-color: rgba($gray-50, 0.5);
+    }
+    
+    tr {
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateX(3px);
+        box-shadow: -3px 0 0 $primary;
+      }
+    }
+  }
+}
+
+// Vista móvil
+@media (max-width: 640px) {
+  .sm\:hidden {
+    > div {
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}
+
+// Modal de confirmación
+.fixed.inset-0 {
+  backdrop-filter: blur(5px);
+  
+  > div {
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 0.5rem;
+      padding: 2px;
+      background: linear-gradient(120deg, $gray-200, $primary-light, $gray-200);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+  }
+}
+
+// Estilos para elementos de feedback visual
+.bg-blue-50, .bg-red-50, .bg-green-50 {
+  transition: all 0.3s ease;
+}
+
+// Estilos para los estados de carga
+.animate-transitioning {
+  opacity: 0.6;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+// Mejora visual para estados vacíos
+tr td[colspan] {
+  .flex.flex-col.items-center {
+    svg {
+      filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07));
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+}
+
+// Media queries adicionales para responsividad
+@media (max-width: 768px) {
+  .md\:flex-row {
+    flex-direction: column;
+    
+    > * {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+// Estilos para dispositivos de alta resolución
+@media (min-width: 1536px) {
+  .min-h-screen {
+    max-width: 1920px;
+    margin: 0 auto;
+  }
+}
+
+// Modo oscuro - preparado para futuras implementaciones
+@media (prefers-color-scheme: dark) {
+  // Estos estilos se activarán cuando se implemente el modo oscuro
+  // Tu aplicación debe tener soporte para dark mode para usar estos estilos
+  
+  /* Ejemplo:
+  .bg-white {
+    background-color: $gray-800;
+    color: $gray-100;
+  }
+  
+  .text-gray-700 {
+    color: $gray-300;
+  }
+  */
+}
+
+// Mejoras de accesibilidad
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@keyframes smoothFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes smoothScale {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes smoothSlide {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

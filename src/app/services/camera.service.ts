@@ -1,12 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
+import { CloudinaryImageService } from './cloudinary-image.service';
 
-// Photo item interface
+// Photo item interface - updated with cloudinaryUrl
 export interface PhotoItem {
   url: string;
   timestamp: Date;
+  cloudinaryUrl?: string; // Added for Cloudinary integration
+  name?: string; // Optional name for the photo
 }
 
 // Report item interface
@@ -23,9 +26,9 @@ export interface ReportItem {
   providedIn: 'root'
 })
 export class CameraService {
-  addPhoto(arg0: { url: any; date: Date; name: any; }) {
-    throw new Error('Method not implemented.');
-  }
+  // Inject CloudinaryImageService
+  private cloudinaryService = inject(CloudinaryImageService);
+  
   // BehaviorSubjects to store and share data
   public _photos = new BehaviorSubject<PhotoItem[]>([]); // Público para acceso directo
   private _reports = new BehaviorSubject<ReportItem[]>([]);
@@ -48,7 +51,7 @@ export class CameraService {
     this.loadDraftReportFromStorage();
   }
   
-  // Camera methods
+  // Camera methods with Cloudinary integration
   async takePicture(): Promise<string> {
     try {
       if (!Capacitor.isPluginAvailable('Camera')) {
@@ -73,7 +76,8 @@ export class CameraService {
       // Save the photo
       const newPhoto: PhotoItem = {
         url: image.dataUrl,
-        timestamp: new Date()
+        timestamp: new Date(),
+        name: `photo_${Date.now()}.jpeg`
       };
       
       // Update photos list
@@ -91,6 +95,23 @@ export class CameraService {
     }
   }
   
+  // Add a photo with enhanced parameters
+  addPhoto(photo: { url: string; date: Date; name: string; cloudinaryUrl?: string }): void {
+    const newPhoto: PhotoItem = {
+      url: photo.url,
+      timestamp: photo.date,
+      name: photo.name,
+      cloudinaryUrl: photo.cloudinaryUrl
+    };
+    
+    const currentPhotos = this._photos.value;
+    const updatedPhotos = [newPhoto, ...currentPhotos];
+    this._photos.next(updatedPhotos);
+    
+    // Save to local storage
+    this.savePhotosToStorage();
+  }
+  
   // Delete a photo
   deletePhoto(index: number): void {
     const currentPhotos = this._photos.value;
@@ -102,6 +123,112 @@ export class CameraService {
       // Save updated list to storage
       this.savePhotosToStorage();
     }
+  }
+  
+  // Upload a photo to Cloudinary and update its cloudinaryUrl
+  async uploadPhotoToCloudinary(index: number, userId: string, reportId: string = 'default'): Promise<string | null> {
+    const currentPhotos = this._photos.value;
+    if (index < 0 || index >= currentPhotos.length) {
+      console.error('Invalid photo index');
+      return null;
+    }
+    
+    const photo = currentPhotos[index];
+    
+    // If already uploaded, return the existing URL
+    if (photo.cloudinaryUrl) {
+      return photo.cloudinaryUrl;
+    }
+    
+    try {
+      // Convert data URL to File object
+      const file = await this.dataURLtoFile(
+        photo.url, 
+        photo.name || `photo_${Date.now()}.jpeg`
+      );
+      
+      // Optimize the image
+      const optimizedFile = await this.cloudinaryService.optimizeImage(file);
+      
+      // Upload to Cloudinary and get the URL (convert promise to async/await)
+      const cloudinaryUrl = await this.cloudinaryService.uploadProfileImage(
+        optimizedFile, 
+        reportId, 
+        'Reportes'
+      ).toPromise();
+      
+      // Update the photo with the Cloudinary URL
+      if (cloudinaryUrl) {
+        const updatedPhotos = [...currentPhotos];
+        updatedPhotos[index] = {
+          ...photo,
+          cloudinaryUrl: cloudinaryUrl
+        };
+        
+        this._photos.next(updatedPhotos);
+        this.savePhotosToStorage();
+        return cloudinaryUrl;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error uploading to Cloudinary:', error);
+      return null;
+    }
+  }
+  
+  // Helper method to convert DataURL to File
+  private async dataURLtoFile(dataUrl: string, filename: string): Promise<File> {
+    const arr = dataUrl.split(',');
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    
+    return new File([u8arr], filename, { type: mime });
+  }
+  
+  // Update a photo with Cloudinary URL
+  updatePhotoWithCloudinaryUrl(index: number, cloudinaryUrl: string): boolean {
+    const currentPhotos = this._photos.value;
+    if (index >= 0 && index < currentPhotos.length) {
+      const updatedPhotos = [...currentPhotos];
+      updatedPhotos[index] = {
+        ...updatedPhotos[index],
+        cloudinaryUrl: cloudinaryUrl
+      };
+      
+      this._photos.next(updatedPhotos);
+      this.savePhotosToStorage();
+      return true;
+    }
+    return false;
+  }
+  
+  // Find a photo by URL and update its Cloudinary URL
+  updatePhotoCloudUrlByLocalUrl(localUrl: string, cloudinaryUrl: string): boolean {
+    const currentPhotos = this._photos.value;
+    const index = currentPhotos.findIndex(photo => photo.url === localUrl);
+    
+    if (index >= 0) {
+      return this.updatePhotoWithCloudinaryUrl(index, cloudinaryUrl);
+    }
+    return false;
+  }
+  
+  // Get Cloudinary URL by local URL
+  getCloudinaryUrl(localUrl: string): string | undefined {
+    const photo = this._photos.value.find(p => p.url === localUrl);
+    return photo?.cloudinaryUrl;
+  }
+  
+  // Get photo index by URL
+  getPhotoIndexByUrl(url: string): number {
+    return this._photos.value.findIndex(photo => photo.url === url);
   }
   
   // Add a report

@@ -14,8 +14,10 @@ $border-color: #ddd;
 $light-bg: #f0f0f0;
 $transition: all 0.2s ease-in-out;
 $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
 // Import the Sass color module to use color functions
 @use "sass:color";
+
 // Define the button-reset mixin if it doesn't exist elsewhere
 @mixin button-reset {
   background: none;
@@ -25,11 +27,27 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   font: inherit;
   cursor: pointer;
 }
+
 @mixin flex-center {
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+// Animations
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinner-small {
+  to { transform: rotate(360deg); }
+}
+
 .tasks-container {
   padding: 1.5rem;
   max-width: 1200px;
@@ -53,6 +71,7 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     }
   }
 }
+
 // PDF/Camera Modal
 .pdf-modal {
   position: fixed;
@@ -66,6 +85,7 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   justify-content: center;
   z-index: 1000;
   animation: modalFadeIn 0.3s ease-out;
+  
   .pdf-modal-content {
     background-color: white;
     border-radius: $border-radius;
@@ -76,22 +96,26 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    
     // Make modal larger for camera
     &.camera-modal-content {
       max-width: 900px;
       height: 90vh;
     }
+    
     .pdf-modal-header {
       padding: 1rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid $primary-light;
+      
       h3 {
         margin: 0;
         color: $primary-dark;
         font-size: 1.25rem;
       }
+      
       .btn-close {
         background: none;
         border: none;
@@ -100,16 +124,19 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         color: $text-secondary;
         cursor: pointer;
         transition: $transition;
+        
         &:hover {
           color: $error-color;
           transform: scale(1.1);
         }
       }
     }
+    
     .pdf-modal-body {
       flex-grow: 1;
       padding: 1.5rem;
       overflow-y: auto;
+      
       // Specific styles for modal body containing camera component
       app-camera {
         display: block;
@@ -117,6 +144,7 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         height: 100%;
         min-height: 400px;
       }
+      
       .preview-content {
         h3 {
           color: $primary-dark;
@@ -124,27 +152,32 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
           margin-top: 0;
           margin-bottom: 1rem;
         }
+        
         p {
           margin-bottom: 1rem;
           strong {
             color: $primary-color;
           }
         }
+        
         h4 {
           color: $primary-dark;
           margin-top: 1.5rem;
           margin-bottom: 0.75rem;
         }
       }
+      
       // PDF viewer container
       .pdf-preview-container {
         height: 70vh;
         overflow-y: auto;
+        
         iframe {
           width: 100%;
           height: 100%;
           border: none;
         }
+        
         ::ng-deep {
           pdf-viewer {
             display: block;
@@ -153,12 +186,14 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
       }
     }
+    
     .pdf-modal-footer {
       padding: 1rem 1.5rem;
       display: flex;
       justify-content: flex-end;
       gap: 1rem;
       border-top: 1px solid $primary-light;
+      
       button {
         padding: 0.6rem 1.2rem;
         font-weight: 500;
@@ -166,28 +201,34 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         cursor: pointer;
         transition: $transition;
       }
+      
       .btn-cancel {
         background-color: white;
         color: $text-secondary;
         border: 1px solid $primary-light;
+        
         &:hover {
           background-color: $primary-light;
           color: $primary-dark;
         }
       }
+      
       .btn-download {
         background-color: $info-color;
         color: white;
         border: none;
+        
         &:hover {
           background-color: color.adjust($info-color, $lightness: -10%);
           transform: translateY(-2px);
         }
       }
+      
       .btn-confirm {
         background-color: $primary-color;
         color: white;
         border: none;
+        
         &:hover {
           background-color: color.adjust($primary-color, $lightness: -5%);
           transform: translateY(-2px);
@@ -196,29 +237,21 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     }
   }
 }
-// Alerts and messages
-.alert {
-  padding: 0.75rem 1rem;
-  border-radius: $border-radius;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  &.alert-error {
-    background-color: lighten($error-color, 35%);
-    color: darken($error-color, 10%);
-  }
-  &.alert-success {
-    background-color: lighten($success-color, 40%);
-    color: darken($success-color, 10%);
-  }
-  .alert-icon {
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-  }
+
+// Spinner y estados de carga
+.spinner-small {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spinner-small 1s ease-in-out infinite;
+  margin-right: 5px;
+  vertical-align: middle;
 }
-// Loading state
+
+// Loading state general
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -226,6 +259,7 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   justify-content: center;
   padding: 2.5rem;
   color: $text-secondary;
+  
   .spinner {
     width: 40px;
     height: 40px;
@@ -235,10 +269,90 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
   }
+  
   p {
     font-size: 1rem;
   }
 }
+
+// Indicadores de cloudinary
+.cloud-badge,
+.local-badge {
+  position: absolute;
+  top: 5px;
+  right: 25px;
+  border-radius: 50%;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.cloud-badge {
+  background-color: rgba(76, 175, 80, 0.9);
+  color: white;
+}
+
+.local-badge {
+  background-color: rgba(255, 152, 0, 0.9);
+  color: white;
+}
+
+.cloud-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Estilos para las miniaturas con indicador de nube
+.thumbnail {
+  &.cloud-uploaded {
+    border-color: #4CAF50;
+  }
+  
+  &.selected {
+    border-color: #2196F3;
+  }
+  
+  &.selected.cloud-uploaded {
+    border-width: 3px;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+  }
+}
+
+// Alerts and messages
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: $border-radius;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  &.alert-error {
+    background-color: lighten($error-color, 35%);
+    color: darken($error-color, 10%);
+  }
+  
+  &.alert-success {
+    background-color: lighten($success-color, 40%);
+    color: darken($success-color, 10%);
+  }
+  
+  .alert-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+  }
+}
+
 // Tabs for work types
 .work-tabs {
   display: flex;
@@ -246,13 +360,16 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   border-bottom: 1px solid #ddd;
   overflow-x: auto;
   scrollbar-width: thin;
+  
   &::-webkit-scrollbar {
     height: 4px;
   }
+  
   &::-webkit-scrollbar-thumb {
     background-color: $text-secondary;
     border-radius: 2px;
   }
+  
   .tab-button {
     padding: 10px 20px;
     border: none;
@@ -262,11 +379,13 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     position: relative;
     transition: $transition;
     white-space: nowrap;
+    
     &.active {
       font-weight: bold;
       color: $primary-color;
       border-bottom: 2px solid $primary-color;
     }
+    
     .counter {
       display: inline-block;
       background-color: #e0e0e0;
@@ -279,18 +398,21 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
       font-size: 12px;
       margin-left: 6px;
     }
+    
     &.active .counter {
       background-color: $primary-color;
       color: white;
     }
   }
 }
+
 // Grid of tasks and reports
 .tasks-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
+  
   .task-card {
     border: 1px solid #ddd;
     border-radius: $border-radius;
@@ -298,58 +420,70 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     cursor: pointer;
     transition: $transition;
     background-color: white;
+    
     &:hover {
       transform: translateY(-3px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+    
     &.selected {
       border-color: $primary-color;
       background-color: $primary-light;
       box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
     }
+    
     .task-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 0.75rem;
+      
       .task-title {
         margin: 0;
         font-size: 1rem;
         font-weight: 600;
       }
+      
       .priority-badge {
         padding: 0.25rem 0.5rem;
         border-radius: $border-radius;
         font-size: 0.75rem;
         font-weight: 500;
+        
         &.priority-high, &.priority-alta {
           background-color: lighten($error-color, 35%);
           color: darken($error-color, 10%);
         }
+        
         &.priority-medium, &.priority-media {
           background-color: #fff8e1;
           color: #ff8f00;
         }
+        
         &.priority-low, &.priority-baja {
           background-color: #e8f5e9;
           color: #388e3c;
         }
+        
         &.priority-normal {
           background-color: $primary-light;
           color: $primary-color;
         }
       }
     }
+    
     .task-info {
       > div {
         margin-bottom: 0.5rem;
       }
+      
       strong {
         display: block;
         font-size: 0.75rem;
         color: $text-secondary;
         margin-bottom: 0.25rem;
       }
+      
       .task-description {
         p {
           margin: 0;
@@ -362,6 +496,7 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     }
   }
 }
+
 // Message when no reports
 .no-reports {
   text-align: center;
@@ -369,10 +504,12 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   color: $text-secondary;
   background-color: #f9f9f9;
   border-radius: $border-radius;
+  
   p {
     margin: 0 0 1rem;
     font-size: 1rem;
   }
+  
   .btn-take-photo {
     display: inline-flex;
     align-items: center;
@@ -384,31 +521,38 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     padding: 0.75rem 1.25rem;
     cursor: pointer;
     transition: $transition;
+    
     &:hover {
       background-color: $primary-dark;
       transform: translateY(-2px);
     }
+    
     .button-icon {
       font-size: 1.25rem;
     }
   }
 }
+
 // Form styles
 .completion-form {
   background-color: #f9f9f9;
   border-radius: $border-radius;
   padding: 1.25rem;
   margin-bottom: 1.25rem;
+  
   .form-group {
     margin-bottom: 1rem;
+    
     label {
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
+      
       .required {
         color: $error-color;
       }
     }
+    
     textarea {
       width: 100%;
       padding: 0.75rem;
@@ -416,16 +560,19 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
       border-radius: $border-radius;
       font-size: 0.875rem;
       font-family: inherit;
+      
       &.error {
         border-color: $error-color;
       }
     }
+    
     .error-text {
       color: $error-color;
       font-size: 0.75rem;
       margin-top: 0.25rem;
       display: block;
     }
+    
     .helper-text {
       color: $text-secondary;
       font-size: 0.75rem;
@@ -500,8 +647,9 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         transition: $transition;
         border: none;
         
-        &:disabled {
-          opacity: 0.6;
+        &:disabled, &[disabled], &.disabled {
+          opacity: 0.7;
+          pointer-events: none;
           cursor: not-allowed;
         }
         
@@ -546,6 +694,12 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         color: $text-secondary;
         margin-top: 0;
         margin-bottom: 0.75rem;
+        
+        .photos-count {
+          font-size: 0.85em;
+          color: #666;
+          font-weight: normal;
+        }
       }
       
       .gallery-thumbnails {
@@ -562,7 +716,16 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
           cursor: pointer;
           
           &.selected {
-            border-color: $primary-color;
+            border-color: #2196F3;
+          }
+          
+          &.cloud-uploaded {
+            border-color: #4CAF50;
+          }
+          
+          &.selected.cloud-uploaded {
+            border-width: 3px;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
           }
           
           img {
@@ -778,16 +941,6 @@ $box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
       transform: translateY(-2px);
     }
   }
-}
-
-// Animations
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 // Responsive styles

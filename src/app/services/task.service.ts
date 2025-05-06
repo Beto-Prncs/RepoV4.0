@@ -86,7 +86,7 @@ export class TaskService {
     console.log('Buscando reportes completados para userId:', workerId);
     const reportesRef = collection(this.firestore, 'Reportes');
     
-    // Query without orderBy to avoid index issues
+    // Query with explicit logging - using getDocs for more direct debugging
     const reportesQuery = query(
       reportesRef,
       where('IdUsuario', '==', workerId),
@@ -95,12 +95,24 @@ export class TaskService {
     
     console.log('Query params for completed reports:', { workerId, estado: 'Completado' });
     
-    return collectionData(reportesQuery, { idField: 'IdReporte' }).pipe(
-      tap(reportes => {
-        console.log('Raw completed reports from Firestore:', JSON.stringify(reportes));
+    // Use getDocs instead of collectionData for more direct debugging
+    return from(getDocs(reportesQuery)).pipe(
+      tap(snapshot => {
+        console.log('Query returned snapshot with', snapshot.size, 'documents');
+        // Log each document ID for debugging
+        snapshot.docs.forEach(doc => {
+          console.log('Found document with ID:', doc.id);
+        });
       }),
-      map((reportes: any[]) => {
-        console.log('Processing completed reports:', reportes.length);
+      map(snapshot => {
+        const reportes: any[] = [];
+        snapshot.forEach(doc => {
+          console.log('Processing doc data:', JSON.stringify(doc.data()));
+          reportes.push({
+            IdReporte: doc.id,
+            ...doc.data()
+          });
+        });
         return this.processReportDates(reportes);
       }),
       tap(processedReports => {
@@ -108,6 +120,41 @@ export class TaskService {
       }),
       catchError(error => {
         console.error('Error getting completed reports:', error);
+        return of([]);
+      })
+    );
+  }
+  
+  /**
+   * Get all reports by status
+   * @param status Status to filter by ('Pendiente' or 'Completado')
+   * @returns Observable with array of reports with the specified status
+   */
+  getReportesByStatus(status: string): Observable<Reporte[]> {
+    if (!status) {
+      console.error('Status is required to get reports');
+      return of([]);
+    }
+    
+    console.log('Getting reports with status:', status);
+    const reportesRef = collection(this.firestore, 'Reportes');
+    
+    // Create query for reports by status
+    const reportesQuery = query(
+      reportesRef,
+      where('estado', '==', status)
+    );
+    
+    return collectionData(reportesQuery, { idField: 'IdReporte' }).pipe(
+      tap(reportes => {
+        console.log('Raw reports from Firestore:', JSON.stringify(reportes));
+      }),
+      map((reportes: any[]) => {
+        console.log('Processing reports:', reportes.length);
+        return this.processReportDates(reportes);
+      }),
+      catchError(error => {
+        console.error('Error getting reports by status:', error);
         return of([]);
       })
     );

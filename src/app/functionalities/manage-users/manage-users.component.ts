@@ -20,7 +20,7 @@ import {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './manage-users.component.html',
-  styleUrl: './manage-users.component.css'
+  styleUrl: './manage-users.component.scss'
 })
 export class ManageUsersComponent implements OnInit {
   private authService: AuthService = inject(AuthService);

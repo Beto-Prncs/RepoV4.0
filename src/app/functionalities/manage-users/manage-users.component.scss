@@ -1,0 +1,178 @@
+/* manage-users.component.scss */
+
+// Variables
+$primary-color: #3b82f6;
+$primary-dark: #2563eb;
+$primary-light: #eff6ff;
+$success-color: #10b981;
+$danger-color: #ef4444;
+$warning-color: #f59e0b;
+
+// Estilos globales para el componente
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+// Mejoras para las tarjetas
+.card-hover-effect {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+}
+
+// Estilización de la tabla
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  
+  th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f9fafb;
+  }
+  
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+    
+    @media (max-width: 640px) {
+      padding: 0.5rem;
+    }
+  }
+  
+  tr {
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: #f9fafb;
+    }
+  }
+}
+
+// Estilos para los botones
+button {
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  &.filter-btn {
+    transition: all 0.2s ease-in-out;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &.active {
+      font-weight: 600;
+    }
+  }
+}
+
+// Animaciones personalizadas
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Aplicar animaciones a elementos específicos
+.fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+// Mejoras responsive
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+  
+  .action-button {
+    span {
+      display: none;
+    }
+    
+    svg {
+      margin-right: 0;
+    }
+  }
+}
+
+// Estilización específica para elementos del modal
+.modal-overlay {
+  backdrop-filter: blur(4px);
+  transition: opacity 0.3s ease;
+}
+
+.modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  // Scrollbar personalizado
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+    
+    &:hover {
+      background: #9ca3af;
+    }
+  }
+}
+
+// Mejoras para los badges de estado/rol
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  
+  &.admin {
+    background-color: rgba($primary-color, 0.1);
+    color: $primary-dark;
+  }
+  
+  &.worker {
+    background-color: rgba($success-color, 0.1);
+    color: $success-color;
+  }
+}
