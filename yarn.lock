@@ -1212,6 +1212,11 @@
   resolved "https://registry.npmjs.org/@capacitor/push-notifications/-/push-notifications-7.0.1.tgz"
   integrity sha512-nSHsMSrTHX5pOkX1Khse75/uvSx/JTcXG+9aT6a66CvzalH6MCs0ha8Jv+xu0k9xW8caO+qSUMjfj5Oy82Uxmw==
 
+"@capacitor/splash-screen@^7.0.1":
+  version "7.0.1"
+  resolved "https://registry.npmjs.org/@capacitor/splash-screen/-/splash-screen-7.0.1.tgz"
+  integrity sha512-Nbqw9bEIe7uHj/HOT81mf4jT6uK1YykozpQw/uIKQDueMg6RJYaJK2/TMajIOohLk8fJF4TYIc1i9nGjNLnfGg==
+
 "@cloudinary/angular@^1.0.0-beta.14":
   version "1.0.0-beta.14"
   resolved "https://registry.npmjs.org/@cloudinary/angular/-/angular-1.0.0-beta.14.tgz"

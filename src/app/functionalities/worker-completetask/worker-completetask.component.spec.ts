@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { WorkerCompletetaskComponent } from './worker-completetask.component';
+import { WorkerCompletetaskComponent
 
 describe('WorkerCompletetaskComponent', () => {
   let component: WorkerCompletetaskComponent;

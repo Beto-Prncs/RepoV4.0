@@ -1,174 +1,358 @@
-<div class="main-container">
-  <!-- Header section -->
-  <div class="header">
-    <button class="back-button" (click)="goBack()">
-      <i class="fas fa-arrow-left"></i> Volver
-    </button>
-    <h1>Reportes Completados</h1>
-  </div>
-
-  <!-- Loading and error messages -->
-  <div *ngIf="isLoading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Cargando reportes completados...</p>
-  </div>
-
-  <div *ngIf="errorMessage" class="error-message">
-    {{ errorMessage }}
-  </div>
-
-  <div *ngIf="successMessage" class="success-message">
-    {{ successMessage }}
-  </div>
-
-  <!-- Filter section -->
-  <div class="filters-container" *ngIf="!isLoading && completedTasks.length > 0">
-    <div class="search-container">
+<!-- worker-completetask.component.html -->
+<div class="tasks-container">
+  <button type="button" class="btn-back" (click)="goBack()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Volver
+  </button>
+  
+  <h2>Reportes Completados</h2>
+  
+  <!-- Mensajes de estado -->
+  @if (errorMessage) {
+    <div class="alert alert-error">
+      <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      {{ errorMessage }}
+    </div>
+  }
+  
+  @if (successMessage) {
+    <div class="alert alert-success">
+      <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      {{ successMessage }}
+    </div>
+  }
+  
+  <!-- Estado de carga -->
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando reportes completados...</p>
+    </div>
+  }
+  
+  <!-- Sistema de búsqueda y filtros -->
+  <div class="search-filters-container">
+    <!-- Barra de búsqueda -->
+    <div class="search-bar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
       <input 
         type="text" 
-        [(ngModel)]="searchTerm" 
-        placeholder="Buscar reportes..." 
-        class="search-input"
-        (input)="onSearchChange()"
+        placeholder="Buscar por título, descripción..." 
+        [(ngModel)]="searchQuery"
+        (input)="applyFilters()"
       >
-      <i class="fas fa-search search-icon"></i>
     </div>
-
-    <div class="filter-options">
-      <div class="filter-select">
-        <label for="company-filter">Empresa:</label>
-        <select id="company-filter" [(ngModel)]="selectedCompany" (change)="applyFilters()">
-          <option value="">Todas</option>
-          <option *ngFor="let company of (companies$ | async)" [value]="company.IdEmpresa">
-            {{ company.Nombre }}
-          </option>
+    
+    <!-- Filtros -->
+    <div class="filters-row">
+      <div class="filter-group">
+        <div class="filter-label">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          Empresa
+        </div>
+        <select [(ngModel)]="selectedEmpresa" (change)="applyFilters()">
+          <option value="Todas las empresas">Todas las empresas</option>
+          @for (empresa of empresas; track empresa.IdEmpresa) {
+            <option [value]="empresa.IdEmpresa">{{ empresa.Nombre }}</option>
+          }
         </select>
       </div>
-
-      <div class="filter-select">
-        <label for="date-filter">Fecha:</label>
-        <select id="date-filter" [(ngModel)]="selectedDateFilter" (change)="applyFilters()">
-          <option value="">Todas las fechas</option>
-          <option value="today">Hoy</option>
-          <option value="yesterday">Ayer</option>
-          <option value="week">Última semana</option>
-          <option value="month">Último mes</option>
+      
+      <div class="filter-group">
+        <div class="filter-label">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          Fecha de completado
+        </div>
+        <select [(ngModel)]="selectedFecha" (change)="applyFilters()">
+          @for (fecha of fechasDisponibles; track fecha) {
+            <option [value]="fecha">{{ fecha }}</option>
+          }
         </select>
       </div>
-
-      <button class="reset-button" (click)="resetFilters()">
-        <i class="fas fa-sync-alt"></i> Resetear filtros
+      
+      <div class="filter-group">
+        <div class="filter-label">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          Prioridad
+        </div>
+        <select [(ngModel)]="selectedPrioridad" (change)="applyFilters()">
+          @for (prioridad of prioridadesDisponibles; track prioridad) {
+            <option [value]="prioridad">{{ prioridad }}</option>
+          }
+        </select>
+      </div>
+      
+      <button class="btn-clear-filters" (click)="clearFilters()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+        Limpiar filtros
       </button>
     </div>
   </div>
-
-  <!-- Empty state -->
-  <div *ngIf="!isLoading && completedTasks.length === 0" class="empty-state">
-    <i class="fas fa-clipboard-check empty-icon"></i>
-    <h2>No hay reportes completados</h2>
-    <p>Una vez que completes tareas, aparecerán aquí.</p>
-  </div>
-
-  <!-- Tasks list -->
-  <div class="reports-container" *ngIf="!isLoading && filteredTasks.length > 0">
-    <div class="report-card" *ngFor="let report of filteredTasks">
-      <div class="report-header">
-        <h3 class="report-title">{{ report.Tipo_Trabajo }}</h3>
-        <span class="report-status" [ngClass]="getStatusClass(report.estado)">
-          {{ report.estado }}
-        </span>
+  
+  <!-- Sin reportes -->
+  @if (!isLoading && filteredTasks.length === 0) {
+    <div class="no-tasks">
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          <line x1="12" y1="11" x2="12" y2="17"></line>
+          <line x1="9" y1="14" x2="15" y2="14"></line>
+        </svg>
+        <p>No hay reportes completados que coincidan con los filtros.</p>
       </div>
+    </div>
+  }
+  
+  <!-- Lista de reportes completados -->
+  @if (!isLoading && filteredTasks.length > 0) {
+    <div class="tasks-grid">
+      @for (task of filteredTasks; track task.IdReporte) {
+        <div class="task-card">
+          <div class="task-header">
+            <h3>{{ task.Tipo_Trabajo }}</h3>
+            <div class="task-tags">
+              <span class="status-badge" [class]="getStatusClass(task.estado)">
+                {{ task.estado }}
+              </span>
+              
+              @if (task.priority) {
+                <span class="priority-badge" [class]="getPriorityClass(task.priority)">
+                  {{ task.priority }}
+                </span>
+              }
+              
+              <!-- Badge para disponibilidad de PDF con tooltip -->
+              @if (task.pdfUrl || task.reporteGenerado) {
+                <span class="pdf-badge" title="PDF disponible">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                  PDF
+                </span>
+              }
+              
+              <!-- Badge para evidencias fotográficas -->
+              @if (hasImages(task)) {
+                <span class="evidence-badge" title="Contiene evidencias fotográficas">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  Fotos ({{ getImageCount(task) }})
+                </span>
+              }
+            </div>
+          </div>
+          
+          <div class="task-content">
+            <!-- Fecha de completado y empresa -->
+            <div class="task-meta">
+              <div class="task-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Completado: {{ formatDate(task.fechaCompletado || task.fecha) }}
+              </div>
+              
+              <div class="task-company">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                {{ getEmpresaName(task.IdEmpresa) }}
+              </div>
+            </div>
+            
+            <!-- Ubicación -->
+            @if (task.location) {
+              <div class="task-location">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                {{ task.location }}
+              </div>
+            }
+            
+            <!-- Departamento -->
+            @if (task.departamento) {
+              <div class="task-department">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                  <rect x="9" y="9" width="6" height="6"></rect>
+                  <line x1="9" y1="1" x2="9" y2="4"></line>
+                  <line x1="15" y1="1" x2="15" y2="4"></line>
+                  <line x1="9" y1="20" x2="9" y2="23"></line>
+                  <line x1="15" y1="20" x2="15" y2="23"></line>
+                  <line x1="20" y1="9" x2="23" y2="9"></line>
+                  <line x1="20" y1="14" x2="23" y2="14"></line>
+                  <line x1="1" y1="9" x2="4" y2="9"></line>
+                  <line x1="1" y1="14" x2="4" y2="14"></line>
+                </svg>
+                {{ task.departamento }}
+              </div>
+            }
+            
+            <!-- Descripción del problema -->
+            <div class="task-description">
+              <h4>Descripción del problema:</h4>
+              <p>{{ task.jobDescription }}</p>
+            </div>
+            
+            <!-- Solución aplicada -->
+            @if (task.descripcionCompletado) {
+              <div class="task-solution">
+                <h4>Solución aplicada:</h4>
+                <p>{{ task.descripcionCompletado }}</p>
+              </div>
+            }
+            
+            <!-- Materiales utilizados -->
+            @if (task.materialesUtilizados) {
+              <div class="task-materials">
+                <h4>Materiales utilizados:</h4>
+                <p>{{ task.materialesUtilizados }}</p>
+              </div>
+            }
+            
+            <!-- Evidencias incluidas -->
+            @if (hasImages(task)) {
+              <div class="task-evidence">
+                <h4>Evidencias incluidas:</h4>
+                <div class="evidence-images">
+                  @for (img of task.evidenceImages; track $index) {
+                    @if ($index < 1) {
+                      <div class="evidence-image">
+                        <img [src]="img" alt="Evidencia {{ $index + 1 }}">
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+            }
+            
+            <!-- Indicadores de firma y materiales -->
+            <div class="task-indicators">
+              @if (task.firmaDigital) {
+                <div class="indicator">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"></path>
+                    <path d="M8 11.5L11 14.5L16 9.5"></path>
+                  </svg>
+                  <span>Incluye firma digital</span>
+                </div>
+              }
+              
+              @if (task.materialesUtilizados) {
+                <div class="indicator">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                  </svg>
+                  <span>Materiales detallados</span>
+                </div>
+              }
+            </div>
+            
+            <!-- Botones para ver y descargar PDF -->
+            <div class="task-actions">
+              <button type="button" class="btn-view-pdf" (click)="openPdfViewer(task, $event)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                Ver reporte
+              </button>
+              
+              <button type="button" class="btn-download-pdf" (click)="startDownload(task, $event)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Descargar PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+  
+<!-- Corrige el HTML del modal de PDF en worker-completetask.component.html -->
 
-      <div class="report-info">
-        <div class="info-row">
-          <span class="info-label">Empresa:</span>
-          <span class="info-value">{{ getCompanyName(report.IdEmpresa) }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Ubicación:</span>
-          <span class="info-value">{{ report.location || 'No especificada' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Departamento:</span>
-          <span class="info-value">{{ report.departamento || 'No especificado' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Prioridad:</span>
-          <span class="info-value priority-tag" [ngClass]="getPriorityClass(report.priority)">
-            {{ report.priority || 'Normal' }}
-          </span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Fecha completado:</span>
-          <span class="info-value">{{ formatDate(report.fechaCompletado) }}</span>
-        </div>
-      </div>
-
-      <div class="report-description">
-        <h4>Descripción del trabajo:</h4>
-        <p>{{ report.jobDescription }}</p>
-        
-        <h4 *ngIf="report.descripcionCompletado">Descripción de la solución:</h4>
-        <p *ngIf="report.descripcionCompletado">{{ report.descripcionCompletado }}</p>
-      </div>
-
-      <div class="report-features">
-        <div class="feature-tag" *ngIf="hasEvidenceImages(report)">
-          <i class="fas fa-images"></i> {{ getEvidenceCount(report) }} evidencias
-        </div>
-        <div class="feature-tag" *ngIf="hasSignature(report)">
-          <i class="fas fa-signature"></i> Firmado
-        </div>
-        <div class="feature-tag" *ngIf="hasMaterials(report)">
-          <i class="fas fa-tools"></i> Materiales
-        </div>
-        <div class="feature-tag" *ngIf="report.reportePdfGenerado">
-          <i class="fas fa-file-pdf"></i> PDF disponible
-        </div>
-      </div>
-
-      <div class="report-actions">
-        <button class="action-button view-button" *ngIf="report.reportePdfGenerado" (click)="openPdfViewer(report)">
-          <i class="fas fa-eye"></i> Ver PDF
+<!-- Modal para visor de PDF mejorado -->
+@if (showPdfViewer) {
+  <div class="pdf-modal-overlay" (click)="closePdfViewer($event)">
+    <div class="pdf-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ selectedReport?.Tipo_Trabajo }}</h3>
+        <button type="button" class="btn-close" (click)="closePdfViewer($event)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
-        <button class="action-button download-button" *ngIf="report.reportePdfGenerado" (click)="startDownload(report)">
-          <i class="fas fa-download"></i> Descargar PDF
-        </button>
+      </div>
+      
+      <div class="modal-body">
+        @if (pdfUrl) {
+          <iframe [src]="pdfUrl" class="responsive-iframe" frameborder="0" allowfullscreen></iframe>
+        } @else {
+          <div class="pdf-loading">
+            <div class="spinner"></div>
+            <p>Cargando PDF...</p>
+          </div>
+        }
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closePdfViewer($event)">Cerrar</button>
+        @if (selectedReport) {
+          <button type="button" class="btn-download" (click)="startDownload(selectedReport, $event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Descargar PDF
+          </button>
+        }
       </div>
     </div>
   </div>
-
-  <!-- PDF Viewer Modal -->
-  <div class="pdf-modal" *ngIf="showPdfViewer">
-    <div class="pdf-modal-content">
-      <div class="pdf-modal-header">
-        <h2>Vista previa del PDF</h2>
-        <button class="close-button" (click)="closePdfViewer()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="pdf-container" *ngIf="!isLoading && pdfUrl">
-        <pdf-viewer [src]="pdfUrl" 
-                   [render-text]="true"
-                   [original-size]="false"
-                   [show-all]="true"
-                   [fit-to-page]="true"
-                   [zoom]="1"
-                   style="width: 100%; height: 80vh;">
-        </pdf-viewer>
-      </div>
-      <div class="loading-container" *ngIf="isLoading">
-        <div class="spinner"></div>
-        <p>Cargando PDF...</p>
-      </div>
-      <div class="pdf-modal-footer">
-        <button class="action-button download-button" *ngIf="selectedReport && !isLoading" (click)="startDownload(selectedReport)">
-          <i class="fas fa-download"></i> Descargar PDF
-        </button>
-        <button class="action-button close-button" (click)="closePdfViewer()">
-          <i class="fas fa-times"></i> Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
+}
 </div>

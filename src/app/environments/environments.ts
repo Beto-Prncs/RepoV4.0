@@ -1,6 +1,8 @@
 
 export const environment =
 {
+  production: false,
+  appUrl:'workflowdb-4122b.web.app',
     firebaseConfig : 
     {
       apiKey: "AIzaSyB02aFRJQaUZV4PH-1UilL0G1qR011UMOo",
