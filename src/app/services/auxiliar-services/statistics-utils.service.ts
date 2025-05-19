@@ -1,4 +1,4 @@
-// statistics-utils.service.ts - Versión optimizada
+
 import { Injectable } from '@angular/core';
 import { Reporte, Usuario } from '../../models/interfaces';
 
@@ -31,7 +31,6 @@ export class StatisticsUtilsService {
 
   /**
    * Calcular estadísticas básicas a partir de reportes
-   * Optimizado para mejor rendimiento
    */
   calculateBasicStats(reports: Reporte[]) {
     if (!reports || reports.length === 0) {
@@ -44,20 +43,10 @@ export class StatisticsUtilsService {
         avgCompletionTime: 'N/A'
       };
     }
-
-    // Usar Map para reducir el tiempo de procesamiento
-    const statusCount = new Map<string, number>();
-    let completedCount = 0;
     
     // Contar estados en una sola pasada
-    reports.forEach(report => {
-      const status = report.estado || 'Desconocido';
-      statusCount.set(status, (statusCount.get(status) || 0) + 1);
-      if (status === 'Completado') completedCount++;
-    });
-    
+    const completedReports = reports.filter(r => r.estado === 'Completado').length;
     const totalReports = reports.length;
-    const completedReports = completedCount;
     const pendingReports = totalReports - completedReports;
     
     // Calcular tasas
@@ -83,11 +72,10 @@ export class StatisticsUtilsService {
 
   /**
    * Calcular tiempo promedio para completar reportes
-   * Optimizado para mejor rendimiento
    */
   calculateAverageCompletionTime(reports: Reporte[]): string {
     // Filtrar reportes completados con fechas válidas
-    const completedReports = reports.filter(r => 
+    const completedReports = reports.filter(r =>
       r.estado === 'Completado' && r.fecha && r.fechaCompletado
     );
     
@@ -96,22 +84,32 @@ export class StatisticsUtilsService {
     }
     
     let totalHours = 0;
+    let validReports = 0;
     
     // Calcular tiempo total
     completedReports.forEach(report => {
-      const startDate = report.fecha instanceof Date ? report.fecha : new Date(report.fecha);
-      const endDate = report.fechaCompletado instanceof Date ? 
-        report.fechaCompletado : new Date(report.fechaCompletado);
-      
-      // Calcular diferencia en horas con validación
-      if (startDate && endDate && startDate.getTime() <= endDate.getTime()) {
-        const diffMs = endDate.getTime() - startDate.getTime();
-        const diffHours = diffMs / (1000 * 60 * 60);
-        totalHours += diffHours;
+      try {
+        const startDate = report.fecha instanceof Date ? report.fecha : new Date(report.fecha);
+        const endDate = report.fechaCompletado instanceof Date ? 
+          report.fechaCompletado : new Date(report.fechaCompletado);
+        
+        // Calcular diferencia en horas con validación
+        if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && 
+            startDate.getTime() <= endDate.getTime()) {
+          const diffMs = endDate.getTime() - startDate.getTime();
+          const diffHours = diffMs / (1000 * 60 * 60);
+          totalHours += diffHours;
+          validReports++;
+        }
+      } catch (error) {
+        console.error('Error al calcular tiempo de reporte:', error);
+        // Continuar con el siguiente reporte
       }
     });
     
-    const avgHours = totalHours / completedReports.length;
+    if (validReports === 0) return 'N/A';
+    
+    const avgHours = totalHours / validReports;
     
     // Formatear el resultado con mejor legibilidad
     if (avgHours < 24) {
@@ -125,7 +123,6 @@ export class StatisticsUtilsService {
 
   /**
    * Calcular estadísticas para cada trabajador
-   * Optimizado para mejor rendimiento
    */
   calculateWorkerStats(reports: Reporte[], workers: Usuario[]): WorkerStats[] {
     if (!reports || reports.length === 0 || !workers || workers.length === 0) {
@@ -143,6 +140,8 @@ export class StatisticsUtilsService {
     
     // Agrupar reportes por trabajador
     reports.forEach(report => {
+      if (!report.IdUsuario) return; // Ignorar reportes sin ID de usuario válido
+      
       if (!reportsByWorker.has(report.IdUsuario)) {
         reportsByWorker.set(report.IdUsuario, []);
       }
@@ -173,7 +172,7 @@ export class StatisticsUtilsService {
       
       stats.push({
         id: worker.IdUsuario,
-        name: worker.Nombre || 'Desconocido',
+        name: worker.Nombre || worker.Username || 'Desconocido',
         totalReports: workerReports.length,
         completedReports: completedReports.length,
         pendingReports: pendingReports.length,
@@ -227,7 +226,7 @@ export class StatisticsUtilsService {
     });
     
     // Filtrar prioridades que tengan al menos un reporte
-    const labelsWithCounts = priorities.filter(priority => 
+    const labelsWithCounts = priorities.filter(priority =>
       (priorityCounts.get(priority) || 0) > 0
     );
     
@@ -242,6 +241,7 @@ export class StatisticsUtilsService {
       'rgba(16, 185, 129, 0.8)', // Baja - Verde
       'rgba(209, 213, 219, 0.8)' // Sin prioridad - Gris
     ];
+    
     const borderColors = [
       'rgba(239, 68, 68, 1)',
       'rgba(245, 158, 11, 1)',
@@ -266,16 +266,28 @@ export class StatisticsUtilsService {
   prepareDepartmentChartData(reports: Reporte[], workers: Usuario[], colorsPalette: any): ChartData {
     // Crear mapa de ID de trabajador a departamento
     const workerToDepartment = new Map<string, string>();
-    
     workers.forEach(worker => {
-      workerToDepartment.set(worker.IdUsuario, worker.Departamento || 'Desconocido');
+      const department = worker.Departamento || worker.IdDepartamento || 'Desconocido';
+      workerToDepartment.set(worker.IdUsuario, department);
     });
     
     // Agrupar reportes por departamento
     const departmentReports = new Map<string, Reporte[]>();
     
     reports.forEach(report => {
-      const department = workerToDepartment.get(report.IdUsuario) || 'Desconocido';
+      // Intentar obtener departamento del reporte directamente primero
+      let department = report.departamento || '';
+      
+      // Si no hay departamento en el reporte, intentar obtenerlo del trabajador
+      if (!department && report.IdUsuario) {
+        department = workerToDepartment.get(report.IdUsuario) || 'Desconocido';
+      }
+      
+      // Si aún no hay departamento, usar 'Desconocido'
+      if (!department) {
+        department = 'Desconocido';
+      }
+      
       if (!departmentReports.has(department)) {
         departmentReports.set(department, []);
       }
@@ -312,14 +324,15 @@ export class StatisticsUtilsService {
   /**
    * Preparar datos para gráfico de empresas
    */
-  prepareCompanyChartData(reports: Reporte[], companies: Map<string, string>, colorsPalette: any): ChartData {
+  prepareCompanyChartData(reports: Reporte[], companyMap: Map<string, string>, colorsPalette: any): ChartData {
     // Agrupar reportes por empresa
     const companyReports = new Map<string, Reporte[]>();
     
     // Agrupar reportes
     reports.forEach(report => {
       const companyId = report.IdEmpresa;
-      const companyName = companies.get(companyId) || 'Desconocida';
+      const companyName = companyMap.get(companyId) || 'Desconocida';
+      
       if (!companyReports.has(companyName)) {
         companyReports.set(companyName, []);
       }
@@ -348,6 +361,49 @@ export class StatisticsUtilsService {
         data: data,
         backgroundColor: backgroundColors,
         borderColor: borderColors,
+        borderWidth: 1
+      }]
+    };
+  }
+
+  /**
+   * Preparar datos para gráfico de eficiencia de trabajadores
+   */
+  prepareEfficiencyChartData(workerStats: WorkerStats[]): ChartData {
+    // Limitar a los 5 trabajadores con más reportes
+    const topWorkers = workerStats
+      .filter(worker => worker.totalReports > 0)
+      .sort((a, b) => b.totalReports - a.totalReports)
+      .slice(0, 5);
+      
+    if (topWorkers.length === 0) {
+      return {
+        labels: ['No hay datos'],
+        datasets: [{
+          label: 'Eficiencia',
+          data: [0],
+          backgroundColor: 'rgba(209, 213, 219, 0.8)',
+          borderWidth: 1
+        }]
+      };
+    }
+    
+    const labels = topWorkers.map(worker => worker.name);
+    const data = topWorkers.map(worker => worker.efficiency);
+    
+    // Determinar colores basados en valor de eficiencia
+    const backgroundColors = data.map(value => {
+      if (value >= 80) return 'rgba(16, 185, 129, 0.8)'; // Verde para alta eficiencia
+      if (value >= 50) return 'rgba(245, 158, 11, 0.8)'; // Naranja para eficiencia media
+      return 'rgba(239, 68, 68, 0.8)'; // Rojo para baja eficiencia
+    });
+    
+    return {
+      labels: labels,
+      datasets: [{
+        label: 'Eficiencia',
+        data: data,
+        backgroundColor: backgroundColors,
         borderWidth: 1
       }]
     };
@@ -387,21 +443,27 @@ export class StatisticsUtilsService {
     
     // Contar reportes por categoría de tiempo
     completedReports.forEach(report => {
-      const startDate = report.fecha instanceof Date ? report.fecha : new Date(report.fecha);
-      const endDate = report.fechaCompletado instanceof Date ? 
-        report.fechaCompletado : new Date(report.fechaCompletado);
-      
-      if (startDate && endDate && startDate.getTime() <= endDate.getTime()) {
-        const diffMs = endDate.getTime() - startDate.getTime();
-        const diffHours = diffMs / (1000 * 60 * 60);
-        
-        // Asignar a la categoría correspondiente
-        for (const category of timeCategories) {
-          if (diffHours <= category.max) {
-            category.count++;
-            break;
+      try {
+        const startDate = report.fecha instanceof Date ? report.fecha : new Date(report.fecha);
+        const endDate = report.fechaCompletado instanceof Date ? 
+          report.fechaCompletado : new Date(report.fechaCompletado);
+          
+        if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && 
+            startDate.getTime() <= endDate.getTime()) {
+          const diffMs = endDate.getTime() - startDate.getTime();
+          const diffHours = diffMs / (1000 * 60 * 60);
+          
+          // Asignar a la categoría correspondiente
+          for (const category of timeCategories) {
+            if (diffHours <= category.max) {
+              category.count++;
+              break;
+            }
           }
         }
+      } catch (error) {
+        console.error('Error al calcular tiempo de reporte:', error);
+        // Continuar con el siguiente reporte
       }
     });
     
@@ -416,49 +478,6 @@ export class StatisticsUtilsService {
         data: data,
         backgroundColor: 'rgba(59, 130, 246, 0.8)',
         borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 1
-      }]
-    };
-  }
-
-  /**
-   * Preparar datos para gráfico de eficiencia
-   */
-  prepareEfficiencyChartData(workerStats: WorkerStats[]): ChartData {
-    // Limitar a los 5 trabajadores con más reportes
-    const topWorkers = workerStats
-      .filter(worker => worker.totalReports > 0)
-      .sort((a, b) => b.totalReports - a.totalReports)
-      .slice(0, 5);
-    
-    if (topWorkers.length === 0) {
-      return {
-        labels: ['No hay datos'],
-        datasets: [{
-          label: 'Eficiencia',
-          data: [0],
-          backgroundColor: 'rgba(209, 213, 219, 0.8)',
-          borderWidth: 1
-        }]
-      };
-    }
-    
-    const labels = topWorkers.map(worker => worker.name);
-    const data = topWorkers.map(worker => worker.efficiency);
-    
-    // Determinar colores basados en valor de eficiencia
-    const backgroundColors = data.map(value => {
-      if (value >= 80) return 'rgba(16, 185, 129, 0.8)'; // Verde para alta eficiencia
-      if (value >= 50) return 'rgba(245, 158, 11, 0.8)'; // Naranja para eficiencia media
-      return 'rgba(239, 68, 68, 0.8)'; // Rojo para baja eficiencia
-    });
-    
-    return {
-      labels: labels,
-      datasets: [{
-        label: 'Eficiencia',
-        data: data,
-        backgroundColor: backgroundColors,
         borderWidth: 1
       }]
     };
@@ -488,7 +507,7 @@ export class StatisticsUtilsService {
    * Formatear fecha para elemento input
    */
   formatDateForInput(date: Date): string {
-    if (!date || !(date instanceof Date)) {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
       date = new Date();
     }
     
@@ -508,7 +527,6 @@ export class StatisticsUtilsService {
     end.setHours(23, 59, 59, 999);
     
     let start = new Date();
-    
     switch (period) {
       case 'week':
         start.setDate(start.getDate() - 7);
@@ -525,12 +543,18 @@ export class StatisticsUtilsService {
       case 'custom':
         // Usar fechas personalizadas seleccionadas por usuario
         if (startDate) {
-          start = new Date(startDate);
+          const customStart = new Date(startDate);
+          if (!isNaN(customStart.getTime())) {
+            start = customStart;
+          }
         }
         if (endDate) {
-          end = new Date(endDate);
-          // Asegurar que sea fin del día
-          end.setHours(23, 59, 59, 999);
+          const customEnd = new Date(endDate);
+          if (!isNaN(customEnd.getTime())) {
+            end = customEnd;
+            // Asegurar que sea fin del día
+            end.setHours(23, 59, 59, 999);
+          }
         }
         break;
     }
@@ -539,64 +563,5 @@ export class StatisticsUtilsService {
     start.setHours(0, 0, 0, 0);
     
     return { start, end };
-  }
-
-  /**
-   * Validar y procesar fechas para asegurar coherencia
-   */
-  validateDateRange(startDate: string, endDate: string): { start: Date, end: Date } | null {
-    try {
-      let start = startDate ? new Date(startDate) : new Date();
-      let end = endDate ? new Date(endDate) : new Date();
-      
-      // Validar fechas
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        console.error('Fechas inválidas:', { startDate, endDate });
-        return null;
-      }
-      
-      // Asegurar que start esté antes que end
-      if (start > end) {
-        const temp = start;
-        start = end;
-        end = temp;
-      }
-      
-      // Asegurar que start sea inicio del día y end sea fin del día
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      
-      return { start, end };
-    } catch (error) {
-      console.error('Error al validar rango de fechas:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Analizar rápidamente datos para detectar valores extremos
-   */
-  analyzeDataDistribution(data: number[]): { min: number, max: number, avg: number, median: number } {
-    if (!data || data.length === 0) {
-      return { min: 0, max: 0, avg: 0, median: 0 };
-    }
-    
-    // Ordenar datos para cálculos
-    const sortedData = [...data].sort((a, b) => a - b);
-    
-    const min = sortedData[0];
-    const max = sortedData[sortedData.length - 1];
-    
-    // Calcular promedio
-    const sum = sortedData.reduce((acc, val) => acc + val, 0);
-    const avg = sum / sortedData.length;
-    
-    // Calcular mediana
-    const midIndex = Math.floor(sortedData.length / 2);
-    const median = sortedData.length % 2 === 0
-      ? (sortedData[midIndex - 1] + sortedData[midIndex]) / 2
-      : sortedData[midIndex];
-    
-    return { min, max, avg, median };
   }
 }

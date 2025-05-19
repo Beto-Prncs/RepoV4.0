@@ -1,13 +1,12 @@
-// statistics.service.ts - Versión optimizada
 import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, query, where, getDocs, orderBy, Timestamp, documentId } from '@angular/fire/firestore';
-import { BehaviorSubject, Observable, of, from, forkJoin, combineLatest } from 'rxjs';
-import { map, catchError, tap, switchMap, take } from 'rxjs/operators';
+import { Observable, of, from, forkJoin } from 'rxjs';
+import { map, catchError, tap, take } from 'rxjs/operators';
 import { Reporte, Usuario, Empresa } from '../../models/interfaces';
 import { AuthService } from '../auth.service';
 
 /**
- * Servicio mejorado para manejar estadísticas con optimizaciones de rendimiento
+ * Servicio mejorado para manejar estadísticas con normalización de datos
  */
 @Injectable({
   providedIn: 'root'
@@ -15,36 +14,27 @@ import { AuthService } from '../auth.service';
 export class StatisticsService {
   private firestore: Firestore = inject(Firestore);
   private authService: AuthService = inject(AuthService);
-  
-  // Cache para mejorar el rendimiento
-  private companiesCache = new Map<string, Empresa>();
-  private workersCache = new Map<string, Usuario>();
-  private reportsCache = new Map<string, Reporte[]>();
+
+  constructor() { }
 
   /**
-   * Obtener todas las empresas desde Firestore con caché
+   * Obtener empresas desde Firestore
    */
   getCompanies(): Observable<Empresa[]> {
-    // Verificar caché primero
-    if (this.companiesCache.size > 0) {
-      const cachedCompanies = Array.from(this.companiesCache.values());
-      console.log('Usando empresas en caché:', cachedCompanies.length);
-      return of(cachedCompanies);
-    }
-
     console.log('Obteniendo empresas desde Firestore');
     const companiesRef = collection(this.firestore, 'Empresa');
     return from(getDocs(companiesRef)).pipe(
       map(snapshot => {
         const companies: Empresa[] = [];
         snapshot.forEach(doc => {
-          const empresa = {
+          // Normalizar datos de empresa
+          const empresa = this.normalizeCompany({
             IdEmpresa: doc.id,
             ...doc.data() as Omit<Empresa, 'IdEmpresa'>
-          };
+          });
           companies.push(empresa);
-          this.companiesCache.set(doc.id, empresa);
         });
+        console.log(`Obtenidas ${companies.length} empresas`);
         return companies;
       }),
       catchError(error => {
@@ -55,12 +45,10 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener trabajadores según el nivel de administrador y permisos
-   * Mejorado con caché y manejo eficiente de promesas
+   * Obtener trabajadores filtrados según nivel de administrador
    */
   getFilteredWorkers(userId: string, adminLevel: string): Observable<Usuario[]> {
     console.log(`Obteniendo trabajadores filtrados para admin nivel ${adminLevel}`);
-    
     if (adminLevel === '3') {
       return this.getAdminLevel3Workers(userId);
     } else if (adminLevel === '2') {
@@ -71,24 +59,22 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener todos los trabajadores directamente
+   * Obtener todos los trabajadores
    */
   private getAllWorkers(): Observable<Usuario[]> {
     console.log('Obteniendo todos los trabajadores');
     const workersRef = collection(this.firestore, 'Usuario');
     const q = query(workersRef, where('Rol', '==', 'worker'));
-    
     return from(getDocs(q)).pipe(
       map(snapshot => {
         const workers: Usuario[] = [];
         snapshot.forEach(doc => {
-          const worker = {
+          // Normalizar datos de trabajador
+          const worker = this.normalizeUser({
             IdUsuario: doc.id,
             ...doc.data() as Omit<Usuario, 'IdUsuario'>
-          };
+          });
           workers.push(worker);
-          // Actualizar caché de trabajadores
-          this.workersCache.set(doc.id, worker);
         });
         console.log(`Encontrados ${workers.length} trabajadores`);
         return workers;
@@ -101,13 +87,11 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener trabajadores para admin nivel 3 (todos los trabajadores en jerarquía)
-   * Versión optimizada con manejo de promesas en paralelo
+   * Obtener trabajadores para admin nivel 3
    */
   private getAdminLevel3Workers(adminId: string): Observable<Usuario[]> {
     return new Observable<Usuario[]>(observer => {
       console.log('Obteniendo trabajadores para admin nivel 3:', adminId);
-      
       const allWorkers = new Map<string, Usuario>();
       
       // Paso 1: Obtener todos los administradores nivel 2 creados por este admin
@@ -120,10 +104,10 @@ export class StatisticsService {
             .then(directWorkers => {
               console.log('Trabajadores directos encontrados:', directWorkers.length);
               
-              // Añadir trabajadores directos al mapa
+              // Añadir trabajadores directos normalizados al mapa
               directWorkers.forEach(worker => {
-                allWorkers.set(worker.IdUsuario, worker);
-                this.workersCache.set(worker.IdUsuario, worker);
+                const normalizedWorker = this.normalizeUser(worker);
+                allWorkers.set(normalizedWorker.IdUsuario, normalizedWorker);
               });
               
               // Crear un array de promesas para obtener todos los trabajadores de los admins nivel 2
@@ -137,9 +121,9 @@ export class StatisticsService {
                   // Procesar los resultados
                   workersArrays.forEach(workers => {
                     workers.forEach(worker => {
-                      if (!allWorkers.has(worker.IdUsuario)) {
-                        allWorkers.set(worker.IdUsuario, worker);
-                        this.workersCache.set(worker.IdUsuario, worker);
+                      const normalizedWorker = this.normalizeUser(worker);
+                      if (!allWorkers.has(normalizedWorker.IdUsuario)) {
+                        allWorkers.set(normalizedWorker.IdUsuario, normalizedWorker);
                       }
                     });
                   });
@@ -161,7 +145,6 @@ export class StatisticsService {
 
   /**
    * Obtener trabajadores para admin nivel 2
-   * Optimizado para reducir consultas redundantes
    */
   private getAdminLevel2Workers(adminId: string): Observable<Usuario[]> {
     return new Observable<Usuario[]>(observer => {
@@ -184,12 +167,12 @@ export class StatisticsService {
             .then(directWorkers => {
               console.log('Trabajadores directos encontrados:', directWorkers.length);
               
-              // Almacenar en caché
-              directWorkers.forEach(worker => this.workersCache.set(worker.IdUsuario, worker));
+              // Normalizar trabajadores
+              const normalizedDirectWorkers = directWorkers.map(worker => this.normalizeUser(worker));
               
               // Si no hay creador, solo devolver trabajadores directos
               if (!createdBy) {
-                observer.next(directWorkers);
+                observer.next(normalizedDirectWorkers);
                 observer.complete();
                 return;
               }
@@ -199,13 +182,17 @@ export class StatisticsService {
                 .then(creatorWorkers => {
                   console.log('Trabajadores del creador encontrados:', creatorWorkers.length);
                   
-                  // Actualizar caché
-                  creatorWorkers.forEach(worker => this.workersCache.set(worker.IdUsuario, worker));
+                  // Normalizar trabajadores del creador
+                  const normalizedCreatorWorkers = creatorWorkers.map(worker => this.normalizeUser(worker));
                   
                   // Combinar trabajadores evitando duplicados usando un Map
                   const combinedWorkersMap = new Map<string, Usuario>();
-                  directWorkers.forEach(worker => combinedWorkersMap.set(worker.IdUsuario, worker));
-                  creatorWorkers.forEach(worker => {
+                  
+                  normalizedDirectWorkers.forEach(worker => 
+                    combinedWorkersMap.set(worker.IdUsuario, worker)
+                  );
+                  
+                  normalizedCreatorWorkers.forEach(worker => {
                     if (!combinedWorkersMap.has(worker.IdUsuario)) {
                       combinedWorkersMap.set(worker.IdUsuario, worker);
                     }
@@ -218,7 +205,7 @@ export class StatisticsService {
                 })
                 .catch(error => {
                   console.error('Error al obtener trabajadores del creador:', error);
-                  observer.next(directWorkers); // Fallback a trabajadores directos
+                  observer.next(normalizedDirectWorkers); // Fallback a trabajadores directos
                   observer.complete();
                 });
             })
@@ -237,8 +224,7 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener administradores creados por un administrador específico con un nivel específico
-   * Optimizado para mejor rendimiento
+   * Obtener administradores creados por un administrador específico
    */
   async getAdminsCreatedBy(creatorId: string, level: string): Promise<Usuario[]> {
     console.log(`Buscando admins nivel ${level} creados por ${creatorId}`);
@@ -256,12 +242,11 @@ export class StatisticsService {
       const admins: Usuario[] = [];
       
       snapshot.forEach(doc => {
-        const admin = {
+        const admin = this.normalizeUser({
           IdUsuario: doc.id,
           ...doc.data() as Omit<Usuario, 'IdUsuario'>
-        };
+        });
         admins.push(admin);
-        this.workersCache.set(doc.id, admin); // Guardar en caché
       });
       
       console.log(`Encontrados ${admins.length} admins nivel ${level}`);
@@ -273,8 +258,7 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener reportes basados en parámetros de filtrado
-   * Optimizado para consultas más eficientes y uso de caché
+   * Obtener reportes filtrados según parámetros
    */
   getFilteredReports(
     userId: string,
@@ -285,18 +269,9 @@ export class StatisticsService {
     selectedWorker: string = ''
   ): Observable<Reporte[]> {
     console.log('Obteniendo reportes filtrados con parámetros:', {
-      userId, adminLevel, dateRange, 
+      userId, adminLevel, dateRange,
       selectedCompany, selectedDepartment, selectedWorker
     });
-    
-    // Creamos una clave de caché basada en los parámetros
-    const cacheKey = `${userId}_${adminLevel}_${dateRange.start.getTime()}_${dateRange.end.getTime()}_${selectedCompany}_${selectedDepartment}_${selectedWorker}`;
-    
-    // Verificar si tenemos los datos en caché
-    if (this.reportsCache.has(cacheKey)) {
-      console.log('Usando reportes en caché');
-      return of(this.reportsCache.get(cacheKey) || []);
-    }
     
     // Si hay filtros específicos, aplicarlos primero
     let reportsObservable: Observable<Reporte[]>;
@@ -318,11 +293,9 @@ export class StatisticsService {
       }
     }
     
-    // Procesar los reportes y guardarlos en caché
     return reportsObservable.pipe(
       tap(reports => {
         console.log(`Obtenidos ${reports.length} reportes`);
-        this.reportsCache.set(cacheKey, reports);
       })
     );
   }
@@ -350,7 +323,7 @@ export class StatisticsService {
             ...doc.data()
           });
         });
-        return this.processReportDates(reports);
+        return this.normalizeReports(reports);
       }),
       catchError(error => {
         console.error('Error al obtener reportes por trabajador:', error);
@@ -360,7 +333,7 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener reportes por departamento - Optimizado
+   * Obtener reportes por departamento
    */
   getReportsByDepartment(department: string, dateRange: { start: Date, end: Date }): Observable<Reporte[]> {
     console.log('Obteniendo reportes para departamento:', department);
@@ -385,6 +358,7 @@ export class StatisticsService {
         // Crear una consulta para cada chunk
         chunks.forEach((chunk, index) => {
           console.log(`Procesando chunk ${index + 1}/${chunks.length} con ${chunk.length} trabajadores`);
+          
           const q = query(
             collection(this.firestore, 'Reportes'),
             where('IdUsuario', 'in', chunk),
@@ -400,7 +374,7 @@ export class StatisticsService {
                 ...doc.data()
               });
             });
-            return this.processReportDates(reports);
+            return this.normalizeReports(reports);
           });
           
           reportPromises.push(promise);
@@ -424,25 +398,46 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener trabajadores por departamento - Optimizado
+   * Obtener trabajadores por departamento
    */
   private async getDepartmentWorkers(department: string): Promise<Usuario[]> {
     console.log('Obteniendo trabajadores del departamento:', department);
     
     try {
+      // Buscar por ambos campos: Departamento y departamento (en caso de inconsistencia)
       const workersRef = collection(this.firestore, 'Usuario');
-      const q = query(workersRef, where('Departamento', '==', department));
-      const snapshot = await getDocs(q);
+      const q = query(
+        workersRef, 
+        where('Departamento', '==', department)
+      );
       
+      const snapshot = await getDocs(q);
       const workers: Usuario[] = [];
+      
       snapshot.forEach(doc => {
-        const worker = {
+        const worker = this.normalizeUser({
           IdUsuario: doc.id,
           ...doc.data() as Omit<Usuario, 'IdUsuario'>
-        };
+        });
         workers.push(worker);
-        this.workersCache.set(doc.id, worker);
       });
+      
+      // Si no encontramos trabajadores, intentar con el otro caso de atributo
+      if (workers.length === 0) {
+        const q2 = query(
+          workersRef, 
+          where('departamento', '==', department)
+        );
+        
+        const snapshot2 = await getDocs(q2);
+        snapshot2.forEach(doc => {
+          const worker = this.normalizeUser({
+            IdUsuario: doc.id,
+            ...doc.data() as Omit<Usuario, 'IdUsuario'>
+          });
+          workers.push(worker);
+        });
+      }
       
       console.log(`Encontrados ${workers.length} trabajadores en el departamento`);
       return workers;
@@ -475,7 +470,7 @@ export class StatisticsService {
             ...doc.data()
           });
         });
-        const processedReports = this.processReportDates(reports);
+        const processedReports = this.normalizeReports(reports);
         console.log(`Encontrados ${processedReports.length} reportes para la empresa`);
         return processedReports;
       }),
@@ -487,8 +482,7 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener reportes para admin nivel 3 (todos los reportes en jerarquía)
-   * Versión optimizada con mejor manejo de promesas
+   * Obtener reportes para admin nivel 3
    */
   getReportsByAdminLevel3(adminId: string, dateRange: { start: Date, end: Date }): Observable<Reporte[]> {
     console.log('Obteniendo reportes para admin nivel 3:', adminId);
@@ -514,6 +508,7 @@ export class StatisticsService {
           // Crear consultas para cada chunk
           chunks.forEach((chunk, index) => {
             console.log(`Procesando chunk ${index + 1}/${chunks.length}`);
+            
             const q = query(
               collection(this.firestore, 'Reportes'),
               where('IdUsuario', 'in', chunk),
@@ -529,7 +524,7 @@ export class StatisticsService {
                   ...doc.data()
                 });
               });
-              return this.processReportDates(reports);
+              return this.normalizeReports(reports);
             });
             
             reportPromises.push(promise);
@@ -555,7 +550,7 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener reportes para admin nivel 2 (reportes de trabajadores del admin y su creador)
+   * Obtener reportes para admin nivel 2
    */
   getReportsByAdminLevel2(adminId: string, dateRange: { start: Date, end: Date }): Observable<Reporte[]> {
     console.log('Obteniendo reportes para admin nivel 2:', adminId);
@@ -581,6 +576,7 @@ export class StatisticsService {
           // Crear consultas para cada chunk
           chunks.forEach((chunk, index) => {
             console.log(`Procesando chunk ${index + 1}/${chunks.length}`);
+            
             const q = query(
               collection(this.firestore, 'Reportes'),
               where('IdUsuario', 'in', chunk),
@@ -596,7 +592,7 @@ export class StatisticsService {
                   ...doc.data()
                 });
               });
-              return this.processReportDates(reports);
+              return this.normalizeReports(reports);
             });
             
             reportPromises.push(promise);
@@ -622,7 +618,7 @@ export class StatisticsService {
   }
 
   /**
-   * Obtener todos los reportes (sin filtrado)
+   * Obtener todos los reportes
    */
   getAllReports(dateRange: { start: Date, end: Date }): Observable<Reporte[]> {
     console.log('Obteniendo todos los reportes en el rango de fechas');
@@ -631,8 +627,7 @@ export class StatisticsService {
     const q = query(
       reportsRef,
       where('fecha', '>=', dateRange.start),
-      where('fecha', '<=', dateRange.end),
-      orderBy('fecha', 'desc') // Ordenar por fecha descendente para optimizar
+      where('fecha', '<=', dateRange.end)
     );
     
     return from(getDocs(q)).pipe(
@@ -644,7 +639,7 @@ export class StatisticsService {
             ...doc.data()
           });
         });
-        const processedReports = this.processReportDates(reports);
+        const processedReports = this.normalizeReports(reports);
         console.log(`Total reportes encontrados: ${processedReports.length}`);
         return processedReports;
       }),
@@ -656,37 +651,116 @@ export class StatisticsService {
   }
 
   /**
-   * Procesar fechas de reportes para convertir timestamps de Firestore a objetos Date
+   * Normalizar reportes para manejar inconsistencias en los atributos
    */
-  private processReportDates(reports: any[]): Reporte[] {
-    return reports.map(report => ({
-      ...report,
-      fecha: this.convertToDate(report.fecha),
-      fechaCompletado: report.fechaCompletado ? this.convertToDate(report.fechaCompletado) : undefined,
-      fechaActualizacion: report.fechaActualizacion ? this.convertToDate(report.fechaActualizacion) : undefined
-    }));
+  private normalizeReports(reports: any[]): Reporte[] {
+    return reports.map(report => {
+      // Asegurar que todos los campos necesarios existan
+      const normalizedReport: Reporte = {
+        IdReporte: report.IdReporte || '',
+        IdEmpresa: report.IdEmpresa || '',
+        IdUsuario: report.IdUsuario || '',
+        Tipo_Trabajo: report.Tipo_Trabajo || '',
+        // Gestionar la inconsistencia del campo departamento
+        departamento: report.departamento || report.Departamento || '',
+        estado: report.estado || 'Pendiente',
+        fecha: this.convertToDate(report.fecha) || new Date(),
+        fechaActualizacion: this.convertToDate(report.fechaActualizacion) || new Date(),
+        jobDescription: report.jobDescription || '',
+        location: report.location || '',
+        priority: report.priority || 'Media'
+      };
+
+      // Añadir campos que solo están presentes en reportes completados
+      if (report.estado === 'Completado') {
+        normalizedReport.fechaCompletado = this.convertToDate(report.fechaCompletado);
+        normalizedReport.evidenceImages = report.evidenceImages || [];
+        normalizedReport.firmaDigital = report.firmaDigital || '';
+        normalizedReport.materialesUtilizados = report.materialesUtilizados || '';
+        normalizedReport.descripcionCompletado = report.descripcionCompletado || '';
+        normalizedReport.reporteGenerado = report.reporteGenerado || false;
+      }
+
+      return normalizedReport;
+    });
+  }
+
+  /**
+   * Normalizar usuario para manejar inconsistencias en los atributos
+   */
+  private normalizeUser(user: any): Usuario {
+    // Asegurar que todos los campos necesarios existan
+    return {
+      IdUsuario: user.IdUsuario || '',
+      Correo: user.Correo || '',
+      Nombre: user.Nombre || '',
+      Username: user.Username || '',
+      Password: user.Password || '',
+      Foto_Perfil: user.Foto_Perfil || '',
+      Telefono: user.Telefono || '',
+      Rol: user.Rol || 'worker',
+      // Manejar la inconsistencia del campo Departamento
+      Departamento: user.Departamento || user.departamento || '',
+      IdDepartamento: user.IdDepartamento || user.Departamento || '',
+      NivelAdmin: user.NivelAdmin || '',
+      createdBy: user.createdBy || ''
+    };
+  }
+
+  /**
+   * Normalizar empresa para manejar posibles inconsistencias
+   */
+  private normalizeCompany(company: any): Empresa {
+    return {
+      IdEmpresa: company.IdEmpresa || '',
+      Nombre: company.Nombre || '',
+      Correo: company.Correo || '',
+      Direccion: company.Direccion || '',
+      Sector: company.Sector || ''
+    };
   }
 
   /**
    * Convertir timestamp de Firestore a Date
    */
   private convertToDate(timestamp: any): Date {
-    if (timestamp instanceof Timestamp) {
-      return timestamp.toDate();
-    } else if (timestamp && typeof timestamp.toDate === 'function') {
-      return timestamp.toDate();
-    } else if (timestamp instanceof Date) {
-      return timestamp;
-    } else if (typeof timestamp === 'string') {
-      return new Date(timestamp);
-    } else if (timestamp && timestamp.seconds) {
-      return new Date(timestamp.seconds * 1000 + (timestamp.nanoseconds || 0) / 1000000);
+    if (!timestamp) return new Date();
+    
+    try {
+      // Si es un Timestamp de Firestore
+      if (timestamp instanceof Timestamp || (timestamp && typeof timestamp.toDate === 'function')) {
+        return timestamp.toDate();
+      }
+      
+      // Si ya es un Date
+      if (timestamp instanceof Date) {
+        return timestamp;
+      }
+      
+      // Si es un número (segundos o milisegundos)
+      if (typeof timestamp === 'number') {
+        return timestamp < 100000000000 ? new Date(timestamp * 1000) : new Date(timestamp);
+      }
+      
+      // Si es un objeto con seconds y nanoseconds (formato Firestore)
+      if (timestamp && timestamp.seconds && typeof timestamp.seconds === 'number') {
+        return new Date(timestamp.seconds * 1000 + (timestamp.nanoseconds || 0) / 1000000);
+      }
+      
+      // Si es una cadena, intentar parsearla
+      if (typeof timestamp === 'string') {
+        return new Date(timestamp);
+      }
+      
+      return new Date();
+    } catch (error) {
+      console.error('Error al convertir fecha:', error, timestamp);
+      return new Date();
     }
-    return new Date();
   }
 
   /**
-   * Método auxiliar para dividir arrays en chunks del tamaño especificado
+   * Método auxiliar para dividir arrays en chunks
    */
   chunkArray<T>(array: T[], chunkSize: number): T[][] {
     const chunks: T[][] = [];
@@ -694,15 +768,5 @@ export class StatisticsService {
       chunks.push(array.slice(i, i + chunkSize));
     }
     return chunks;
-  }
-  
-  /**
-   * Limpiar caché para pruebas o cuando se necesite forzar recarga
-   */
-  clearCache(): void {
-    this.companiesCache.clear();
-    this.workersCache.clear();
-    this.reportsCache.clear();
-    console.log('Caché de estadísticas limpiado');
   }
 }

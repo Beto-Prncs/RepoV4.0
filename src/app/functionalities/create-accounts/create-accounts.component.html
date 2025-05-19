@@ -302,10 +302,10 @@
                     class="w-full md:w-2/3 px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
                     [ngClass]="{'border-red-300 bg-red-50': departmentInput.invalid && departmentInput.touched}"
                   >
-                  <option value="">Seleccione un departamento</option>
-                  <option *ngFor="let dept of departments$ | async" [value]="dept.IdDepartamento">
-                    {{dept.IdDepartamento === 'otro' ? 'Otro departamento' : dept.Nombre}}
-                  </option>
+                    <option value="">Seleccione un departamento</option>
+                    <option *ngFor="let dept of departments" [value]="dept">
+                      {{dept === 'otro' ? 'Otro departamento' : dept}}
+                    </option>
                   </select>
                   
                   <!-- Campo para departamento personalizado con transición suave -->

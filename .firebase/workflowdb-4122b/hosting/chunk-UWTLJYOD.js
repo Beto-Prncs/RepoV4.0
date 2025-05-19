@@ -1,2 +1,0 @@
-import{Mb as i,bb as n,yb as o,zb as m}from"./chunk-GCXAMRXK.js";import"./chunk-OIKEWKHE.js";var d=(()=>{class e{static \u0275fac=function(t){return new(t||e)};static \u0275cmp=n({type:e,selectors:[["app-admin-completed-tasks"]],decls:2,vars:0,template:function(t,a){t&1&&(o(0,"p"),i(1,"admin-completed-tasks works!"),m())},encapsulation:2})}return e})();export{d as AdminCompletedTasksComponent};
-//# sourceMappingURL=chunk-UWTLJYOD.js.map

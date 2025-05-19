@@ -16,6 +16,7 @@ export interface Usuario {
   Foto_Perfil?: string;
   Correo?: string;
   Departamento?: string;
+  IdDepartamento?: string;
   createdBy?: string;
 }
 

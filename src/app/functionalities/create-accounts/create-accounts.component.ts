@@ -1,25 +1,21 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Auth } from '@angular/fire/auth';
+import { Auth, createUserWithEmailAndPassword, sendEmailVerification } from '@angular/fire/auth';
 import {
   Firestore,
   doc,
+  setDoc,
   collection,
   getDocs,
   query,
   where,
   getDoc
 } from '@angular/fire/firestore';
-import { Usuario, Departamento } from '../../models/interfaces';
-import { DepartmentService } from '../../services/department.service';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject } from 'rxjs';
-import { HttpClientModule } from '@angular/common/http';
-import { UserService } from '../../services/auxiliar-services/user.service';
-import { EmailSenderService } from '../../services/auxiliar-services/email-sender.service';
-import { SessionHelperService } from '../../services/auxiliar-services/session-helper.service';
+// Importar funciones para envío de correo
+import { getFunctions, httpsCallable } from '@angular/fire/functions';
+import { Usuario } from '../../models/interfaces';
 
 interface AccountData {
   firstName: string;
@@ -44,22 +40,17 @@ interface Notification {
 @Component({
   selector: 'app-create-accounts',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './create-accounts.component.html',
   styleUrls: [
-    './create-accounts.component.scss',
-    './create-accounts-animations.css'
+    './create-accounts.component.scss'
   ]
 })
 export class CreateAccountsComponent implements OnInit {
   private auth: Auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
   private router: Router = inject(Router);
-  private departmentService: DepartmentService = inject(DepartmentService);
-  private userService: UserService = inject(UserService);
-  private emailSenderService: EmailSenderService = inject(EmailSenderService);
-  private sessionHelper: SessionHelperService = inject(SessionHelperService);
-  private destroyRef: DestroyRef = inject(DestroyRef);
+  private functions = getFunctions();
 
   selectedType: 'worker' | 'admin' | null = null;
   showPassword: boolean = false;
@@ -71,10 +62,19 @@ export class CreateAccountsComponent implements OnInit {
   notifications: Notification[] = [];
   isAdminLevelRestricted = false;
   currentAdminLevel = '';
+
   private notificationId = 0;
 
-  departments$ = new BehaviorSubject<Departamento[]>([]);
+  departments: string[] = [
+    'sistemas',
+    'diseño',
+    'marketing',
+    'ventas',
+    'otro'
+  ];
+
   adminLevels: string[] = ['1', '2', '3', 'otro'];
+
   accountData: AccountData = {
     firstName: '',
     lastName: '',
@@ -91,7 +91,6 @@ export class CreateAccountsComponent implements OnInit {
   async ngOnInit() {
     await this.loadInitialData();
     await this.checkAdminRestrictions();
-    this.loadDepartments();
   }
 
   private async loadInitialData() {
@@ -100,30 +99,6 @@ export class CreateAccountsComponent implements OnInit {
     } catch (error) {
       console.error('Error loading initial data:', error);
     }
-  }
-
-  private loadDepartments() {
-    this.departmentService.getDepartments().pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (departments) => {
-        // Añadir la opción "otro" al final de los departamentos
-        const departmentsWithOther = [
-          ...departments,
-          {
-            IdDepartamento: 'otro',
-            Nombre: 'Otro departamento',
-            id: 'otro',
-            name: 'Otro departamento'
-          }
-        ];
-        this.departments$.next(departmentsWithOther);
-      },
-      error: (error) => {
-        console.error('Error cargando departamentos:', error);
-        this.showNotification('error', 'Error', 'No se pudieron cargar los departamentos');
-      }
-    });
   }
 
   private async loadExistingUsernames() {
@@ -147,9 +122,11 @@ export class CreateAccountsComponent implements OnInit {
           const userData = userDoc.data();
           if (userData && userData['Rol'] === 'admin') {
             this.currentAdminLevel = userData['NivelAdmin'];
+            
             // Si es nivel 2 o 3, restringir las opciones
             if (userData['NivelAdmin'] === '2' || userData['NivelAdmin'] === '3') {
               this.isAdminLevelRestricted = true;
+              
               // Si el usuario selecciona tipo admin, establecer nivel 2 por defecto
               if (this.selectedType === 'admin') {
                 this.accountData.adminLevel = '2';
@@ -184,16 +161,13 @@ export class CreateAccountsComponent implements OnInit {
     this.notifications = this.notifications.filter(n => n.id !== id);
   }
 
-  // Método actualizado para crear usuario sin functions
   async onSubmit(form: NgForm): Promise<void> {
     if (form.invalid || !this.selectedType) return;
-    
     this.formSubmitted = true;
     this.isLoading = true;
-    
     try {
       // Verificar disponibilidad del nombre de usuario
-      if (this.existingUsernames.includes(this.accountData.username)) {
+      if (!(await this.isUsernameAvailable(this.accountData.username))) {
         this.showNotification(
           'error',
           'Error de registro',
@@ -210,20 +184,11 @@ export class CreateAccountsComponent implements OnInit {
         this.showNotification(
           'error',
           'Error de autenticación',
-          'No hay una sesión activa. Por favor, vuelve a iniciar sesión.'
+          'No hay una sesión activa'
         );
         this.isLoading = false;
         this.formSubmitted = false;
-        this.router.navigate(['/login']);
         return;
-      }
-      
-      // Determinar el departamento
-      let departamentoValue = '';
-      if (this.selectedType === 'worker') {
-        departamentoValue = this.accountData.department === 'otro'
-          ? this.accountData.customDepartment || ""
-          : this.accountData.department;
       }
       
       // Determinar el nivel de admin según el usuario que lo crea
@@ -233,33 +198,52 @@ export class CreateAccountsComponent implements OnInit {
         nivelAdmin = '2';
       }
       
-      // Preparar los datos para la creación de usuario
-      const userData = {
-        email: this.accountData.email,
-        password: this.accountData.password,
-        firstName: this.accountData.firstName,
-        lastName: this.accountData.lastName,
-        username: this.accountData.username,
-        phone: this.accountData.phone || "",
-        department: departamentoValue,
-        adminLevel: nivelAdmin,
-        role: this.selectedType
+      // IMPORTANTE: Guardar la contraseña antes de crear el usuario en Authentication
+      const plainPassword = this.accountData.password;
+      
+      // Crear usuario en Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        this.auth,
+        this.accountData.email,
+        plainPassword // Usar la contraseña sin modificar
+      );
+      
+      // Enviar correo de verificación
+      await sendEmailVerification(userCredential.user);
+      
+      // Crear documento de usuario en Firestore con el createdBy y la contraseña en texto plano
+      const userData: Usuario = {
+        IdUsuario: userCredential.user.uid,
+        Nombre: `${this.accountData.firstName} ${this.accountData.lastName}`,
+        Correo: this.accountData.email,
+        Username: this.accountData.username,
+        // IMPORTANTE: Almacenar la contraseña en texto plano para permitir login con username
+        Password: plainPassword, // Guardar la misma contraseña que se usó en Firebase Auth
+        Foto_Perfil: "",
+        Rol: this.selectedType,
+        Telefono: this.accountData.phone || "",
+        Departamento: this.selectedType === 'worker' ?
+          (this.accountData.department === 'otro' ?
+            this.accountData.customDepartment || "" :
+            this.accountData.department) :
+          "",
+        NivelAdmin: this.selectedType === 'admin' ? nivelAdmin : "",
+        createdBy: currentUser.uid // Añadir el ID del creador
       };
       
-      // Llamar a nuestro servicio para crear el usuario sin afectar la sesión actual
-      const result = await this.userService.createUserWithoutSession(userData, currentUser.uid);
+      await setDoc(doc(this.firestore, 'Usuario', userCredential.user.uid), userData);
       
-      if (result && result.success) {
-        this.showNotification(
-          'success',
-          'Cuenta creada',
-          `La cuenta de ${this.selectedType} ha sido creada exitosamente. Se ha enviado un correo con las credenciales.`
-        );
-        form.resetForm();
-        this.resetForm();
-      } else {
-        throw new Error('Error al crear usuario');
-      }
+      // Enviar correo de bienvenida con credenciales
+      await this.sendWelcomeEmail(userData);
+      
+      this.showNotification(
+        'success',
+        'Cuenta creada',
+        `La cuenta de ${this.selectedType} ha sido creada exitosamente. Se ha enviado un correo con las credenciales.`
+      );
+      
+      form.resetForm();
+      this.resetForm();
     } catch (error: any) {
       console.error('Error detallado:', error);
       this.handleError(error);
@@ -269,29 +253,57 @@ export class CreateAccountsComponent implements OnInit {
     }
   }
 
+  // Método para enviar correo de bienvenida
+  private async sendWelcomeEmail(user: Usuario): Promise<void> {
+    try {
+      // Opción 1: Usando Cloud Functions (recomendado)
+      const sendWelcomeEmail = httpsCallable(this.functions, 'sendWelcomeEmail');
+      await sendWelcomeEmail({
+        email: user.Correo,
+        name: user.Nombre,
+        username: user.Username,
+        password: user.Password, // La contraseña se enviará en texto claro solo en el correo
+        role: user.Rol
+      });
+
+      console.log('Correo de bienvenida enviado exitosamente');
+    } catch (error) {
+      console.error('Error enviando correo de bienvenida:', error);
+      // No interrumpir el flujo si el correo falla
+    }
+  }
+
   private handleError(error: any): void {
     let message = 'Error al crear la cuenta';
     let title = 'Error';
-    
-    if (error.code) {
-      if (error.code === 'auth/email-already-in-use') {
-        message = 'Este correo electrónico ya está registrado';
-        title = 'Error de correo';
-      } else if (error.code === 'auth/invalid-email') {
-        message = 'Correo electrónico inválido';
-        title = 'Error de formato';
-      } else if (error.code === 'auth/operation-not-allowed') {
-        message = 'Operación no permitida';
-        title = 'Error de permisos';
-      } else if (error.code === 'auth/weak-password') {
-        message = 'La contraseña es demasiado débil';
-        title = 'Error de contraseña';
-      }
-    } else if (error.message) {
-      message = error.message;
+    if (error.code === 'auth/email-already-in-use') {
+      message = 'Este correo electrónico ya está registrado';
+      title = 'Error de correo';
+    } else if (error.code === 'auth/invalid-email') {
+      message = 'Correo electrónico inválido';
+      title = 'Error de formato';
+    } else if (error.code === 'auth/operation-not-allowed') {
+      message = 'Operación no permitida';
+      title = 'Error de permisos';
+    } else if (error.code === 'auth/weak-password') {
+      message = 'La contraseña es demasiado débil';
+      title = 'Error de contraseña';
     }
-    
     this.showNotification('error', title, message);
+  }
+
+  private async isUsernameAvailable(username: string): Promise<boolean> {
+    try {
+      const userQuery = query(
+        collection(this.firestore, 'Usuario'),
+        where('Username', '==', username)
+      );
+      const querySnapshot = await getDocs(userQuery);
+      return querySnapshot.empty;
+    } catch (error) {
+      console.error('Error checking username:', error);
+      return false;
+    }
   }
 
   togglePasswordVisibility(): void {
@@ -309,6 +321,7 @@ export class CreateAccountsComponent implements OnInit {
     } else {
       this.accountData.department = '';
       this.accountData.customDepartment = '';
+      
       // Si hay restricciones de nivel de admin, aplicarlas
       if (this.isAdminLevelRestricted) {
         this.accountData.adminLevel = '2';
